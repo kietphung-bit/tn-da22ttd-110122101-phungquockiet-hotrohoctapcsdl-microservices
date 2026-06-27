@@ -1,0 +1,755 @@
+{
+    "common": {
+        "brand": "DB Design Studio",
+        "signOut": "Sign out",
+        "loading": "Loading...",
+        "actions": "Actions",
+        "status": "Status",
+        "active": "Active",
+        "disabled": "Disabled"
+    },
+    "login": {
+        "heroTitle": "Welcome back",
+        "heroSubtitle": "Sign in to continue managing the learning platform.",
+        "heading": "Account access",
+        "subheading": "Use your staff credentials to continue.",
+        "email": "Email",
+        "password": "Password",
+        "submit": "Sign in",
+        "submitting": "Signing in...",
+        "error": "Login failed. Please check your credentials.",
+        "noAccount": "No account?",
+        "registerLink": "Create one"
+    },
+    "register": {
+        "heroTitle": "Create an account",
+        "heroSubtitle": "Start curating the learning flow for students.",
+        "heading": "New administrator",
+        "subheading": "We will set the role to student by default.",
+        "fullName": "Full name",
+        "email": "Email",
+        "password": "Password",
+        "submit": "Register",
+        "submitting": "Creating...",
+        "error": "Registration failed. Please try again.",
+        "haveAccount": "Already have an account?",
+        "loginLink": "Sign in"
+    },
+    "admin": {
+        "sidebar": {
+            "users": "User Management",
+            "exercises": "Exercise Management",
+            "submissions": "Submissions",
+            "evaluationRounds": "Evaluation Rounds",
+            "practiceInsights": "Practice Effectiveness",
+            "title": "Admin Console"
+        },
+        "users": {
+            "title": "User Management",
+            "subtitle": "Manage instructors, students, and access state.",
+            "loadError": "Failed to load users.",
+            "detailError": "Failed to load user details.",
+            "disableError": "Failed to disable user.",
+            "enableError": "Failed to enable user.",
+            "deleteError": "Failed to delete user.",
+            "confirmDisable": "Are you sure you want to disable this user?",
+            "confirmEnable": "Are you sure you want to enable this user?",
+            "confirmDelete": "Are you sure you want to delete this user?",
+            "loading": "Loading users...",
+            "view": "View",
+            "detailTitle": "User details",
+            "detail": {
+                "email": "Email:",
+                "name": "Name:",
+                "role": "Role:",
+                "status": "Status:",
+                "gender": "Gender:",
+                "dob": "Date of birth:",
+                "phone": "Phone:",
+                "address": "Address:"
+            },
+            "columns": {
+                "name": "Name",
+                "email": "Email",
+                "role": "Role",
+                "status": "Status",
+                "actions": "Actions"
+            },
+            "disable": "Disable",
+            "enable": "Enable",
+            "delete": "Delete",
+            "roles": {
+                "student": "Student",
+                "instructor": "Instructor"
+            },
+            "form": {
+                "openCreate": "New user",
+                "createTitle": "Create user",
+                "close": "Close",
+                "email": "Email",
+                "fullName": "Full name",
+                "password": "Password",
+                "role": "Role",
+                "gender": "Gender",
+                "genderEmpty": "Select gender",
+                "genderMale": "Male",
+                "genderFemale": "Female",
+                "genderOther": "Other",
+                "dob": "Date of birth",
+                "phone": "Phone",
+                "address": "Address",
+                "create": "Create",
+                "cancel": "Cancel",
+                "missingRequired": "Please enter email, password, and full name.",
+                "createError": "Failed to create user."
+            }
+        },
+        "exercises": {
+            "title": "Exercise Management",
+            "subtitle": "Create, edit, and publish new ERD challenges.",
+            "loadError": "Failed to load exercises.",
+            "deleteError": "Failed to delete exercise.",
+            "confirmDelete": "Are you sure you want to delete this exercise?",
+            "saveError": "Failed to save exercise.",
+            "publishError": "Failed to update publish status.",
+            "loading": "Loading exercises...",
+            "form": {
+                "createTitle": "Create exercise",
+                "editTitle": "Edit exercise",
+                "openCreate": "New exercise",
+                "close": "Close",
+                "title": "Title",
+                "description": "Description",
+                "scenario": "Scenario data (JSON)",
+                "formatJson": "Format JSON",
+                "published": "Published",
+                "create": "Create exercise",
+                "update": "Update",
+                "cancel": "Cancel edit"
+            },
+            "filters": {
+                "searchPlaceholder": "Search title, code, description...",
+                "allSources": "All sources",
+                "manual": "Manual",
+                "aiGenerated": "AI-generated",
+                "allPublish": "All status",
+                "published": "Published",
+                "unpublished": "Unpublished",
+                "apply": "Apply",
+                "reset": "Reset"
+            },
+            "validation": {
+                "titleRequired": "Title is required.",
+                "createdByMissing": "Unable to determine creator. Please sign in again.",
+                "scenarioJson": "Scenario data must be valid JSON."
+            },
+            "columns": {
+                "code": "Code",
+                "title": "Title",
+                "description": "Description",
+                "source": "Source",
+                "creator": "Creator",
+                "published": "Published",
+                "actions": "Actions"
+            },
+            "edit": "Edit",
+            "delete": "Delete",
+            "publish": "Publish",
+            "unpublish": "Unpublish",
+            "yes": "Yes",
+            "no": "No",
+            "sampleSolution": {
+                "title": "Sample solution",
+                "open": "Sample solution",
+                "close": "Close",
+                "cancel": "Cancel",
+                "create": "Create solution",
+                "update": "Update solution",
+                "delete": "Delete solution",
+                "loading": "Loading sample solution...",
+                "loadError": "Failed to load sample solution.",
+                "saveError": "Failed to save sample solution.",
+                "deleteError": "Failed to delete sample solution.",
+                "confirmDelete": "Are you sure you want to delete this sample solution?",
+                "solutionData": "Solution data (JSON)",
+                "formatJson": "Format JSON",
+                "exerciseLabel": "Exercise:",
+                "codeLabel": "Code:",
+                "missingExercise": "Unable to determine exercise.",
+                "notAllowed": "Only available for MANUAL exercises.",
+                "notApplicable": "AI-generated exercises do not have manually managed sample solutions.",
+                "noSolution": "No sample solution exists for this exercise.",
+                "validation": {
+                    "solutionJson": "Sample solution must be valid JSON."
+                }
+            },
+            "actions": {
+                "viewDetail": "View details",
+                "edit": "Edit",
+                "publish": "Publish",
+                "unpublish": "Unpublish",
+                "delete": "Delete exercise"
+            },
+            "detail": {
+                "backToList": "← Back to list",
+                "loading": "Loading exercise details...",
+                "loadError": "Failed to load exercise details.",
+                "tabInfo": "Exercise info",
+                "tabSampleSolution": "Sample solution",
+                "tabInsights": "Insights",
+                "fields": {
+                    "code": "Exercise code",
+                    "title": "Title",
+                    "description": "Description",
+                    "source": "Source",
+                    "published": "Publish status",
+                    "creator": "Creator",
+                    "scenarioData": "Scenario data"
+                }
+            },
+            "scenarioEditor": {
+                "formMode": "Visual form",
+                "rawMode": "Raw JSON",
+                "businessContext": "Business context",
+                "businessContextPlaceholder": "Describe the business context...",
+                "requirements": "Requirements",
+                "addRequirement": "+ Add requirement",
+                "requirementPlaceholder": "Enter a requirement...",
+                "constraints": "Constraints",
+                "addConstraint": "+ Add constraint",
+                "constraintPlaceholder": "Enter a constraint...",
+                "difficulty": "Difficulty",
+                "difficultyEasy": "Easy",
+                "difficultyMedium": "Medium",
+                "difficultyHard": "Hard",
+                "tags": "Tags",
+                "addTag": "+ Add tag",
+                "tagPlaceholder": "Enter tag...",
+                "rawPlaceholder": "Enter valid JSON...",
+                "formatJson": "Format JSON"
+            },
+            "solutionEditor": {
+                "formMode": "Visual form",
+                "rawMode": "Raw JSON",
+                "entities": "Entities",
+                "addEntity": "+ Add entity",
+                "entityName": "Entity name",
+                "entityNamePlaceholder": "e.g. Student",
+                "primaryKey": "Primary key",
+                "primaryKeyPlaceholder": "e.g. StudentId",
+                "attributes": "Attributes (one per line)",
+                "attributesPlaceholder": "e.g. FullName\nDateOfBirth",
+                "relationships": "Relationships",
+                "addRelationship": "+ Add relationship",
+                "relFrom": "From entity",
+                "relTo": "To entity",
+                "relCardinality": "Cardinality",
+                "relDescription": "Description",
+                "relDescriptionPlaceholder": "Describe the relationship...",
+                "normalizationNotes": "Normalization notes",
+                "normalizationNotesPlaceholder": "Notes about 1NF/2NF/3NF normalization...",
+                "constraints": "Integrity constraints",
+                "addConstraint": "+ Add constraint",
+                "constraintPlaceholder": "Enter constraint...",
+                "rawPlaceholder": "Enter valid JSON...",
+                "formatJson": "Format JSON"
+            }
+        },
+        "submissions": {
+            "title": "Submissions",
+            "subtitle": "View student submission list and AI evaluation results.",
+            "loadError": "Failed to load submissions.",
+            "loading": "Loading submissions...",
+            "retry": "Retry",
+            "empty": "No submissions found.",
+            "total": "Total: {{count}} submissions",
+            "allStatuses": "All statuses",
+            "filterStatus": "Filter by status",
+            "viewDetail": "View detail",
+            "status": {
+                "draft": "Draft",
+                "submitted": "Submitted",
+                "processing": "Processing",
+                "graded": "Graded",
+                "failed": "Failed"
+            },
+            "columns": {
+                "student": "Student",
+                "exercise": "Exercise",
+                "status": "Status",
+                "submittedAt": "Submitted at",
+                "actions": "Actions"
+            },
+            "detail": {
+                "title": "Submission Detail",
+                "subtitle": "Detailed info, diagram, and AI evaluation result.",
+                "backToList": "← Back to list",
+                "loading": "Loading detail...",
+                "loadError": "Failed to load submission details.",
+                "infoTitle": "Submission Info",
+                "diagramTitle": "Student Diagram (DiagramData)",
+                "evaluationTitle": "AI Evaluation Result",
+                "noEvaluation": "No evaluation available for this submission.",
+                "noDetails": "No error details found.",
+                "score": "Score",
+                "evaluatedAt": "Evaluated at:",
+                "detailsTitle": "Error Details",
+                "fields": {
+                    "submissionId": "Submission ID",
+                    "status": "Status",
+                    "student": "Student",
+                    "exercise": "Exercise",
+                    "createdAt": "Created at",
+                    "submittedAt": "Submitted at"
+                },
+                "roundHistory": {
+                    "title": "Evaluation Round History",
+                    "subtitle": "Read-only metadata and saved feedback snapshots for this submission.",
+                    "empty": "No evaluation rounds have been recorded for this submission.",
+                    "total": "{{count}} rounds",
+                    "roundWithMax": "Round {{round}}/{{max}}",
+                    "fallbackYes": "Fallback used",
+                    "fallbackNo": "No fallback",
+                    "fallbackFrom": "Fallback from {{provider}}",
+                    "detailsTitle": "Saved Feedback Details",
+                    "noDetails": "This round has no saved feedback details.",
+                    "fields": {
+                        "roundNumber": "Round number",
+                        "roundStatus": "Round status",
+                        "overallScore": "Overall score",
+                        "provider": "Provider",
+                        "model": "Model",
+                        "fallbackUsed": "Fallback",
+                        "submittedAt": "Submitted at",
+                        "gradedAt": "Graded at"
+                    }
+                }
+            }
+        },
+        "evaluationRounds": {
+            "title": "Evaluation Round Monitoring",
+            "subtitle": "Read-only view of round failures, provider metadata, and fallback usage.",
+            "loadError": "Failed to load evaluation rounds.",
+            "loading": "Loading evaluation rounds...",
+            "empty": "No evaluation rounds match the current filters.",
+            "refresh": "Refresh",
+            "total": "Total: {{count}} rounds",
+            "roundNumber": "Round {{number}}",
+            "fallbackYes": "Fallback used",
+            "fallbackNo": "No fallback",
+            "fallbackFrom": "From {{provider}}",
+            "viewSubmission": "View submission",
+            "filters": {
+                "status": "Filter by status",
+                "allStatuses": "All statuses",
+                "provider": "Provider",
+                "fallback": "Filter by fallback",
+                "allFallback": "All fallback states",
+                "fallbackOnly": "Fallback only",
+                "noFallback": "No fallback",
+                "submissionId": "Submission ID",
+                "studentId": "Student ID"
+            },
+            "columns": {
+                "round": "Round",
+                "submission": "Submission",
+                "student": "Student",
+                "status": "Status",
+                "score": "Score",
+                "provider": "Provider / Model",
+                "fallback": "Fallback",
+                "time": "Submitted / Graded",
+                "actions": "Actions"
+            }
+        },
+        "practiceInsights": {
+            "title": "Practice Effectiveness",
+            "subtitle": "Read-only overview of submissions, grading rounds, providers, and common issues.",
+            "loadError": "Failed to load practice insights.",
+            "loading": "Loading practice insights...",
+            "empty": "No data matches the current filters.",
+            "emptyPanel": "No data to display yet.",
+            "refresh": "Refresh",
+            "unknown": "Unknown",
+            "providerRounds": "{{count}} rounds",
+            "providerFallback": "{{count}} fallback",
+            "affectedSubmissions": "{{count}} affected submissions",
+            "recentRoundsHint": "Latest grading rounds from the backend safe whitelist.",
+            "totalRecentRounds": "{{count}} recent rounds",
+            "chartDescriptions": {
+                "status": "Grading flow health through the number of submissions in each status.",
+                "provider": "AI provider stability through total grading rounds and fallback rounds.",
+                "issues": "Common student issue types to prioritize exercise and guidance improvements."
+            },
+            "emptyCharts": {
+                "status": "No submission status data is available for the current filters.",
+                "provider": "No provider or fallback data is available for the current filters.",
+                "issues": "No top issue type data is available for the current filters."
+            },
+            "chart": {
+                "count": "{{count}} items",
+                "rounds": "{{count}} rounds",
+                "fallbackRounds": "{{count}} fallback",
+                "occurrences": "{{count}} occurrences",
+                "roundLegend": "Total grading rounds",
+                "fallbackLegend": "Fallback rounds"
+            },
+            "sources": {
+                "manual": "Manual",
+                "ai_generated": "AI-generated"
+            },
+            "filters": {
+                "from": "From date",
+                "to": "To date",
+                "apply": "Apply",
+                "reset": "Reset",
+                "allSubmissionStatuses": "All submission statuses",
+                "allRoundStatuses": "All round statuses",
+                "allSources": "All exercise sources",
+                "provider": "Provider",
+                "allFallback": "All fallback states",
+                "fallbackOnly": "Fallback only",
+                "noFallback": "No fallback",
+                "exerciseId": "Exercise ID",
+                "studentId": "Student ID"
+            },
+            "kpis": {
+                "totalSubmissions": "Submissions",
+                "totalStudents": "{{count}} students",
+                "totalRounds": "Grading rounds",
+                "totalExercises": "{{count}} exercises",
+                "averageScore": "Average score",
+                "gradedRounds": "{{count}} graded rounds",
+                "completionRate": "Completion rate",
+                "failedRounds": "{{count}} failed rounds",
+                "fallbackRate": "Fallback rate",
+                "processingRounds": "{{count}} processing rounds",
+                "failureRate": "Failure rate",
+                "readOnly": "Read-only data"
+            },
+            "sections": {
+                "statusBreakdown": "Status breakdown",
+                "providerBreakdown": "Provider and fallback",
+                "topIssueTypes": "Top issue types",
+                "recentRounds": "Recent rounds"
+            }
+        }
+    },
+    "student": {
+        "sidebar": {
+            "chatbot": "Knowledge QA chat",
+            "chatbotDemo": "QA chat demo",
+            "title": "Learning space",
+            "practice": "Start practice",
+            "exercises": "Exercise list",
+            "submissions": "Submission history"
+        },
+        "chatbot": {
+            "title": "Knowledge QA chat",
+            "subtitle": "Ask database theory questions using approved KnowledgeBase material.",
+            "messages": "Chatbot messages",
+            "emptyTitle": "Ask about ERD, normalization, or keys",
+            "emptyBody": "The chatbot retrieves APPROVED knowledge and answers briefly from the matched context.",
+            "placeholder": "Type a question, for example: What is 1NF?",
+            "send": "Send",
+            "sending": "Sending...",
+            "loading": "Retrieving knowledge and preparing an answer...",
+            "clear": "Clear chat",
+            "newChat": "New chat",
+            "history": "History",
+            "historyLoading": "Loading conversations...",
+            "historyError": "Could not load conversation history.",
+            "noHistory": "No conversations yet.",
+            "untitled": "Untitled chat",
+            "noPreview": "No messages yet",
+            "openingConversation": "Opening conversation...",
+            "openConversationError": "Could not open this conversation.",
+            "sources": "Retrieved sources",
+            "noSources": "No sources yet. Send a question to see related materials.",
+            "providerLabel": "Provider",
+            "providerUnknown": "Unknown",
+            "sourcesLabel": "Sources",
+            "error": "Could not send the question right now. Please check your session and try again.",
+            "rateLimitError": "You are sending questions too quickly. Please wait a minute and try again."
+        },
+        "workspacePage": {
+            "title": "Workspace: {{title}}",
+            "loadingTitle": "Loading workspace...",
+            "loading": "Loading workspace...",
+            "notFoundTitle": "Workspace not found",
+            "notFound": "Submission not found.",
+            "exit": "Exit",
+            "saveDraft": "Save draft",
+            "saving": "Saving...",
+            "submit": "Submit",
+            "submitting": "Submitting...",
+            "editAgain": "Edit again",
+            "confirmSubmit": "Are you sure you want to submit? After submission, the workspace will be locked by the current rule.",
+            "readOnly": "This submission has been submitted or is being evaluated. You can only view the workspace by the current rule.",
+            "noDescription": "No detailed description yet.",
+            "messages": {
+                "saveSuccess": "Draft saved successfully.",
+                "submitSuccess": "Submitted. The system is evaluating and will show results when ready.",
+                "reopenSuccess": "Workspace reopened. You can revise and submit the next round."
+            },
+            "errors": {
+                "missingSubmissionId": "Missing submissionId.",
+                "invalidSubmissionId": "Invalid submissionId.",
+                "loadWorkspace": "Could not load workspace: {{message}}",
+                "saveDraft": "Could not save draft.",
+                "reopen": "Could not reopen workspace.",
+                "submit": "Could not submit.",
+                "polling": "Could not refresh evaluation status."
+            },
+            "fields": {
+                "exercise": "Exercise",
+                "source": "Source",
+                "description": "Description"
+            },
+            "rounds": {
+                "counter": "Feedback rounds {{used}}/{{max}}",
+                "current": "Current round",
+                "currentStatus": "Current round status",
+                "history": "Feedback history",
+                "historyHelp": "Open a round to review its provider, model, and saved hints.",
+                "round": "Round",
+                "roundWithMax": "Round {{round}}/{{max}}",
+                "latestFeedback": "Latest feedback",
+                "submittedAt": "Submitted at",
+                "gradedAt": "Graded at",
+                "noRoundDetails": "This round has no feedback details yet.",
+                "exhausted": "You have used all 3 feedback rounds. The workspace is now read-only."
+            },
+            "evaluation": {
+                "title": "Evaluation result",
+                "providerLabel": "{{provider}} evaluation",
+                "providerFallbackLabel": "{{provider}} evaluation fallback from {{fallbackFrom}}",
+                "providerUnknown": "Provider not available yet",
+                "model": "Model",
+                "status": "Status",
+                "score": "Overall score",
+                "evaluatedAt": "Evaluated at",
+                "details": "Errors/Hints",
+                "type": "Type",
+                "description": "Description",
+                "location": "Location",
+                "processing": "The submission is being processed. Results will appear when the status is GRADED.",
+                "processingWithPrevious": "The current round is still being processed. The latest feedback below belongs to the most recent graded round.",
+                "failed": "Evaluation failed. Please try again later or contact your instructor if the problem continues.",
+                "failedCanRevise": "The current round failed to evaluate. You still have a round left, so use Edit again to revise and submit the next round.",
+                "failedNoRounds": "The current round failed to evaluate and no feedback rounds remain.",
+                "polling": "Automatically checking every {{seconds}} seconds.",
+                "pollTimeout": "Evaluation is taking longer than usual. Reload this page after a few minutes to check the result.",
+                "noDetails": "No evaluation details yet.",
+                "noGradedFeedback": "No successfully graded feedback is available for this submission yet."
+            }
+        },
+        "workspace": {
+            "tabs": {
+                "manage": "Entity/Relationship"
+            },
+            "actions": {
+                "addEntity": "+ Entity",
+                "addRelationship": "+ Relationship",
+                "fitView": "Fit View",
+                "edit": "Edit",
+                "delete": "Delete",
+                "close": "Close",
+                "cancel": "Cancel"
+            },
+            "locked": "Submission is not in DRAFT status, so the workspace is read-only.",
+            "emptyCanvas": "No diagramData yet. Add the first Entity or open the JSON tab to import valid diagramData.",
+            "canvasHelp": "Drag nodes to reposition them. Drag from the right handle to the left handle to create a relationship. Double-click nodes or edges to edit.",
+            "entities": "Entities",
+            "relationships": "Relationships",
+            "noEntities": "No entities yet.",
+            "noRelationships": "No relationships yet.",
+            "noAttributes": "No attributes yet.",
+            "notices": {
+                "entityAdded": "Added a new entity.",
+                "entityUpdated": "Updated entity.",
+                "entityDeleted": "Deleted entity and related relationships.",
+                "entityDeletedFromCanvas": "Deleted entity from canvas.",
+                "relationshipAdded": "Added a new relationship.",
+                "relationshipUpdated": "Updated relationship.",
+                "relationshipDeleted": "Deleted relationship.",
+                "relationshipDuplicate": "A relationship with the same name and entity pair already exists.",
+                "relationshipExists": "A relationship between these two entities already exists.",
+                "jsonApplied": "Updated diagramData from JSON.",
+                "workspaceReset": "Cleared the current workspace."
+            },
+            "json": {
+                "apply": "Apply JSON",
+                "reset": "Reset empty",
+                "invalid": "Invalid JSON."
+            },
+            "entity": {
+                "createTitle": "Add Entity",
+                "editTitle": "Edit Entity",
+                "name": "Entity name",
+                "attributes": "Attributes",
+                "attributeNamePlaceholder": "e.g. studentId",
+                "attributeTypePlaceholder": "e.g. BIGINT",
+                "attributeNotePlaceholder": "Note",
+                "addAttribute": "Add attribute",
+                "bulkAttributes": "Quick paste attributes",
+                "bulkPlaceholder": "One attribute per line. Use * or (PK) to mark a primary key.\ne.g. * studentId: BIGINT\nfullName: VARCHAR",
+                "applyBulk": "Add from paste",
+                "note": "Note",
+                "save": "Save Entity",
+                "validation": {
+                    "nameRequired": "Please enter an entity name.",
+                    "bulkEmpty": "No valid attributes to add."
+                }
+            },
+            "relationship": {
+                "createTitle": "Add Relationship",
+                "editTitle": "Edit Relationship",
+                "needsTwoEntities": "At least 2 entities are required to create a relationship.",
+                "name": "Relationship name",
+                "fromEntity": "From Entity",
+                "toEntity": "To Entity",
+                "selectEntity": "Select entity",
+                "cardinality": "Cardinality",
+                "cardinalityHelp": {
+                    "1 - 1": "One record on each side",
+                    "1 - N": "Left side one, right side many",
+                    "N - 1": "Left side many, right side one",
+                    "N - N": "Many-to-many, usually needs a bridge table"
+                },
+                "note": "Note",
+                "notePlaceholder": "e.g. Needs a bridge table for N - N",
+                "save": "Save Relationship",
+                "validation": {
+                    "nameRequired": "Please enter a relationship name.",
+                    "entitiesRequired": "Please select both entities.",
+                    "distinctEntities": "Relationship endpoints must be different."
+                }
+            }
+        }
+    },
+    "instructor": {
+        "sidebar": {
+            "title": "Instructor Console",
+            "knowledgeBase": "Academic Knowledge",
+            "practiceInsights": "Insights"
+        },
+        "practiceInsights": {
+            "title": "Insights",
+            "subtitle": "Anonymized overview of submissions, grading rounds, and common issues by exercise.",
+            "selectorSubtitle": "Choose an exercise to review signals for adjusting future assignments and guidance.",
+            "exerciseSelect": "Select exercise",
+            "exercisePlaceholder": "Select an exercise to view insights",
+            "loadExercisesError": "Failed to load exercises.",
+            "emptyExercises": "No exercises are available for insights yet.",
+            "chooseExercise": "Choose an exercise to view KPI cards, common issue charts, and anonymized submission rows.",
+            "privacyNote": "This page only uses aggregate/anonymized data; it does not show student names, student emails, raw diagrams, raw provider errors, or dead-letter payloads.",
+            "viewExerciseDetail": "Open exercise detail",
+            "sections": {
+                "scopeBreakdown": "Submission scope",
+                "statusBreakdown": "Grading status"
+            },
+            "chartDescriptions": {
+                "scope": "Compare direct submissions with AI-derived exercise submissions to understand how the assignment is being used.",
+                "status": "Current graded, failed, and processing submissions in the selected scope.",
+                "issues": "The most frequent student issue types for improving assignments or adding guidance."
+            },
+            "emptyCharts": {
+                "scope": "No submission scope data is available for this exercise.",
+                "status": "No grading status data is available for this exercise.",
+                "issues": "No top issue type data is available for this exercise."
+            },
+            "chart": {
+                "submissions": "{{count}} submissions",
+                "occurrences": "{{count}} occurrences"
+            }
+        },
+        "exerciseInsights": {
+            "loadError": "Failed to load exercise insights.",
+            "loading": "Loading practice insights...",
+            "empty": "No submissions are available in the current scope.",
+            "emptyPanel": "No data to display yet.",
+            "refresh": "Refresh",
+            "unknown": "Unknown",
+            "roundNumber": "Round {{number}}",
+            "affectedSubmissions": "{{count}} affected submissions",
+            "anonymizedHint": "This table only shows submission IDs and aggregate status, without student names or emails.",
+            "totalSubmissions": "{{count}} submissions",
+            "scopes": {
+                "all": "All scopes",
+                "direct": "Direct",
+                "derived_ai": "AI-derived"
+            },
+            "filters": {
+                "title": "Insight filters",
+                "subtitle": "Filter by scope, grading round status, provider, and fallback usage.",
+                "from": "From date",
+                "to": "To date",
+                "apply": "Apply",
+                "reset": "Reset",
+                "allSubmissionStatuses": "All submission statuses",
+                "allRoundStatuses": "All round statuses",
+                "allRounds": "All rounds",
+                "provider": "Provider",
+                "allFallback": "All fallback states",
+                "fallbackOnly": "Fallback only",
+                "noFallback": "No fallback"
+            },
+            "exercise": {
+                "code": "Exercise code",
+                "title": "Title",
+                "source": "Source",
+                "scope": "Selected scope",
+                "derivedAiExerciseCount": "AI-derived exercises",
+                "includedSubmissionCount": "Included submissions"
+            },
+            "kpis": {
+                "directSubmissions": "Direct submissions",
+                "derivedSubmissions": "{{count}} AI-derived submissions",
+                "participants": "Participants",
+                "includedSubmissions": "{{count}} submissions",
+                "graded": "Graded",
+                "failedProcessing": "{{failed}} failed, {{processing}} processing",
+                "averageScore": "Average score",
+                "totalRounds": "{{count}} grading rounds",
+                "fallbackRate": "Fallback rate",
+                "derivedExercises": "{{count}} AI-derived exercises"
+            },
+            "sections": {
+                "topIssueTypes": "Top issue types",
+                "anonymizedSubmissions": "Anonymized submission summaries"
+            },
+            "columns": {
+                "submission": "Submission",
+                "scope": "Scope",
+                "status": "Status",
+                "roundsUsed": "Rounds",
+                "latestRound": "Latest round",
+                "latestScore": "Latest score",
+                "time": "Submitted / Graded"
+            }
+        }
+    },
+    "viewers": {
+        "technicalData": "Technical data",
+        "scenario": {
+            "invalid": "Scenario data is not in a supported format. The technical data is still available below for inspection.",
+            "empty": "No scenario data yet.",
+            "difficulty": "Difficulty",
+            "requirementCount": "Requirements",
+            "constraintCount": "Constraints",
+            "entityCount": "Suggested entities",
+            "context": "Business context",
+            "requirements": "Design requirements",
+            "constraints": "Business constraints",
+            "noRequirements": "No specific requirements yet.",
+            "noConstraints": "No specific constraints yet."
+        },
+        "erd": {
+            "invalid": "The diagram data is not in a supported format, so it cannot be fully rendered. Please inspect the technical data below.",
+            "empty": "No diagram is available yet.",
+            "entities": "Entities",
+            "relationships": "Relationships"
+        }
+    }
+}

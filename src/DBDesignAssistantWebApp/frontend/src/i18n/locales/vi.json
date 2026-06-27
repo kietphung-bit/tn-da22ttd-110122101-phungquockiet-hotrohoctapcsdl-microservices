@@ -1,0 +1,838 @@
+{
+    "common": {
+        "brand": "DB Design Academy",
+        "signOut": "Đăng xuất",
+        "loading": "Đang tải...",
+        "actions": "Hành động",
+        "status": "Trạng thái",
+        "active": "Hoạt động",
+        "disabled": "Đã khóa",
+        "quota": "Thiết kế mô hình logical, kiểm tra sơ đồ và cung cấp hướng dẫn tối ưu ERD",
+        "save": "Lưu",
+        "cancel": "Hủy",
+        "empty": "Không có dữ liệu",
+        "view": "Xem",
+        "edit": "Sửa",
+        "delete": "Xóa",
+        "hide": "Ẩn",
+        "show": "Hiện",
+        "approve": "Duyệt",
+        "reject": "Từ chối",
+        "submit": "Gửi duyệt"
+    },
+    "login": {
+        "heroTitle": "Chào mừng đến với hệ thống",
+        "heroSubtitle": "Đăng nhập để truy cập nền tảng học tập.",
+        "heading": "Truy cập hệ thống",
+        "subheading": "Dùng tài khoản quản trị để tiếp tục.",
+        "email": "Email",
+        "password": "Mật khẩu",
+        "submit": "Đăng nhập",
+        "submitting": "Đang đăng nhập...",
+        "error": "Đăng nhập thất bại. Vui lòng kiểm tra thông tin.",
+        "noAccount": "Chưa có tài khoản?",
+        "registerLink": "Tạo tài khoản"
+    },
+    "register": {
+        "heroTitle": "Tạo tài khoản",
+        "heroSubtitle": "Bắt đầu truy cập tính năng của hệ thống.",
+        "heading": "Tạo tài khoản mới",
+        "subheading": "Mặc định vai trò sẽ là sinh viên.",
+        "fullName": "Họ và tên",
+        "email": "Email",
+        "password": "Mật khẩu",
+        "submit": "Đăng ký",
+        "submitting": "Đang tạo...",
+        "error": "Đăng ký thất bại. Vui lòng thử lại.",
+        "haveAccount": "Đã có tài khoản?",
+        "loginLink": "Đăng nhập"
+    },
+    "admin": {
+        "sidebar": {
+            "users": "Quản lý người dùng",
+            "exercises": "Quản lý bài tập",
+            "submissions": "Bài nộp",
+            "title": "Bảng điều khiển",
+            "knowledgeBase": "Kiến thức cơ sở",
+            "skills": "Quản lý kỹ năng",
+            "evaluationRounds": "Vòng chấm bài",
+            "studentSkillStats": "Thống kê kỹ năng",
+            "practiceInsights": "Thống kê"
+        },
+        "users": {
+            "title": "Quản lý người dùng",
+            "subtitle": "Quản lý giảng viên, sinh viên và trạng thái truy cập.",
+            "loadError": "Không thể tải danh sách người dùng.",
+            "detailError": "Không thể tải thông tin người dùng.",
+            "disableError": "Không thể khóa tài khoản.",
+            "enableError": "Không thể mở khóa tài khoản.",
+            "deleteError": "Không thể xóa tài khoản.",
+            "confirmDisable": "Bạn có chắc muốn khóa tài khoản này?",
+            "confirmEnable": "Bạn có chắc muốn mở khóa tài khoản này?",
+            "confirmDelete": "Bạn có chắc muốn xóa tài khoản này?",
+            "loading": "Đang tải người dùng...",
+            "view": "Xem",
+            "detailTitle": "Thông tin người dùng",
+            "detail": {
+                "email": "Email:",
+                "name": "Họ tên:",
+                "role": "Vai trò:",
+                "status": "Trạng thái:",
+                "gender": "Giới tính:",
+                "dob": "Ngày sinh:",
+                "phone": "Số điện thoại:",
+                "address": "Địa chỉ:"
+            },
+            "columns": {
+                "name": "Họ tên",
+                "email": "Email",
+                "role": "Vai trò",
+                "status": "Trạng thái",
+                "actions": "Hành động"
+            },
+            "disable": "Khóa",
+            "enable": "Mở khóa",
+            "delete": "Xóa",
+            "roles": {
+                "student": "Sinh viên",
+                "instructor": "Giảng viên"
+            },
+            "form": {
+                "openCreate": "Tạo người dùng",
+                "createTitle": "Tạo người dùng",
+                "close": "Đóng",
+                "email": "Email",
+                "fullName": "Họ và tên",
+                "password": "Mật khẩu",
+                "role": "Vai trò",
+                "gender": "Giới tính",
+                "genderEmpty": "Chọn giới tính",
+                "genderMale": "Nam",
+                "genderFemale": "Nữ",
+                "genderOther": "Khác",
+                "dob": "Ngày sinh",
+                "phone": "Số điện thoại",
+                "address": "Địa chỉ",
+                "create": "Tạo",
+                "cancel": "Hủy",
+                "missingRequired": "Vui lòng nhập email, mật khẩu và họ tên.",
+                "createError": "Không thể tạo người dùng."
+            }
+        },
+        "exercises": {
+            "title": "Quản lý bài tập",
+            "subtitle": "Tạo, chỉnh sửa và xuất bản bài tập ERD.",
+            "loadError": "Không thể tải danh sách bài tập.",
+            "deleteError": "Không thể xóa bài tập.",
+            "confirmDelete": "Bạn có chắc muốn xóa bài tập này?",
+            "saveError": "Không thể lưu bài tập.",
+            "publishError": "Không thể cập nhật trạng thái xuất bản.",
+            "loading": "Đang tải bài tập...",
+            "form": {
+                "createTitle": "Tạo bài tập",
+                "editTitle": "Chỉnh sửa bài tập",
+                "openCreate": "Tạo bài tập mới",
+                "close": "Đóng",
+                "title": "Tiêu đề",
+                "description": "Mô tả",
+                "scenario": "Dữ liệu kịch bản (JSON)",
+                "formatJson": "Định dạng JSON",
+                "published": "Hiển thị",
+                "create": "Tạo bài tập",
+                "update": "Cập nhật",
+                "cancel": "Hủy"
+            },
+            "filters": {
+                "searchPlaceholder": "Tìm theo tiêu đề, mã, mô tả...",
+                "allSources": "Tất cả nguồn",
+                "manual": "Manual",
+                "aiGenerated": "AI-generated",
+                "allPublish": "Tất cả trạng thái",
+                "published": "Đã xuất bản",
+                "unpublished": "Chưa xuất bản",
+                "apply": "Lọc",
+                "reset": "Đặt lại"
+            },
+            "validation": {
+                "titleRequired": "Tiêu đề là bắt buộc.",
+                "createdByMissing": "Không thể xác định người tạo. Vui lòng đăng nhập lại.",
+                "scenarioJson": "Dữ liệu kịch bản phải là JSON hợp lệ."
+            },
+            "columns": {
+                "code": "Mã bài tập",
+                "title": "Tiêu đề",
+                "description": "Mô tả",
+                "source": "Nguồn",
+                "creator": "Người tạo",
+                "published": "Trạng thái",
+                "actions": "Hành động"
+            },
+            "edit": "Sửa",
+            "delete": "Xóa",
+            "publish": "Hiển thị",
+            "unpublish": "Ẩn bài",
+            "yes": "Hiển thị",
+            "no": "Ẩn",
+            "sampleSolution": {
+                "title": "Lời giải mẫu",
+                "open": "Lời giải mẫu",
+                "close": "Đóng",
+                "cancel": "Hủy",
+                "create": "Tạo lời giải",
+                "update": "Cập nhật lời giải",
+                "delete": "Xóa lời giải",
+                "loading": "Đang tải lời giải mẫu...",
+                "loadError": "Không thể tải lời giải mẫu.",
+                "saveError": "Không thể lưu lời giải mẫu.",
+                "deleteError": "Không thể xóa lời giải mẫu.",
+                "confirmDelete": "Bạn có chắc muốn xóa lời giải mẫu này?",
+                "solutionData": "Dữ liệu lời giải (JSON)",
+                "formatJson": "Định dạng JSON",
+                "exerciseLabel": "Bài tập:",
+                "codeLabel": "Mã bài:",
+                "missingExercise": "Không xác định được bài tập.",
+                "notAllowed": "Chỉ hỗ trợ bài MANUAL.",
+                "notApplicable": "Bài tập AI-generated không có lời giải mẫu được quản lý thủ công.",
+                "noSolution": "Chưa có lời giải mẫu cho bài tập này.",
+                "validation": {
+                    "solutionJson": "Lời giải mẫu phải là JSON hợp lệ."
+                }
+            },
+            "actions": {
+                "viewDetail": "Xem chi tiết",
+                "edit": "Chỉnh sửa",
+                "publish": "Xuất bản",
+                "unpublish": "Ẩn bài",
+                "delete": "Xóa bài tập"
+            },
+            "detail": {
+                "backToList": "← Quay lại danh sách",
+                "loading": "Đang tải chi tiết bài tập...",
+                "loadError": "Không thể tải thông tin bài tập.",
+                "tabInfo": "Thông tin bài tập",
+                "tabSampleSolution": "Lời giải mẫu",
+                "tabInsights": "Thống kê thực hành",
+                "fields": {
+                    "code": "Mã bài tập",
+                    "title": "Tiêu đề",
+                    "description": "Mô tả",
+                    "source": "Nguồn",
+                    "published": "Trạng thái xuất bản",
+                    "creator": "Người tạo",
+                    "scenarioData": "Dữ liệu kịch bản"
+                }
+            },
+            "scenarioEditor": {
+                "formMode": "Form trực quan",
+                "rawMode": "Raw JSON",
+                "businessContext": "Bối cảnh nghiệp vụ",
+                "businessContextPlaceholder": "Mô tả bối cảnh kinh doanh...",
+                "requirements": "Yêu cầu nghiệp vụ",
+                "addRequirement": "+ Thêm yêu cầu",
+                "requirementPlaceholder": "Nhập một yêu cầu...",
+                "constraints": "Ràng buộc",
+                "addConstraint": "+ Thêm ràng buộc",
+                "constraintPlaceholder": "Nhập một ràng buộc...",
+                "difficulty": "Độ khó",
+                "difficultyEasy": "Dễ",
+                "difficultyMedium": "Trung bình",
+                "difficultyHard": "Khó",
+                "tags": "Tags",
+                "addTag": "+ Thêm tag",
+                "tagPlaceholder": "Nhập tag...",
+                "rawPlaceholder": "Nhập JSON hợp lệ...",
+                "formatJson": "Định dạng JSON"
+            },
+            "solutionEditor": {
+                "formMode": "Form trực quan",
+                "rawMode": "Raw JSON",
+                "entities": "Danh sách Entity",
+                "addEntity": "+ Thêm entity",
+                "entityName": "Tên entity",
+                "entityNamePlaceholder": "VD: SinhVien",
+                "primaryKey": "Khóa chính",
+                "primaryKeyPlaceholder": "VD: MaSV",
+                "attributes": "Thuộc tính (mỗi dòng 1 thuộc tính)",
+                "attributesPlaceholder": "VD: HoTen\nNgaySinh",
+                "relationships": "Danh sách Relationship",
+                "addRelationship": "+ Thêm relationship",
+                "relFrom": "Từ entity",
+                "relTo": "Đến entity",
+                "relCardinality": "Bản số",
+                "relDescription": "Mô tả",
+                "relDescriptionPlaceholder": "Mô tả quan hệ...",
+                "normalizationNotes": "Ghi chú chuẩn hóa",
+                "normalizationNotesPlaceholder": "Ghi chú về chuẩn hóa 1NF/2NF/3NF...",
+                "constraints": "Ràng buộc toàn vẹn",
+                "addConstraint": "+ Thêm ràng buộc",
+                "constraintPlaceholder": "Nhập ràng buộc...",
+                "rawPlaceholder": "Nhập JSON hợp lệ...",
+                "formatJson": "Định dạng JSON"
+            }
+        },
+        "submissions": {
+            "title": "Quản lý bài nộp",
+            "subtitle": "Xem danh sách bài nộp của sinh viên và kết quả đánh giá.",
+            "loadError": "Không thể tải danh sách bài nộp.",
+            "loading": "Đang tải bài nộp...",
+            "retry": "Thử lại",
+            "empty": "Không có bài nộp nào.",
+            "total": "Tổng: {{count}} bài nộp",
+            "allStatuses": "Tất cả trạng thái",
+            "filterStatus": "Lọc theo trạng thái",
+            "viewDetail": "Xem chi tiết",
+            "status": {
+                "draft": "Nháp",
+                "submitted": "Đã nộp",
+                "processing": "Đang chấm",
+                "graded": "Đã chấm",
+                "failed": "Chấm thất bại"
+            },
+            "columns": {
+                "student": "Sinh viên",
+                "exercise": "Bài tập",
+                "status": "Trạng thái",
+                "submittedAt": "Thời gian nộp",
+                "actions": "Hành động"
+            },
+            "detail": {
+                "title": "Chi tiết bài nộp",
+                "subtitle": "Thông tin chi tiết, sơ đồ và kết quả đánh giá AI.",
+                "backToList": "← Quay lại danh sách",
+                "loading": "Đang tải chi tiết...",
+                "loadError": "Không thể tải thông tin bài nộp.",
+                "infoTitle": "Thông tin bài nộp",
+                "diagramTitle": "Sơ đồ bài làm (DiagramData)",
+                "evaluationTitle": "Kết quả đánh giá AI",
+                "noEvaluation": "Chưa có kết quả đánh giá cho bài nộp này.",
+                "noDetails": "Không có chi tiết lỗi.",
+                "score": "Điểm",
+                "evaluatedAt": "Thời gian chấm:",
+                "detailsTitle": "Chi tiết lỗi",
+                "fields": {
+                    "submissionId": "Mã bài nộp",
+                    "status": "Trạng thái",
+                    "student": "Sinh viên",
+                    "exercise": "Bài tập",
+                    "createdAt": "Ngày tạo",
+                    "submittedAt": "Ngày nộp"
+                },
+                "roundHistory": {
+                    "title": "Lịch sử vòng chấm",
+                    "subtitle": "Chỉ đọc metadata và feedback snapshot đã lưu cho bài nộp này.",
+                    "empty": "Bài nộp này chưa có vòng chấm nào.",
+                    "total": "{{count}} vòng",
+                    "roundWithMax": "Vòng {{round}}/{{max}}",
+                    "fallbackYes": "Có fallback",
+                    "fallbackNo": "Không fallback",
+                    "fallbackFrom": "Fallback từ {{provider}}",
+                    "detailsTitle": "Chi tiết feedback đã lưu",
+                    "noDetails": "Vòng này chưa có chi tiết feedback đã lưu.",
+                    "fields": {
+                        "roundNumber": "Số vòng",
+                        "roundStatus": "Trạng thái vòng",
+                        "overallScore": "Điểm tổng",
+                        "provider": "Provider",
+                        "model": "Model",
+                        "fallbackUsed": "Fallback",
+                        "submittedAt": "Thời gian nộp",
+                        "gradedAt": "Thời gian chấm"
+                    }
+                }
+            }
+        },
+        "evaluationRounds": {
+            "title": "Theo dõi vòng chấm bài",
+            "subtitle": "Màn hình chỉ đọc để xem round lỗi, provider, model và fallback.",
+            "loadError": "Không thể tải danh sách vòng chấm.",
+            "loading": "Đang tải danh sách vòng chấm...",
+            "empty": "Không có vòng chấm nào khớp bộ lọc hiện tại.",
+            "refresh": "Tải lại",
+            "total": "Tổng: {{count}} vòng chấm",
+            "roundNumber": "Vòng {{number}}",
+            "fallbackYes": "Có fallback",
+            "fallbackNo": "Không fallback",
+            "fallbackFrom": "Từ {{provider}}",
+            "viewSubmission": "Xem bài nộp",
+            "filters": {
+                "status": "Lọc theo trạng thái",
+                "allStatuses": "Tất cả trạng thái",
+                "provider": "Provider",
+                "fallback": "Lọc fallback",
+                "allFallback": "Tất cả fallback",
+                "fallbackOnly": "Chỉ fallback",
+                "noFallback": "Không fallback",
+                "submissionId": "Mã bài nộp",
+                "studentId": "Mã sinh viên"
+            },
+            "columns": {
+                "round": "Round",
+                "submission": "Bài nộp",
+                "student": "Sinh viên",
+                "status": "Trạng thái",
+                "score": "Điểm",
+                "provider": "Provider / Model",
+                "fallback": "Fallback",
+                "time": "Nộp / Chấm",
+                "actions": "Hành động"
+            }
+        },
+        "practiceInsights": {
+            "title": "Thống kê",
+            "subtitle": "Tổng quan chỉ đọc về bài nộp, vòng chấm, provider và các lỗi phổ biến.",
+            "loadError": "Không thể tải thống kê thực hành.",
+            "loading": "Đang tải thống kê thực hành...",
+            "empty": "Không có dữ liệu khớp bộ lọc hiện tại.",
+            "emptyPanel": "Chưa có dữ liệu để hiển thị.",
+            "refresh": "Tải lại",
+            "unknown": "Chưa xác định",
+            "providerRounds": "{{count}} vòng",
+            "providerFallback": "{{count}} fallback",
+            "affectedSubmissions": "{{count}} bài nộp bị ảnh hưởng",
+            "recentRoundsHint": "Danh sách vòng chấm gần nhất theo whitelist an toàn của backend.",
+            "totalRecentRounds": "{{count}} vòng gần nhất",
+            "chartDescriptions": {
+                "status": "Sức khỏe luồng chấm bài qua số bài nộp ở từng trạng thái.",
+                "provider": "Độ ổn định provider AI qua tổng số vòng chấm và số vòng phải fallback.",
+                "issues": "Lỗi sinh viên thường gặp để ưu tiên cải thiện bài tập và hướng dẫn."
+            },
+            "emptyCharts": {
+                "status": "Chưa có dữ liệu trạng thái bài nộp cho bộ lọc hiện tại.",
+                "provider": "Chưa có dữ liệu provider hoặc fallback cho bộ lọc hiện tại.",
+                "issues": "Chưa có dữ liệu loại lỗi phổ biến cho bộ lọc hiện tại."
+            },
+            "chart": {
+                "count": "{{count}} mục",
+                "rounds": "{{count}} vòng",
+                "fallbackRounds": "{{count}} fallback",
+                "occurrences": "{{count}} lượt",
+                "roundLegend": "Tổng vòng chấm",
+                "fallbackLegend": "Vòng fallback"
+            },
+            "sources": {
+                "manual": "Manual",
+                "ai_generated": "AI-generated"
+            },
+            "filters": {
+                "from": "Từ ngày",
+                "to": "Đến ngày",
+                "apply": "Lọc",
+                "reset": "Đặt lại",
+                "allSubmissionStatuses": "Tất cả trạng thái bài nộp",
+                "allRoundStatuses": "Tất cả trạng thái vòng",
+                "allSources": "Tất cả nguồn bài tập",
+                "provider": "Provider",
+                "allFallback": "Tất cả fallback",
+                "fallbackOnly": "Chỉ fallback",
+                "noFallback": "Không fallback",
+                "exerciseId": "Mã bài tập",
+                "studentId": "Mã sinh viên"
+            },
+            "kpis": {
+                "totalSubmissions": "Bài nộp",
+                "totalStudents": "{{count}} sinh viên",
+                "totalRounds": "Vòng chấm",
+                "totalExercises": "{{count}} bài tập",
+                "averageScore": "Điểm trung bình",
+                "gradedRounds": "{{count}} vòng đã chấm",
+                "completionRate": "Tỷ lệ hoàn tất",
+                "failedRounds": "{{count}} vòng lỗi",
+                "fallbackRate": "Tỷ lệ fallback",
+                "processingRounds": "{{count}} vòng đang xử lý",
+                "failureRate": "Tỷ lệ lỗi",
+                "readOnly": "Dữ liệu chỉ đọc"
+            },
+            "sections": {
+                "statusBreakdown": "Phân bố trạng thái",
+                "providerBreakdown": "Provider và fallback",
+                "topIssueTypes": "Loại lỗi phổ biến",
+                "recentRounds": "Vòng chấm gần đây"
+            }
+        },
+        "knowledgeBase": {
+            "title": "Quản lý kiến thức cơ sở",
+            "subtitle": "Quản lý dữ liệu kiến thức cho Chatbot",
+            "loading": "Đang tải dữ liệu kiến thức...",
+            "loadError": "Không thể tải dữ liệu kiến thức.",
+            "create": "Tạo mục kiến thức mới",
+            "kbTitle": "Tiêu đề",
+            "kbCategory": "Phân loại",
+            "kbSource": "Nguồn thông tin",
+            "kbContent": "Nội dung chi tiết",
+            "status": {
+                "active": "Hiển thị",
+                "inactive": "Ẩn"
+            },
+            "delete": "Xóa",
+            "confirmDelete": "Bạn có chắc muốn xóa mục kiến thức này?",
+            "deleteError": "Không thể xóa mục kiến thức.",
+            "edit": "Sửa học liệu",
+            "detail": "Chi tiết học liệu",
+            "scope": "Phạm vi",
+            "approvalStatus": "Kiểm duyệt",
+            "createdBy": "Nguồn / Tác giả",
+            "reviewNote": "Lý do từ chối",
+            "reject": "Từ chối học liệu",
+            "confirmHide": "Bạn có chắc muốn ẩn mục kiến thức này?",
+            "confirmShow": "Bạn có chắc muốn hiển thị mục kiến thức này?",
+            "toggleError": "Không thể cập nhật trạng thái hiển thị.",
+            "confirmApprove": "Bạn có chắc muốn duyệt mục kiến thức này?",
+            "approveError": "Không thể duyệt mục kiến thức.",
+            "rejectError": "Không thể từ chối mục kiến thức.",
+            "filter": {
+                "all": "Tất cả",
+                "pending": "Chờ duyệt",
+                "approved": "Đã duyệt"
+            },
+            "form": {
+                "missingRequired": "Vui lòng nhập tiêu đề và nội dung.",
+                "createError": "Không thể tạo mục kiến thức.",
+                "updateError": "Không thể cập nhật mục kiến thức."
+            }
+        },
+        "skills": {
+            "title": "Quản lý kỹ năng",
+            "subtitle": "Quản lý danh sách kỹ năng của người dùng",
+            "loading": "Đang tải danh sách kỹ năng...",
+            "loadError": "Không thể tải danh sách kỹ năng.",
+            "create": "Tạo kỹ năng mới",
+            "skillName": "Tên kỹ năng",
+            "skillDescription": "Mô tả kỹ năng",
+            "skillCategory": "Danh mục",
+            "delete": "Xóa",
+            "confirmDelete": "Bạn có chắc muốn xóa kỹ năng này?",
+            "deleteError": "Không thể xóa kỹ năng.",
+            "status": {
+                "active": "Hiển thị",
+                "inactive": "Ẩn"
+            }
+        }
+    },
+    "student": {
+        "sidebar": {
+            "chatbot": "Chat hỏi đáp kiến thức",
+            "chatbotDemo": "Chat hỏi đáp demo",
+            "title": "Không gian học tập",
+            "practice": "Môi trường thực hành",
+            "exercises": "Danh sách bài tập",
+            "submissions": "Lịch sử nộp bài"
+        },
+        "chatbot": {
+            "title": "Chat hỏi đáp kiến thức",
+            "subtitle": "Hỏi đáp lý thuyết cơ sở dữ liệu dựa trên kho học liệu.",
+            "messages": "Tin nhắn chatbot",
+            "emptyTitle": "Đặt câu hỏi về ERD, chuẩn hóa hoặc khóa",
+            "emptyBody": "Chatbot sẽ truy xuất tài liệu APPROVED và trả lời ngắn gọn theo ngữ cảnh tìm được.",
+            "placeholder": "Nhập câu hỏi, ví dụ: 1NF là gì?",
+            "send": "Gửi",
+            "sending": "Đang gửi...",
+            "loading": "Đang truy xuất kiến thức và tạo câu trả lời...",
+            "clear": "Xóa chat",
+            "newChat": "Chat mới",
+            "history": "Lịch sử",
+            "historyLoading": "Đang tải lịch sử hội thoại...",
+            "historyError": "Không thể tải lịch sử hội thoại.",
+            "noHistory": "Chưa có hội thoại nào.",
+            "untitled": "Hội thoại chưa đặt tên",
+            "noPreview": "Chưa có tin nhắn",
+            "openingConversation": "Đang mở hội thoại...",
+            "openConversationError": "Không thể mở hội thoại này.",
+            "sources": "Nguồn đã truy xuất",
+            "noSources": "Chưa có nguồn. Hãy gửi một câu hỏi để xem tài liệu liên quan.",
+            "providerLabel": "Provider",
+            "providerUnknown": "Chưa xác định",
+            "sourcesLabel": "Sources",
+            "error": "Không thể gửi câu hỏi lúc này. Vui lòng kiểm tra đăng nhập và thử lại sau.",
+            "rateLimitError": "Bạn đang gửi câu hỏi quá nhanh. Vui lòng chờ một phút rồi thử lại."
+        },
+        "workspacePage": {
+            "title": "Workspace: {{title}}",
+            "loadingTitle": "Đang tải workspace...",
+            "loading": "Đang tải workspace...",
+            "notFoundTitle": "Không tìm thấy workspace",
+            "notFound": "Không tìm thấy submission.",
+            "exit": "Thoát",
+            "saveDraft": "Lưu nháp",
+            "saving": "Đang lưu...",
+            "submit": "Nộp bài",
+            "submitting": "Đang nộp...",
+            "editAgain": "Sửa bài",
+            "confirmSubmit": "Bạn có chắc chắn muốn nộp bài? Sau khi nộp, workspace sẽ bị khóa theo rule hiện tại.",
+            "readOnly": "Submission này đã nộp hoặc đang được chấm. Bạn chỉ có thể xem workspace theo rule hiện tại.",
+            "noDescription": "Chưa có mô tả chi tiết.",
+            "messages": {
+                "saveSuccess": "Lưu nháp thành công.",
+                "submitSuccess": "Đã nộp bài. Hệ thống đang chấm và sẽ hiển thị kết quả khi hoàn tất.",
+                "reopenSuccess": "Workspace đã được mở lại. Bạn có thể chỉnh sửa và nộp vòng tiếp theo."
+            },
+            "errors": {
+                "missingSubmissionId": "Thiếu submissionId.",
+                "invalidSubmissionId": "submissionId không hợp lệ.",
+                "loadWorkspace": "Không tải được workspace: {{message}}",
+                "saveDraft": "Không lưu được bản nháp.",
+                "reopen": "Không mở lại được workspace.",
+                "submit": "Không nộp được bài.",
+                "polling": "Không cập nhật được trạng thái chấm bài."
+            },
+            "fields": {
+                "exercise": "Đề bài",
+                "source": "Nguồn",
+                "description": "Mô tả"
+            },
+            "rounds": {
+                "counter": "Lượt góp ý {{used}}/{{max}}",
+                "current": "Vòng hiện tại",
+                "currentStatus": "Trạng thái vòng hiện tại",
+                "history": "Lịch sử feedback",
+                "historyHelp": "Mở từng vòng để xem lại provider, model và gợi ý đã lưu.",
+                "round": "Vòng",
+                "roundWithMax": "Vòng {{round}}/{{max}}",
+                "latestFeedback": "Feedback mới nhất",
+                "submittedAt": "Thời gian nộp",
+                "gradedAt": "Thời gian chấm",
+                "noRoundDetails": "Vòng này chưa có chi tiết feedback.",
+                "exhausted": "Bạn đã dùng hết 3 lượt góp ý. Workspace hiện chỉ có thể xem lại."
+            },
+            "evaluation": {
+                "title": "Kết quả đánh giá",
+                "providerLabel": "Đánh giá {{provider}}",
+                "providerFallbackLabel": "Đánh giá {{provider}} fallback từ {{fallbackFrom}}",
+                "providerUnknown": "Chưa xác định provider",
+                "model": "Model",
+                "status": "Trạng thái",
+                "score": "Điểm tổng quan",
+                "evaluatedAt": "Thời gian chấm",
+                "details": "Lỗi/Gợi ý",
+                "type": "Loại",
+                "description": "Mô tả",
+                "location": "Vị trí",
+                "processing": "Bài nộp đang được xử lý. Kết quả sẽ hiển thị khi trạng thái là GRADED.",
+                "processingWithPrevious": "Vòng hiện tại đang được xử lý. Feedback mới nhất bên dưới là vòng đã chấm gần nhất.",
+                "failed": "Quá trình chấm bài thất bại. Vui lòng thử lại sau hoặc liên hệ giảng viên nếu lỗi tiếp tục xảy ra.",
+                "failedCanRevise": "Quá trình chấm vòng hiện tại thất bại. Bạn vẫn còn lượt, hãy bấm Sửa bài để chỉnh sửa và nộp vòng tiếp theo.",
+                "failedNoRounds": "Quá trình chấm vòng hiện tại thất bại và bạn đã hết lượt feedback.",
+                "polling": "Đang tự động kiểm tra mỗi {{seconds}} giây.",
+                "pollTimeout": "Quá trình chấm đang lâu hơn bình thường. Bạn có thể reload trang sau ít phút để xem kết quả.",
+                "noDetails": "Chưa có chi tiết đánh giá.",
+                "noGradedFeedback": "Chưa có feedback nào được chấm thành công cho submission này."
+            }
+        },
+        "workspace": {
+            "tabs": {
+                "manage": "Entity/Relationship"
+            },
+            "actions": {
+                "addEntity": "+ Entity",
+                "addRelationship": "+ Relationship",
+                "fitView": "Fit View",
+                "edit": "Sửa",
+                "delete": "Xóa",
+                "close": "Đóng",
+                "cancel": "Hủy"
+            },
+            "locked": "Submission không ở trạng thái DRAFT nên workspace chỉ được xem.",
+            "emptyCanvas": "Chưa có diagramData. Hãy thêm Entity đầu tiên hoặc mở tab JSON để import diagramData hợp lệ.",
+            "canvasHelp": "Kéo node để đổi vị trí. Kéo từ handle bên phải sang handle bên trái để tạo relationship. Double click node/edge để sửa.",
+            "entities": "Entities",
+            "relationships": "Relationships",
+            "noEntities": "Chưa có entity nào.",
+            "noRelationships": "Chưa có relationship nào.",
+            "noAttributes": "Chưa có thuộc tính.",
+            "notices": {
+                "entityAdded": "Đã thêm entity mới.",
+                "entityUpdated": "Đã cập nhật entity.",
+                "entityDeleted": "Đã xóa entity và relationship liên quan.",
+                "entityDeletedFromCanvas": "Đã xóa entity trên canvas.",
+                "relationshipAdded": "Đã thêm relationship mới.",
+                "relationshipUpdated": "Đã cập nhật relationship.",
+                "relationshipDeleted": "Đã xóa relationship.",
+                "relationshipDuplicate": "Relationship cùng tên và cùng cặp entity đã tồn tại.",
+                "relationshipExists": "Relationship giữa hai entity này đã tồn tại.",
+                "jsonApplied": "Đã cập nhật diagramData từ JSON.",
+                "workspaceReset": "Đã xóa nội dung workspace hiện tại."
+            },
+            "json": {
+                "apply": "Áp dụng JSON",
+                "reset": "Tạo rỗng",
+                "invalid": "JSON không hợp lệ."
+            },
+            "entity": {
+                "createTitle": "Thêm Entity",
+                "editTitle": "Sửa Entity",
+                "name": "Tên Entity",
+                "attributes": "Thuộc tính",
+                "attributeNamePlaceholder": "VD: studentId",
+                "attributeTypePlaceholder": "VD: BIGINT",
+                "attributeNotePlaceholder": "Ghi chú",
+                "addAttribute": "Thêm thuộc tính",
+                "bulkAttributes": "Paste nhanh thuộc tính",
+                "bulkPlaceholder": "Mỗi dòng là một thuộc tính. Dùng * hoặc (PK) để đánh dấu khóa chính.\nVD: * studentId: BIGINT\nfullName: VARCHAR",
+                "applyBulk": "Thêm từ paste",
+                "note": "Ghi chú",
+                "save": "Lưu Entity",
+                "validation": {
+                    "nameRequired": "Vui lòng nhập tên entity.",
+                    "bulkEmpty": "Không có thuộc tính hợp lệ để thêm."
+                }
+            },
+            "relationship": {
+                "createTitle": "Thêm Relationship",
+                "editTitle": "Sửa Relationship",
+                "needsTwoEntities": "Cần ít nhất 2 entity để tạo relationship.",
+                "name": "Tên Relationship",
+                "fromEntity": "Từ Entity",
+                "toEntity": "Đến Entity",
+                "selectEntity": "Chọn entity",
+                "cardinality": "Cardinality",
+                "cardinalityHelp": {
+                    "1 - 1": "Một bản ghi mỗi bên",
+                    "1 - N": "Bên trái một, bên phải nhiều",
+                    "N - 1": "Bên trái nhiều, bên phải một",
+                    "N - N": "Nhiều-nhiều, thường cần bảng trung gian"
+                },
+                "note": "Ghi chú",
+                "notePlaceholder": "VD: Cần bảng trung gian nếu N - N",
+                "save": "Lưu Relationship",
+                "validation": {
+                    "nameRequired": "Vui lòng nhập tên relationship.",
+                    "entitiesRequired": "Vui lòng chọn đầy đủ hai entity.",
+                    "distinctEntities": "Hai đầu relationship không được trùng nhau."
+                }
+            }
+        }
+    },
+    "viewers": {
+        "technicalData": "Dữ liệu kỹ thuật",
+        "scenario": {
+            "invalid": "Dữ liệu kịch bản không đúng định dạng. Hệ thống vẫn giữ dữ liệu kỹ thuật bên dưới để kiểm tra.",
+            "empty": "Chưa có dữ liệu kịch bản.",
+            "difficulty": "Độ khó",
+            "requirementCount": "Yêu cầu",
+            "constraintCount": "Ràng buộc",
+            "entityCount": "Entity gợi ý",
+            "context": "Bối cảnh nghiệp vụ",
+            "requirements": "Yêu cầu thiết kế",
+            "constraints": "Ràng buộc nghiệp vụ",
+            "noRequirements": "Chưa có yêu cầu cụ thể.",
+            "noConstraints": "Chưa có ràng buộc cụ thể."
+        },
+        "erd": {
+            "invalid": "Dữ liệu sơ đồ chưa đúng định dạng nên chưa thể hiển thị đầy đủ. Vui lòng xem dữ liệu kỹ thuật bên dưới.",
+            "empty": "Chưa có sơ đồ để hiển thị.",
+            "entities": "Entities",
+            "relationships": "Relationships"
+        }
+    },
+    "instructor":{
+        "sidebar":{
+            "title": "Bảng điều khiển",
+            "knowledgeBase": "Kiến thức học thuật",
+            "practiceInsights": "Thống kê"
+        },
+        "knowledgeBase": {
+            "subtitle": "Đóng góp và tra cứu tài liệu học thuật",
+            "loadError": "Không thể tải dữ liệu kiến thức.",
+            "confirmSubmit": "Bạn có chắc muốn gửi tài liệu này cho Admin duyệt? Sau khi gửi sẽ không thể chỉnh sửa.",
+            "submitError": "Không thể gửi duyệt mục kiến thức.",
+            "tabs": {
+                "my": "Kiến thức của tôi",
+                "system": "Kiến thức hệ thống (Đã duyệt)"
+            }
+        },
+        "practiceInsights": {
+            "title": "Thống kê",
+            "subtitle": "Tổng quan ẩn danh về bài nộp, vòng chấm và lỗi phổ biến theo từng bài tập.",
+            "selectorSubtitle": "Chọn một bài tập để xem các chỉ số phục vụ điều chỉnh đề bài và hướng dẫn.",
+            "exerciseSelect": "Chọn bài tập",
+            "exercisePlaceholder": "Chọn bài tập để xem thống kê",
+            "loadExercisesError": "Không thể tải danh sách bài tập.",
+            "emptyExercises": "Chưa có bài tập nào để thống kê.",
+            "chooseExercise": "Chọn một bài tập để xem KPI, biểu đồ lỗi thường gặp và bảng bài nộp ẩn danh.",
+            "privacyNote": "Trang này chỉ dùng dữ liệu tổng hợp/ẩn danh; không hiển thị tên, email sinh viên, diagram raw, lỗi provider raw hoặc dead-letter payload.",
+            "viewExerciseDetail": "Mở chi tiết bài tập",
+            "sections": {
+                "scopeBreakdown": "Phạm vi bài nộp",
+                "statusBreakdown": "Trạng thái chấm bài"
+            },
+            "chartDescriptions": {
+                "scope": "So sánh bài nộp trực tiếp với bài nộp từ bài AI phát sinh để giảng viên biết mức độ lan tỏa của đề.",
+                "status": "Tình trạng các bài đã chấm, lỗi hoặc đang xử lý trong phạm vi đang chọn.",
+                "issues": "Những loại lỗi sinh viên gặp nhiều nhất, dùng để điều chỉnh đề bài hoặc bổ sung hướng dẫn."
+            },
+            "emptyCharts": {
+                "scope": "Chưa có dữ liệu phạm vi bài nộp cho bài tập này.",
+                "status": "Chưa có dữ liệu trạng thái chấm bài cho bài tập này.",
+                "issues": "Chưa có dữ liệu loại lỗi phổ biến cho bài tập này."
+            },
+            "chart": {
+                "submissions": "{{count}} bài nộp",
+                "occurrences": "{{count}} lượt"
+            }
+        },
+        "exerciseInsights": {
+            "loadError": "Không thể tải thống kê bài tập.",
+            "loading": "Đang tải thống kê thực hành...",
+            "empty": "Chưa có bài nộp nào trong phạm vi hiện tại.",
+            "emptyPanel": "Chưa có dữ liệu để hiển thị.",
+            "refresh": "Tải lại",
+            "unknown": "Chưa xác định",
+            "roundNumber": "Vòng {{number}}",
+            "affectedSubmissions": "{{count}} bài nộp bị ảnh hưởng",
+            "anonymizedHint": "Bảng này chỉ hiển thị mã bài nộp và trạng thái tổng hợp, không hiển thị tên hoặc email sinh viên.",
+            "totalSubmissions": "{{count}} bài nộp",
+            "scopes": {
+                "all": "Tất cả phạm vi",
+                "direct": "Trực tiếp",
+                "derived_ai": "Sinh từ AI"
+            },
+            "filters": {
+                "title": "Bộ lọc thống kê",
+                "subtitle": "Lọc theo phạm vi, trạng thái vòng chấm, provider và fallback.",
+                "from": "Từ ngày",
+                "to": "Đến ngày",
+                "apply": "Lọc",
+                "reset": "Đặt lại",
+                "allSubmissionStatuses": "Tất cả trạng thái bài nộp",
+                "allRoundStatuses": "Tất cả trạng thái vòng",
+                "allRounds": "Tất cả vòng",
+                "provider": "Provider",
+                "allFallback": "Tất cả fallback",
+                "fallbackOnly": "Chỉ fallback",
+                "noFallback": "Không fallback"
+            },
+            "exercise": {
+                "code": "Mã bài tập",
+                "title": "Tiêu đề",
+                "source": "Nguồn",
+                "scope": "Phạm vi đang xem",
+                "derivedAiExerciseCount": "Bài AI phát sinh",
+                "includedSubmissionCount": "Bài nộp trong phạm vi"
+            },
+            "kpis": {
+                "directSubmissions": "Bài nộp trực tiếp",
+                "derivedSubmissions": "{{count}} bài nộp từ AI",
+                "participants": "Người tham gia",
+                "includedSubmissions": "{{count}} bài nộp",
+                "graded": "Đã chấm",
+                "failedProcessing": "{{failed}} lỗi, {{processing}} đang xử lý",
+                "averageScore": "Điểm trung bình",
+                "totalRounds": "{{count}} vòng chấm",
+                "fallbackRate": "Tỷ lệ fallback",
+                "derivedExercises": "{{count}} bài AI phát sinh"
+            },
+            "sections": {
+                "topIssueTypes": "Loại lỗi phổ biến",
+                "anonymizedSubmissions": "Tóm tắt bài nộp ẩn danh"
+            },
+            "columns": {
+                "submission": "Bài nộp",
+                "scope": "Phạm vi",
+                "status": "Trạng thái",
+                "roundsUsed": "Số vòng",
+                "latestRound": "Vòng mới nhất",
+                "latestScore": "Điểm mới nhất",
+                "time": "Nộp / Chấm"
+            }
+        }
+    }
+}

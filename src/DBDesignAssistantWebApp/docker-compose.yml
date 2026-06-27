@@ -1,0 +1,59 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: datn-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  postgres-pgvector:
+    image: pgvector/pgvector:pg16
+    container_name: datn-postgres-pgvector
+    environment:
+      POSTGRES_DB: tempdb
+      POSTGRES_USER: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - datn_postgres_pgvector_data:/var/lib/postgresql/data
+      - ./docker/postgres/init-pgvector.sql:/docker-entrypoint-initdb.d/01-init-pgvector.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d tempdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  ai-worker:
+    build:
+      context: ./ai-worker
+    container_name: datn-ai-worker
+    environment:
+      AI_WORKER_DATABASE_URL: postgresql://postgres@postgres-pgvector:5432/tempdb
+      AI_WORKER_REDIS_HOST: redis
+      AI_WORKER_REDIS_PORT: 6379
+      AI_WORKER_EVALUATION_QUEUE_NAME: ${AI_WORKER_EVALUATION_QUEUE_NAME:-evaluation:jobs}
+      AI_WORKER_EVALUATION_DEAD_LETTER_QUEUE_NAME: ${AI_WORKER_EVALUATION_DEAD_LETTER_QUEUE_NAME:-evaluation:jobs:dead-letter}
+      AI_WORKER_EVALUATION_MAX_RETRIES: ${AI_WORKER_EVALUATION_MAX_RETRIES:-3}
+      AI_WORKER_REDIS_WORKER_ENABLED: ${AI_WORKER_REDIS_WORKER_ENABLED:-true}
+      AI_WORKER_EVALUATION_PROVIDER: ${AI_WORKER_EVALUATION_PROVIDER:-MOCK}
+      AI_WORKER_EVALUATION_PROVIDER_TIMEOUT_SECONDS: ${AI_WORKER_EVALUATION_PROVIDER_TIMEOUT_SECONDS:-30}
+      AI_WORKER_GEMINI_API_KEY: ${AI_WORKER_GEMINI_API_KEY:-}
+      AI_WORKER_GEMINI_MODEL: ${AI_WORKER_GEMINI_MODEL:-gemini-2.0-flash}
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres-pgvector:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  datn_postgres_pgvector_data:

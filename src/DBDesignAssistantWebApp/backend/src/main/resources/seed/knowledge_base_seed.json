@@ -1,0 +1,92 @@
+[
+  {
+    "kbTitle": "ERD - Tổng quan và vai trò",
+    "kbCategory": "Entity Relationship Diagram",
+    "kbSource": "Chương 2 - Cơ sở lý thuyết, tài liệu [1]",
+    "kbContent": "Mô hình thực thể kết hợp (ERD - Entity Relationship Diagram) được giới thiệu bởi Peter Chen vào năm 1976. Mục đích chính của mô hình này là cung cấp một bản thiết kế ở mức khái niệm, giúp thu hẹp khoảng cách ngữ nghĩa giữa thế giới thực và cấu trúc lưu trữ của hệ thống. Mô hình cung cấp một khung nhìn tổng quan và trực quan về cấu trúc dữ liệu ở mức khái niệm."
+  },
+  {
+    "kbTitle": "ERD - Thực thể và thuộc tính",
+    "kbCategory": "Entity Relationship Diagram",
+    "kbSource": "Chương 2 - Cơ sở lý thuyết, tài liệu [1]",
+    "kbContent": "Thực thể (Entity) đại diện cho một đối tượng, sự vật hoặc sự kiện trong thế giới thực mà dữ liệu cần được thu thập. Tập hợp các thực thể cùng loại tạo thành một tập thực thể (Entity Set). Thuộc tính (Attribute) dùng để mô tả thực thể. Dựa trên cấu trúc, có thuộc tính đơn (simple), thuộc tính phức hợp (composite - có thể chia nhỏ), và thuộc tính đa trị (multivalued - chứa nhiều giá trị đối với một thực thể)."
+  },
+  {
+    "kbTitle": "ERD - Mối quan hệ, connectivity và cardinality",
+    "kbCategory": "Entity Relationship Diagram",
+    "kbSource": "Chương 2 - Cơ sở lý thuyết, tài liệu [1]",
+    "kbContent": "Mối quan hệ (Relationship) mô tả sự liên kết giữa các thực thể. Thuật ngữ 'kết nối' (Connectivity) phân loại mối quan hệ thành cấu trúc Một-Một (1:1), Một-Nhiều (1:N), hoặc Nhiều-Nhiều (M:N). 'Bản số' (Cardinality) xác định cụ thể số lượng tối thiểu và tối đa các thể hiện của một thực thể được phép liên kết với một thể hiện của thực thể đối diện, thường được biểu diễn dưới dạng khoảng (min, max)."
+  },
+  {
+    "kbTitle": "ERD - Ký pháp Chen, Crow's Foot và UML Class Diagram",
+    "kbCategory": "Entity Relationship Diagram",
+    "kbSource": "Chương 2 - Cơ sở lý thuyết, tài liệu [1]",
+    "kbContent": "Bên cạnh ký pháp Chen truyền thống, ngày nay các nhà thiết kế cũng ưu tiên sử dụng ký pháp Chân chim (Crow’s Foot) do khả năng thể hiện mạnh mẽ các yếu tố triển khai, hoặc biểu đồ lớp (Class Diagram) trong Ngôn ngữ Mô hình hóa Thống nhất (UML) để biểu diễn dữ liệu ở cả hai khía cạnh cấu trúc và hành vi."
+  },
+  {
+    "kbTitle": "Chuẩn hóa dữ liệu - Mục tiêu và vai trò",
+    "kbCategory": "Normalization",
+    "kbSource": "Chương 2 - Cơ sở lý thuyết, tài liệu [1]",
+    "kbContent": "Chuẩn hóa dữ liệu (Normalization) là quá trình gán các thuộc tính vào đúng thực thể nhằm giảm thiểu hoặc loại bỏ sự dư thừa dữ liệu (data redundancies), từ đó ngăn chặn các bất thường khi thêm, sửa, xóa dữ liệu (anomalies). Lý thuyết phụ thuộc hàm là cốt lõi để thực hiện chuẩn hóa."
+  },
+  {
+    "kbTitle": "Phụ thuộc hàm và các loại phụ thuộc",
+    "kbCategory": "Normalization",
+    "kbSource": "Chương 2 - Cơ sở lý thuyết, tài liệu [1]",
+    "kbContent": "Phụ thuộc hàm (Functional Dependency): Thuộc tính B phụ thuộc hàm vào thuộc tính A (ký hiệu A→B) nếu mỗi giá trị của A xác định chính xác một giá trị của B. Các loại phụ thuộc gồm: Phụ thuộc hàm đầy đủ (vào toàn bộ khóa phức hợp), Phụ thuộc hàm từng phần (vào một phần của khóa chính), và Phụ thuộc hàm bắc cầu (thuộc tính không khóa phụ thuộc vào một thuộc tính không khóa khác)."
+  },
+  {
+    "kbTitle": "Dạng chuẩn 1 (1NF)",
+    "kbCategory": "Normalization",
+    "kbSource": "Chương 2 - Cơ sở lý thuyết, tài liệu [1]",
+    "kbContent": "Một bảng đạt Dạng chuẩn 1 (1NF) khi tất cả các giá trị của thuộc tính là nguyên tố (atomic), không chứa các nhóm lặp lại (repeating groups) hay thuộc tính đa trị, và khóa chính đã được xác định rõ ràng."
+  },
+  {
+    "kbTitle": "Dạng chuẩn 2 (2NF)",
+    "kbCategory": "Normalization",
+    "kbSource": "Chương 2 - Cơ sở lý thuyết, tài liệu [1]",
+    "kbContent": "Một bảng đạt Dạng chuẩn 2 (2NF) khi nó đã ở 1NF và hoàn toàn không chứa phụ thuộc hàm từng phần. Nghĩa là mọi thuộc tính không khóa đều phụ thuộc hoàn toàn vào toàn bộ khóa chính của bảng."
+  },
+  {
+    "kbTitle": "Dạng chuẩn 3 (3NF)",
+    "kbCategory": "Normalization",
+    "kbSource": "Chương 2 - Cơ sở lý thuyết, tài liệu [1]",
+    "kbContent": "Một bảng đạt Dạng chuẩn 3 (3NF) khi nó đã ở 2NF và không chứa bất kỳ phụ thuộc hàm bắc cầu nào. Đối với các hệ thống giao dịch nghiệp vụ, 3NF thường là dạng chuẩn lý tưởng nhất cần đạt được để tối ưu hiệu suất và ngăn chặn dư thừa."
+  },
+  {
+    "kbTitle": "Dạng chuẩn Boyce-Codd (BCNF)",
+    "kbCategory": "Normalization",
+    "kbSource": "Chương 2 - Cơ sở lý thuyết, tài liệu [1]",
+    "kbContent": "Dạng chuẩn Boyce-Codd (BCNF) là một trường hợp đặc biệt và khắt khe hơn của 3NF. Một bảng đạt BCNF khi và chỉ khi mọi định thức (determinant) trong bảng đều là một khóa ứng viên (candidate key)."
+  },
+  {
+    "kbTitle": "Thiết kế mức khái niệm (Conceptual Design)",
+    "kbCategory": "Database Design",
+    "kbSource": "Chương 2 - Cơ sở lý thuyết, tài liệu [1]",
+    "kbContent": "Thiết kế mức khái niệm là quá trình mô hình hóa cấu trúc cơ sở dữ liệu sát với các đối tượng trong thế giới thực nhất, thường sử dụng ERD để tạo ra lược đồ khái niệm toàn cục. Ưu điểm lớn nhất của mô hình này là nó hoàn toàn độc lập với phần mềm (DBMS) và phần cứng."
+  },
+  {
+    "kbTitle": "Thiết kế mức logic (Logical Design)",
+    "kbCategory": "Database Design",
+    "kbSource": "Chương 2 - Cơ sở lý thuyết, tài liệu [1]",
+    "kbContent": "Thiết kế mức logic là giai đoạn mô hình khái niệm được ánh xạ sang các cấu trúc đặc thù của một hệ quản trị CSDL được chọn (ví dụ: mô hình dữ liệu quan hệ). Mức thiết kế này bị phụ thuộc vào phần mềm (như SQL, MySQL, PostgreSQL) nhưng vẫn độc lập với phần cứng vật lý."
+  },
+  {
+    "kbTitle": "Ánh xạ ERD sang mô hình quan hệ",
+    "kbCategory": "Database Design",
+    "kbSource": "Chương 2 - Cơ sở lý thuyết, tài liệu [1]",
+    "kbContent": "Trong quá trình ánh xạ, mỗi thực thể mạnh trở thành một bảng, và thuộc tính trở thành cột. Đối với mối quan hệ 1:N, khóa chính của bảng bên '1' bắt buộc phải được đưa vào bảng bên 'N' (Nhiều) để làm khóa ngoại (foreign key)."
+  },
+  {
+    "kbTitle": "Toàn vẹn thực thể (Entity Integrity)",
+    "kbCategory": "Database Integrity",
+    "kbSource": "Chương 2 - Cơ sở lý thuyết, tài liệu [1]",
+    "kbContent": "Toàn vẹn thực thể (Entity Integrity) là quy tắc bắt buộc trong cơ sở dữ liệu quan hệ: Khóa chính của mỗi bảng phải là duy nhất và không có thành phần nào của khóa chính được phép chứa giá trị rỗng (thường ký hiệu là Null)."
+  },
+  {
+    "kbTitle": "Toàn vẹn tham chiếu (Referential Integrity)",
+    "kbCategory": "Database Integrity",
+    "kbSource": "Chương 2 - Cơ sở lý thuyết, tài liệu [1]",
+    "kbContent": "Toàn vẹn tham chiếu (Referential Integrity) quy định rằng: Mọi giá trị của khóa ngoại phải khớp với một giá trị khóa chính đã tồn tại trong bảng được tham chiếu, hoặc nó phải hoàn toàn là giá trị rỗng (Null) nếu thiết kế cho phép."
+  }
+]
