@@ -56,4 +56,4 @@ Truy cập giao diện ứng dụng trên trình duyệt qua địa chỉ `http:
 - Sinh viên: `student@dbdesign.local`
 
 ---
-*Ghi chú: Nếu bạn muốn phát triển hoặc chạy từng dịch vụ (Frontend, Backend, AI Worker) một cách độc lập thay vì qua Docker, vui lòng xem hướng dẫn chi tiết bên trong các file `README.md` tại thư mục của từng dịch vụ đó.*
+*Ghi chú: Mỗi dịch vụ trong hệ thống (Frontend, Backend, AI Worker) đều có thể triển khai một cách độc lập thay vì qua Docker, vui lòng xem hướng dẫn chi tiết bên trong các file `README.md` tại thư mục của từng dịch vụ đó.*
