@@ -13,19 +13,26 @@
 3. Sau khi đánh giá hoàn tất và AI phân tách lỗi (nếu có), Worker kết nối trực tiếp hoặc gọi lại Backend để lưu kết quả vào CSDL PostgreSQL.
 
 ## Khởi chạy dự án
-Dịch vụ này được cấu hình để hoạt động tốt nhất thông qua Docker Compose ở môi trường root của dự án (`docker-compose up -d ai-worker`). 
 
-Tuy nhiên, nếu muốn chạy trên máy vật lý để theo dõi bug/debug thủ công, bạn tiến hành tại thư mục `ai-worker`:
+### Cách 1: Chạy bằng Docker (Khuyên dùng)
+Dịch vụ này được cấu hình để hoạt động mượt mà và ít phụ thuộc môi trường nhất thông qua Docker. Để khởi chạy (khi đang đứng ở thư mục gốc `DBDesignAssistantWebApp`):
 ```bash
-# 1. Tạo môi trường ảo (Khuyến khích)
+docker compose up --build -d ai-worker
+```
+
+### Cách 2: Chạy trực tiếp (Local - Development)
+Nếu bạn muốn theo dõi bug, sửa code AI trực tiếp hoặc debug thủ công, bạn tiến hành tại thư mục `ai-worker` theo các bước sau:
+```bash
+# 1. Tạo môi trường ảo bằng venv
 python -m venv venv
 
-# 2. Kích hoạt môi trường (trên Windows)
+# 2. Kích hoạt môi trường (Dành cho Windows)
 venv\Scripts\activate
+# Hoặc trên Linux/macOS: source venv/bin/activate
 
-# 3. Cài đặt các phụ thuộc
+# 3. Cài đặt các thư viện phụ thuộc
 pip install -r requirements.txt
 
-# 4. Chạy script chính
+# 4. Khởi chạy script Worker
 python main.py
 ```

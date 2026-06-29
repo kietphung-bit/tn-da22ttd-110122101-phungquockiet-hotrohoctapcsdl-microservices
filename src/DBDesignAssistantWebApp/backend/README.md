@@ -15,10 +15,25 @@ Máy chủ ứng dụng (Backend API) điều phối mọi hệ thống, làm tr
 - **Tự động đánh giá (Evaluation)**: Backend gửi thông tin JSON của biểu đồ (Job) thông qua Redis Queue để module FastAPI (AI Worker) bên ngoài tiếp nhận xử lý ngầm (tránh timeout cho máy chủ Backend), sau đó Backend có thể truy vấn DB để nhận lại đánh giá điểm hoàn thành.
 
 ## Khởi chạy dự án
-Yêu cầu đã chạy PostgreSQL và Redis (thường sẽ được chạy qua Docker ở thư mục bên ngoài).
+
+Bạn có thể chạy dự án thông qua Terminal local hoặc dùng Docker Container. Dù bằng cách nào, máy chủ cũng sẽ chạy trên địa chỉ `http://localhost:8080`.
+
+**Yêu cầu tiên quyết chung:** Cơ sở dữ liệu (PostgreSQL) và Redis phải đang hoạt động.
+
+### Cách 1: Chạy trực tiếp qua Maven Wrapper (Local)
+Dành cho môi trường phát triển (cần cài đặt Java 17+).
 
 ```bash
 # Tại thư mục backend
 .\mvnw.cmd spring-boot:run
 ```
-Hệ thống sẽ chạy trên `http://localhost:8080`.
+*(Nếu muốn chạy test nhanh, bạn có thể chạy: `.\mvnw.cmd clean test`)*
+
+### Cách 2: Chạy thông qua Docker (Production / Demo)
+Nếu máy bạn chưa cài đặt Java hoặc đang muốn demo toàn hệ thống một cách trơn tru, hãy sử dụng file Docker Compose nằm ở thư mục gốc `DBDesignAssistantWebApp`:
+
+```bash
+# Di chuyển ra thư mục DBDesignAssistantWebApp và chạy lệnh
+docker compose up --build -d backend
+```
+Cách này sẽ tạo ra một Container gói gọn cả hệ điều hành, JRE và thư viện biên dịch để phục vụ Backend, tự động kết nối với mạng nội bộ của Redis và Postgres (Docker DNS).

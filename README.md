@@ -1,9 +1,24 @@
-# tn-da22ttd-110122101-phungquockiet-hotrohoctapcsdl-microservices
+<h2 style="text-align: center;">ĐỒ ÁN TỐT NGHIỆP</h2>
 
-## 1. Mục tiêu (Goal)
+<h1 style="text-align: center;">XÂY DỰNG WEBSITE HỖ TRỢ HỌC TẬP VÀ ĐÁNH GIÁ TỰ ĐỘNG KỸ NĂNG THIẾT KẾ CƠ SỞ DỮ LIỆU</h1>
+
+---
+
+## Thông Tin Sinh Viên  
+
+- **Họ và Tên:** Phùng Quốc Kiệt  
+- **MSSV:** 110122101  
+- **Mã lớp:** DA22TTD  
+- **Email sinh viên:** [110122101@st.tvu.edu.vn](mailto:110122101@st.tvu.edu.vn)  
+- **Email cá nhân:** [kietphung0209@gmail.com](mailto:kietphung.study@gmail.com)  
+- **Số điện thoại:** 0399283015  
+
+---
+
+## 1. Tổng quan hệ thống
 Đồ án tập trung xây dựng một hệ thống website hỗ trợ sinh viên luyện tập và thiết kế cơ sở dữ liệu (vẽ biểu đồ thực thể liên kết - ERD). Hệ thống nổi bật khi tích hợp các công cụ tự động đánh giá (AI Scoring) dựa trên công nghệ Trí tuệ nhân tạo (LLM), cùng với tính năng Chatbot RAG giúp sinh viên dễ dàng tra cứu kiến thức về CSDL. Ngoài ra, hệ thống cung cấp công cụ hỗ trợ giảng viên (Instructor) để quản lý kho kiến thức, bài tập, theo dõi đánh giá; và công cụ cho quản trị viên (Admin) để quản lý và theo dõi tổng thể hệ thống.
 
-## 2. Kiến trúc (Architecture)
+## 2. Công nghệ sử dụng
 Dự án được xây dựng dựa trên kiến trúc microservices nhẹ kết hợp:
 - **Frontend**: Ứng dụng Web Single Page Application (SPA) xây dựng bằng React / Vite, TypeScript, TailwindCSS và sử dụng thư viện React Flow để hỗ trợ tính năng không gian làm việc vẽ ERD.
 - **Backend**: API server xây dựng bằng nền tảng Java Spring Boot, chịu trách nhiệm xử lý nghiệp vụ chính, bảo mật phân quyền (Spring Security), tích hợp sinh tự động bài tập từ AI, và cung cấp endpoint xử lý cho Chatbot.
@@ -11,46 +26,34 @@ Dự án được xây dựng dựa trên kiến trúc microservices nhẹ kết
 - **Message Queue & Cache**: Sử dụng Redis đóng vai trò là Message Queue (hàng đợi sự kiện) cho quá trình tương tác giữa Backend và AI Worker.
 - **Cơ sở dữ liệu**: Sử dụng PostgreSQL tích hợp tính năng mở rộng `pgvector`. Phục vụ lưu trữ dữ liệu truyền thống của hệ thống và cả vector embeddings cho tính toán độ tương đồng (áp dụng trong Chatbot RAG).
 
-## 3. Phần mềm cần thiết (Prerequisites)
-Để triển khai và chạy hệ thống, cần đảm bảo thiết bị đã được cài đặt:
-- **Docker & Docker Compose**: Khuyến khích sử dụng, là giải pháp tốt nhất để triển khai Database, Redis và AI Worker đồng bộ.
-- **Node.js (phiên bản 18 trở lên)**: Bắt buộc để khởi chạy và cài đặt thư viện Frontend.
-- **Java (phiên bản 17 trở lên)**: Bắt buộc để khởi chạy máy chủ Backend.
-- **Python (3.10+)**: Chỉ cần thiết nếu bạn muốn khởi chạy AI Worker hoàn toàn thủ công bên ngoài môi trường Docker.
+## 3. Phần mềm cần thiết
+Để triển khai và chạy hệ thống hoàn chỉnh một cách đơn giản nhất, bạn chỉ cần:
+- **Docker & Docker Compose**: Giải pháp tối ưu và được khuyến khích để triển khai toàn bộ ứng dụng (Frontend, Backend, DB, Redis, AI Worker) đồng bộ chỉ với 1 câu lệnh.
+- **Node.js (phiên bản 18+)**: Bắt buộc nếu muốn chạy trực tiếp Frontend không dùng Docker.
+- **Java (phiên bản 17+)**: Bắt buộc nếu muốn chạy trực tiếp Backend không dùng Docker.
+- **Python (3.10+)**: Bắt buộc nếu muốn chạy trực tiếp AI Worker không dùng Docker.
 
 ## 4. Cách thức chạy chương trình
-Toàn bộ mã nguồn ứng dụng nằm trong thư mục `src/DBDesignAssistantWebApp`. Để tối ưu hóa và ít gặp lỗi nhất, vui lòng chạy kết hợp Docker cho các dịch vụ nền và chạy trực tiếp Backend, Frontend thông qua Terminal:
+Toàn bộ mã nguồn ứng dụng nằm trong thư mục `src/DBDesignAssistantWebApp`. Cách chạy nhanh nhất và ít gặp lỗi nhất là sử dụng Docker cho toàn bộ hệ thống.
 
 ### Bước 1: Cấu hình biến môi trường
-Đi tới thư mục mã nguồn chính là `src/DBDesignAssistantWebApp`. Bạn hãy tạo mới hoặc sao chép các file có đuôi `.env.example` thành file `.env` tại các thư mục sau và cung cấp các khóa API cần thiết (ví dụ: Gemini API Key):
+Đi tới thư mục mã nguồn chính là `src/DBDesignAssistantWebApp`. Bạn hãy sao chép các file có đuôi `.env.example` thành file `.env` tại các thư mục sau và cung cấp các khóa API cần thiết (ví dụ: Gemini API Key):
 1. `src/DBDesignAssistantWebApp/.env`
 2. `src/DBDesignAssistantWebApp/ai-worker/.env`
 3. `src/DBDesignAssistantWebApp/backend/src/main/resources/.env`
 
-### Bước 2: Khởi động Database, Redis và AI Worker bằng Docker Compose
-Mở giao diện dòng lệnh (terminal) tại thư mục `src/DBDesignAssistantWebApp` và chạy lệnh sau để khởi động 3 dịch vụ ngầm là `postgres-pgvector`, `redis` và `ai-worker`.
+### Bước 2: Khởi động toàn bộ hệ thống bằng Docker Compose (Khuyên dùng)
+Mở giao diện dòng lệnh (terminal) tại thư mục `src/DBDesignAssistantWebApp` và chạy lệnh sau để build và khởi động toàn bộ 5 dịch vụ (`postgres-pgvector`, `redis`, `backend`, `frontend`, `ai-worker`):
 ```bash
-docker compose up -d postgres-pgvector redis ai-worker
+docker compose up --build -d
 ```
-*(Yêu cầu Docker Desktop đã được bật. Bạn có thể kiểm tra xem các container đã chạy ổn định chưa bằng lệnh `docker compose ps`)*
+*(Yêu cầu Docker Desktop đã được bật. Quá trình build lần đầu có thể mất vài phút. Bạn có thể kiểm tra xem các container đã chạy ổn định chưa bằng lệnh `docker compose ps`)*
 
-### Bước 3: Khởi động Backend (Spring Boot)
-Mở một terminal **mới** tại thư mục Backend (`src/DBDesignAssistantWebApp/backend`) và khởi chạy ứng dụng:
-```bash
-# Đối với Windows
-.\mvnw.cmd spring-boot:run
-```
-*(Backend sẽ tự động kết nối vào PostgreSQL qua cổng 5432, kết nối Redis qua cổng 6379, tự động di dời/tạo lược đồ DB và cung cấp dữ liệu khởi tạo (seed) ban đầu. Máy chủ mặc định chạy tại `http://localhost:8080`)*
-
-### Bước 4: Khởi động Frontend (React / Vite)
-Mở một terminal **mới** khác tại thư mục Frontend (`src/DBDesignAssistantWebApp/frontend`), tiến hành cài đặt phụ thuộc và khởi chạy:
-```bash
-npm install
-npm run dev
-```
+### Bước 3: Trải nghiệm ứng dụng
 Truy cập giao diện ứng dụng trên trình duyệt qua địa chỉ `http://localhost:5173`. Hệ thống đã có sẵn dữ liệu mẫu, bạn có thể thử trải nghiệm bằng các tài khoản sau (Mật khẩu chung là `Password123!`):
 - Admin: `admin@dbdesign.local`
 - Giảng viên: `instructor@dbdesign.local`
 - Sinh viên: `student@dbdesign.local`
 
 ---
+*Ghi chú: Nếu bạn muốn phát triển hoặc chạy từng dịch vụ (Frontend, Backend, AI Worker) một cách độc lập thay vì qua Docker, vui lòng xem hướng dẫn chi tiết bên trong các file `README.md` tại thư mục của từng dịch vụ đó.*
