@@ -1,4 +1,5 @@
 export { default as authApi } from "./authApi";
+export { default as accountApi } from "./accountApi";
 export { default as userApi } from "./userApi";
 export { default as exerciseApi } from "./exerciseApi";
 export { default as sampleSolutionApi } from "./sampleSolutionApi";

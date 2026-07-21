@@ -98,8 +98,25 @@ class PracticeInsightsServiceIntegrationTest {
 
         assertEquals(1L, adminResponse.getSummary().getTotalSubmissions());
         assertEquals(1L, adminResponse.getSummary().getTotalRounds());
+        assertEquals("SUBMITTED_AT", adminResponse.getTrendDateSource());
+        assertEquals(1L, adminResponse.getScoreDistribution().stream()
+                .filter(item -> "80-89".equals(item.getBucket()))
+                .findFirst()
+                .orElseThrow()
+                .getRoundCount());
+        assertEquals(1L, adminResponse.getRoundDistribution().stream()
+                .filter(item -> Integer.valueOf(1).equals(item.getRoundNumber()))
+                .findFirst()
+                .orElseThrow()
+                .getRoundCount());
+        assertFalse(adminResponse.getTrend().isEmpty());
         assertFalse(adminResponse.getTopIssueTypes().isEmpty());
         assertEquals("MISSING_PRIMARY_KEY", adminResponse.getTopIssueTypes().get(0).getErrorType());
+        assertEquals(1L, adminResponse.getTopIssueTypes().get(0).getAffectedRoundCount());
+        assertEquals("ATTRIBUTE_AND_KEY", adminResponse.getSkillAnalytics().get(0).getSkillCode());
+        assertEquals(1L, adminResponse.getSkillAnalytics().get(0).getIssueCount());
+        assertEquals(1L, adminResponse.getSkillAnalytics().get(0).getAffectedRoundCount());
+        assertEquals(1L, adminResponse.getSkillAnalytics().get(0).getAffectedSubmissionCount());
 
         InstructorExerciseInsightsResponse instructorResponse = practiceInsightsService.getInstructorExerciseInsights(
                 instructor.getUserId(),
@@ -117,7 +134,29 @@ class PracticeInsightsServiceIntegrationTest {
         assertEquals(1L, instructorResponse.getSummary().getDerivedSubmissionCount());
         assertEquals(1L, instructorResponse.getSummary().getParticipantCount());
         assertEquals(2L, instructorResponse.getSummary().getTotalRounds());
+        assertEquals("SUBMITTED_AT", instructorResponse.getTrendDateSource());
+        assertEquals(1L, instructorResponse.getScoreDistribution().stream()
+                .filter(item -> "65-79".equals(item.getBucket()))
+                .findFirst()
+                .orElseThrow()
+                .getRoundCount());
+        assertEquals(1L, instructorResponse.getScoreDistribution().stream()
+                .filter(item -> "80-89".equals(item.getBucket()))
+                .findFirst()
+                .orElseThrow()
+                .getRoundCount());
+        assertEquals(2L, instructorResponse.getRoundDistribution().stream()
+                .filter(item -> Integer.valueOf(1).equals(item.getRoundNumber()))
+                .findFirst()
+                .orElseThrow()
+                .getRoundCount());
+        assertFalse(instructorResponse.getTrend().isEmpty());
         assertEquals(2L, instructorResponse.getTopIssueTypes().get(0).getAffectedSubmissionCount());
+        assertEquals(2L, instructorResponse.getTopIssueTypes().get(0).getAffectedRoundCount());
+        assertEquals("ATTRIBUTE_AND_KEY", instructorResponse.getSkillAnalytics().get(0).getSkillCode());
+        assertEquals(2L, instructorResponse.getSkillAnalytics().get(0).getIssueCount());
+        assertEquals(2L, instructorResponse.getSkillAnalytics().get(0).getAffectedSubmissionCount());
+        assertEquals(2L, instructorResponse.getSkillAnalytics().get(0).getAffectedRoundCount());
         assertEquals(2, instructorResponse.getAnonymizedSubmissionSummaries().size());
     }
 

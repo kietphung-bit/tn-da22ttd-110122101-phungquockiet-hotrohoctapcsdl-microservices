@@ -2,17 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import StudentLayout from "../../components/layouts/StudentLayout";
+import ScenarioViewer from "../../components/viewers/ScenarioViewer";
 import { ErdWorkspaceEditor, normalizeDiagramData, touchDiagramData } from "../../features/erd-workspace";
 import type { ErdDiagramData } from "../../features/erd-workspace";
 import { useAuth } from "../../hooks/useAuth";
 import { studentExerciseApi } from "../../services/studentExerciseApi";
 import { studentSubmissionApi } from "../../services/studentSubmissionApi";
 import type { AIEvaluation, EvaluationRound, Exercise, Submission } from "../../types";
-
-const formatScenario = (scenarioData: Record<string, unknown> | null | undefined) => {
-    if (!scenarioData || Object.keys(scenarioData).length === 0) return null;
-    return JSON.stringify(scenarioData, null, 2);
-};
 
 const POLLING_INTERVAL_MS = 4000;
 const MAX_POLL_ATTEMPTS = 45;
@@ -35,6 +31,7 @@ const StudentWorkspacePage = () => {
     const [diagramData, setDiagramData] = useState<ErdDiagramData | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [reopening, setReopening] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
     const [successMsg, setSuccessMsg] = useState("");
@@ -123,7 +120,8 @@ const StudentWorkspacePage = () => {
         && (submission.submissionStatus === "GRADED" || submission.submissionStatus === "FAILED")
     );
     const roundsExhausted = roundsUsed >= maxRounds;
-    const scenarioText = formatScenario(exercise?.scenarioData);
+    const nextRound = Math.min(roundsUsed + 1, maxRounds);
+    const hasScenarioData = Boolean(exercise?.scenarioData && Object.keys(exercise.scenarioData).length > 0);
     const pollingTimedOut = pollingAttempts >= MAX_POLL_ATTEMPTS;
     const formatProviderLabel = useCallback((
         provider: string | null | undefined,
@@ -236,7 +234,7 @@ const StudentWorkspacePage = () => {
         if (!submission || !currentDiagramData || !canRequestRevision) return;
         setErrorMsg("");
         setSuccessMsg("");
-        setSaving(true);
+        setReopening(true);
         try {
             const updated = await studentSubmissionApi.updateDraft(submission.submissionId, {
                 diagramData: currentDiagramData,
@@ -247,12 +245,14 @@ const StudentWorkspacePage = () => {
                 evaluationRounds: submission.evaluationRounds,
             });
             setDiagramData(currentDiagramData);
+            setEvaluation(submission.evaluation ?? evaluation);
+            setPollingAttempts(0);
             setSuccessMsg(t("student.workspacePage.messages.reopenSuccess"));
         } catch (error: unknown) {
             const err = error as { response?: { data?: { message?: string } }, message?: string };
             setErrorMsg(err.response?.data?.message || err.message || t("student.workspacePage.errors.reopen"));
         } finally {
-            setSaving(false);
+            setReopening(false);
         }
     };
 
@@ -336,20 +336,23 @@ const StudentWorkspacePage = () => {
                     </div>
                 </div>
                 <div className="action-group">
-                    <button className="btn btn-outline" onClick={() => navigate("/student/exercises")} type="button">
+                    <button className="btn btn-outline" onClick={() => navigate("/student/exercise-generator")} type="button">
                         {t("student.workspacePage.exit")}
                     </button>
-                    <button className="btn btn-primary" onClick={handleSaveDraft} disabled={!canEdit || saving || submitting} type="button">
-                        {saving ? t("student.workspacePage.saving") : t("student.workspacePage.saveDraft")}
-                    </button>
-                    {canRequestRevision && (
-                        <button className="btn btn-outline" onClick={handleEditAgain} disabled={saving || submitting} type="button">
-                            {t("student.workspacePage.editAgain")}
+                    {canEdit ? (
+                        <>
+                            <button className="btn btn-primary" onClick={handleSaveDraft} disabled={saving || reopening || submitting} type="button">
+                                {saving ? t("student.workspacePage.saving") : t("student.workspacePage.saveDraft")}
+                            </button>
+                            <button className="btn btn-success" onClick={handleSubmit} disabled={saving || reopening || submitting} type="button">
+                                {submitting ? t("student.workspacePage.submitting") : t("student.workspacePage.submit")}
+                            </button>
+                        </>
+                    ) : canRequestRevision ? (
+                        <button className="btn btn-primary" onClick={handleEditAgain} disabled={saving || reopening || submitting} type="button">
+                            {reopening ? t("student.workspacePage.reopening") : t("student.workspacePage.editAgain")}
                         </button>
-                    )}
-                    <button className="btn btn-success" onClick={handleSubmit} disabled={!canEdit || saving || submitting} type="button">
-                        {submitting ? t("student.workspacePage.submitting") : t("student.workspacePage.submit")}
-                    </button>
+                    ) : null}
                 </div>
             </div>
 
@@ -357,42 +360,55 @@ const StudentWorkspacePage = () => {
             {successMsg && <div className="alert alert--success">{successMsg}</div>}
             {loadWarning && <div className="info-notice">{loadWarning}</div>}
             {!canEdit && (
-                <div className="alert">
-                    {roundsExhausted
-                        ? t("student.workspacePage.rounds.exhausted")
-                        : t("student.workspacePage.readOnly")}
+                <div
+                    className={canRequestRevision ? "info-notice" : "alert"}
+                    style={canRequestRevision ? { alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap" } : undefined}
+                >
+                    <p className="detail-field__text" style={{ margin: 0 }}>
+                        {canRequestRevision
+                            ? t("student.workspacePage.revisionAvailable", { nextRound, max: maxRounds })
+                            : roundsExhausted
+                                ? t("student.workspacePage.rounds.exhausted")
+                                : t("student.workspacePage.readOnly")}
+                    </p>
+                    {canRequestRevision && (
+                        <button className="btn btn-primary" onClick={handleEditAgain} disabled={saving || reopening || submitting} type="button">
+                            {reopening ? t("student.workspacePage.reopening") : t("student.workspacePage.editAgain")}
+                        </button>
+                    )}
                 </div>
             )}
 
             <section className="section-card" style={{ marginBottom: 16 }}>
                 <div className="detail-field-grid">
-                    <div className="detail-field">
+                    <div className="detail-field detail-field--full">
                         <span className="detail-field__label">{t("student.workspacePage.fields.exercise")}</span>
                         <span className="detail-field__value">{exercise?.exTitle ?? submission.exerciseTitle}</span>
-                    </div>
-                    <div className="detail-field">
-                        <span className="detail-field__label">{t("student.workspacePage.fields.source")}</span>
-                        <span className="detail-field__value">{exercise?.exerciseSource ?? "Submission"}</span>
                     </div>
                     <div className="detail-field detail-field--full">
                         <span className="detail-field__label">{t("student.workspacePage.fields.description")}</span>
                         <p className="detail-field__text">{exercise?.exDescription || t("student.workspacePage.noDescription")}</p>
                     </div>
-                    {scenarioText && (
-                        <div className="detail-field detail-field--full">
-                            <span className="detail-field__label">Scenario data</span>
-                            <pre className="json-viewer" style={{ maxHeight: 220 }}>{scenarioText}</pre>
-                        </div>
-                    )}
                 </div>
+                {hasScenarioData && (
+                    <ScenarioViewer
+                        data={exercise?.scenarioData}
+                        showSummary={false}
+                        showTechnicalData={false}
+                        showExtraFields={false}
+                        showEmptySections={false}
+                    />
+                )}
             </section>
 
             <section className="section-card">
                 <ErdWorkspaceEditor
-                    key={submission.submissionId}
+                    key={`${submission.submissionId}-${canEdit ? "editable" : "locked"}`}
                     initialData={diagramData}
                     isLocked={!canEdit}
                     onChange={setDiagramData}
+                    edgeLabelMode="endpoint-cardinality"
+                    relationshipCardinalityMode="per-end"
                 />
             </section>
 

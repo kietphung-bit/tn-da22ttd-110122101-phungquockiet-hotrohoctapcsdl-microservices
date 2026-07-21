@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../../hooks/useAuth";
 import AuthLayout from "../../../components/layouts/AuthLayout";
+import PasswordField from "../../../components/auth/PasswordField";
 
 const LoginPage = () => {
     const navigate = useNavigate();
@@ -64,17 +65,14 @@ const LoginPage = () => {
                         required
                     />
                 </div>
-                <div className="form-field">
-                    <label htmlFor="password">{t("login.password")}</label>
-                    <input
-                        id="password"
-                        className="input"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-                </div>
+                <PasswordField
+                    id="password"
+                    label={t("login.password")}
+                    value={password}
+                    onChange={setPassword}
+                    autoComplete="current-password"
+                    required
+                />
                 <button type="submit" className="btn btn-primary" disabled={loading}>
                     {loading ? t("login.submitting") : t("login.submit")}
                 </button>

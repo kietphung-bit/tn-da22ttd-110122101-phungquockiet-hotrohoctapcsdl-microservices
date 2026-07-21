@@ -14,6 +14,7 @@ import com.dbdesignassitant.backend.repositories.SubmissionRepository;
 import com.dbdesignassitant.backend.services.PracticeInsightsService;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -21,8 +22,15 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +42,16 @@ public class PracticeInsightsServiceImpl implements PracticeInsightsService {
     private static final int RECENT_ROUNDS_LIMIT = 20;
     private static final int TOP_ISSUES_LIMIT = 10;
     private static final int ANONYMIZED_SUBMISSIONS_LIMIT = 20;
+    private static final String TREND_DATE_SOURCE = "SUBMITTED_AT";
+    private static final List<String> SKILL_ORDER = List.of(
+            "ENTITY_MODELING",
+            "ATTRIBUTE_AND_KEY",
+            "RELATIONSHIP_MODELING",
+            "CARDINALITY",
+            "NORMALIZATION",
+            "INTEGRITY_CONSTRAINT",
+            "SCOPE_COMPLETENESS",
+            "OTHER");
 
     private final SubmissionRepository submissionRepository;
     private final EvaluationRoundRepository evaluationRoundRepository;
@@ -83,6 +101,27 @@ public class PracticeInsightsServiceImpl implements PracticeInsightsService {
         long failedRounds = longAt(roundSummary, 2);
         long processingRounds = longAt(roundSummary, 3);
         long fallbackRounds = longAt(roundSummary, 5);
+        List<Object[]> issueRows = evaluationRoundRepository.findAdminPracticeTopIssueTypes(
+                fromTime,
+                toTime,
+                statusName,
+                roundStatusName,
+                sourceName,
+                exerciseId,
+                studentId,
+                normalizedProvider,
+                fallbackUsed,
+                TOP_ISSUES_LIMIT);
+        List<Object[]> skillIssueRows = evaluationRoundRepository.findAdminPracticeIssueDetails(
+                fromTime,
+                toTime,
+                statusName,
+                roundStatusName,
+                sourceName,
+                exerciseId,
+                studentId,
+                normalizedProvider,
+                fallbackUsed);
 
         return AdminPracticeInsightsResponse.builder()
                 .summary(AdminPracticeInsightsResponse.Summary.builder()
@@ -118,7 +157,7 @@ public class PracticeInsightsServiceImpl implements PracticeInsightsService {
                         studentId,
                         normalizedProvider,
                         fallbackUsed)))
-                .topIssueTypes(mapIssueTypes(evaluationRoundRepository.findAdminPracticeTopIssueTypes(
+                .scoreDistribution(mapScoreDistribution(evaluationRoundRepository.findAdminPracticeScoreDistribution(
                         fromTime,
                         toTime,
                         statusName,
@@ -127,8 +166,30 @@ public class PracticeInsightsServiceImpl implements PracticeInsightsService {
                         exerciseId,
                         studentId,
                         normalizedProvider,
-                        fallbackUsed,
-                        TOP_ISSUES_LIMIT)))
+                        fallbackUsed)))
+                .roundDistribution(mapRoundDistribution(evaluationRoundRepository.findAdminPracticeRoundDistribution(
+                        fromTime,
+                        toTime,
+                        statusName,
+                        roundStatusName,
+                        sourceName,
+                        exerciseId,
+                        studentId,
+                        normalizedProvider,
+                        fallbackUsed)))
+                .trend(mapTrend(evaluationRoundRepository.findAdminPracticeTrend(
+                        fromTime,
+                        toTime,
+                        statusName,
+                        roundStatusName,
+                        sourceName,
+                        exerciseId,
+                        studentId,
+                        normalizedProvider,
+                        fallbackUsed)))
+                .trendDateSource(TREND_DATE_SOURCE)
+                .topIssueTypes(mapIssueTypes(issueRows))
+                .skillAnalytics(mapSkillAnalytics(skillIssueRows, totalRounds))
                 .recentRounds(mapAdminRecentRounds(evaluationRoundRepository.findAdminPracticeRecentRounds(
                         fromTime,
                         toTime,
@@ -203,6 +264,27 @@ public class PracticeInsightsServiceImpl implements PracticeInsightsService {
         long totalRounds = longAt(roundSummary, 0);
         long fallbackRounds = longAt(roundSummary, 5);
         long includedSubmissionCount = directSubmissionCount + derivedSubmissionCount;
+        List<Object[]> issueRows = evaluationRoundRepository.findInstructorPracticeTopIssueTypes(
+                exerciseId,
+                scopeName,
+                fromTime,
+                toTime,
+                submissionStatusName,
+                roundStatusName,
+                roundNumber,
+                normalizedProvider,
+                fallbackUsed,
+                TOP_ISSUES_LIMIT);
+        List<Object[]> skillIssueRows = evaluationRoundRepository.findInstructorPracticeIssueDetails(
+                exerciseId,
+                scopeName,
+                fromTime,
+                toTime,
+                submissionStatusName,
+                roundStatusName,
+                roundNumber,
+                normalizedProvider,
+                fallbackUsed);
 
         return InstructorExerciseInsightsResponse.builder()
                 .exercise(InstructorExerciseInsightsResponse.ExerciseSummary.builder()
@@ -230,7 +312,29 @@ public class PracticeInsightsServiceImpl implements PracticeInsightsService {
                         .averageScore(decimalAt(roundSummary, 4))
                         .fallbackRate(rate(fallbackRounds, totalRounds))
                         .build())
-                .topIssueTypes(mapIssueTypes(evaluationRoundRepository.findInstructorPracticeTopIssueTypes(
+                .scoreDistribution(mapScoreDistribution(
+                        evaluationRoundRepository.findInstructorPracticeScoreDistribution(
+                                exerciseId,
+                                scopeName,
+                                fromTime,
+                                toTime,
+                                submissionStatusName,
+                                roundStatusName,
+                                roundNumber,
+                                normalizedProvider,
+                                fallbackUsed)))
+                .roundDistribution(mapRoundDistribution(
+                        evaluationRoundRepository.findInstructorPracticeRoundDistribution(
+                                exerciseId,
+                                scopeName,
+                                fromTime,
+                                toTime,
+                                submissionStatusName,
+                                roundStatusName,
+                                roundNumber,
+                                normalizedProvider,
+                                fallbackUsed)))
+                .trend(mapTrend(evaluationRoundRepository.findInstructorPracticeTrend(
                         exerciseId,
                         scopeName,
                         fromTime,
@@ -239,8 +343,10 @@ public class PracticeInsightsServiceImpl implements PracticeInsightsService {
                         roundStatusName,
                         roundNumber,
                         normalizedProvider,
-                        fallbackUsed,
-                        TOP_ISSUES_LIMIT)))
+                        fallbackUsed)))
+                .trendDateSource(TREND_DATE_SOURCE)
+                .topIssueTypes(mapIssueTypes(issueRows))
+                .skillAnalytics(mapSkillAnalytics(skillIssueRows, totalRounds))
                 .anonymizedSubmissionSummaries(mapAnonymizedSubmissionSummaries(
                         submissionRepository.findInstructorAnonymizedSubmissionSummaries(
                                 exerciseId,
@@ -257,7 +363,7 @@ public class PracticeInsightsServiceImpl implements PracticeInsightsService {
     }
 
     private List<AdminPracticeInsightsResponse.StatusBreakdownItem> mapStatusBreakdown(List<Object[]> rows) {
-        return rows.stream()
+        return safeRows(rows).stream()
                 .map(row -> AdminPracticeInsightsResponse.StatusBreakdownItem.builder()
                         .status(submissionStatusAt(row, 0))
                         .count(longAt(row, 1))
@@ -266,7 +372,7 @@ public class PracticeInsightsServiceImpl implements PracticeInsightsService {
     }
 
     private List<AdminPracticeInsightsResponse.ProviderBreakdownItem> mapProviderBreakdown(List<Object[]> rows) {
-        return rows.stream()
+        return safeRows(rows).stream()
                 .map(row -> AdminPracticeInsightsResponse.ProviderBreakdownItem.builder()
                         .provider(stringAt(row, 0))
                         .model(stringAt(row, 1))
@@ -279,18 +385,215 @@ public class PracticeInsightsServiceImpl implements PracticeInsightsService {
                 .toList();
     }
 
-    private List<AdminPracticeInsightsResponse.IssueTypeItem> mapIssueTypes(List<Object[]> rows) {
-        return rows.stream()
-                .map(row -> AdminPracticeInsightsResponse.IssueTypeItem.builder()
-                        .errorType(stringAt(row, 0))
-                        .count(longAt(row, 1))
-                        .affectedSubmissionCount(longAt(row, 2))
+    private List<AdminPracticeInsightsResponse.ScoreDistributionItem> mapScoreDistribution(List<Object[]> rows) {
+        return safeRows(rows).stream()
+                .map(row -> AdminPracticeInsightsResponse.ScoreDistributionItem.builder()
+                        .bucket(stringAt(row, 0))
+                        .minScore(decimalAt(row, 1))
+                        .maxScore(decimalAt(row, 2))
+                        .roundCount(longAt(row, 3))
+                        .affectedSubmissionCount(longAt(row, 4))
+                        .averageScore(decimalAt(row, 5))
                         .build())
                 .toList();
     }
 
+    private List<AdminPracticeInsightsResponse.RoundDistributionItem> mapRoundDistribution(List<Object[]> rows) {
+        return safeRows(rows).stream()
+                .map(row -> AdminPracticeInsightsResponse.RoundDistributionItem.builder()
+                        .roundNumber(integerAt(row, 0))
+                        .roundCount(longAt(row, 1))
+                        .gradedCount(longAt(row, 2))
+                        .failedCount(longAt(row, 3))
+                        .processingCount(longAt(row, 4))
+                        .averageScore(decimalAt(row, 5))
+                        .build())
+                .toList();
+    }
+
+    private List<AdminPracticeInsightsResponse.TrendItem> mapTrend(List<Object[]> rows) {
+        return safeRows(rows).stream()
+                .map(row -> AdminPracticeInsightsResponse.TrendItem.builder()
+                        .date(localDateAt(row, 0))
+                        .submissionCount(longAt(row, 1))
+                        .gradedRoundCount(longAt(row, 2))
+                        .averageScore(decimalAt(row, 3))
+                        .build())
+                .toList();
+    }
+
+    private List<AdminPracticeInsightsResponse.IssueTypeItem> mapIssueTypes(List<Object[]> rows) {
+        return safeRows(rows).stream()
+                .map(row -> AdminPracticeInsightsResponse.IssueTypeItem.builder()
+                        .errorType(stringAt(row, 0))
+                        .count(longAt(row, 1))
+                        .affectedSubmissionCount(longAt(row, 2))
+                        .affectedRoundCount(longAt(row, 3))
+                        .build())
+                .toList();
+    }
+
+    private List<AdminPracticeInsightsResponse.SkillAnalyticsItem> mapSkillAnalytics(
+            List<Object[]> rows,
+            long totalRounds) {
+        Map<String, SkillAggregate> aggregates = new LinkedHashMap<>();
+        for (Object[] row : safeRows(rows)) {
+            String errorType = normalizeIssueType(stringAt(row, 2));
+            String skillCode = skillCodeForErrorType(errorType);
+            if (skillCode == null) {
+                continue;
+            }
+
+            SkillAggregate aggregate = aggregates.computeIfAbsent(skillCode, SkillAggregate::new);
+            aggregate.issueCount++;
+            long roundId = longAt(row, 0);
+            long submissionId = longAt(row, 1);
+            if (roundId > 0) {
+                aggregate.roundIds.add(roundId);
+            }
+            if (submissionId > 0) {
+                aggregate.submissionIds.add(submissionId);
+            }
+            aggregate.errorTypeCounts.merge(errorType, 1L, Long::sum);
+        }
+
+        List<SkillAggregate> sorted = new ArrayList<>(aggregates.values());
+        sorted.sort(Comparator
+                .comparingLong((SkillAggregate aggregate) -> aggregate.issueCount)
+                .reversed()
+                .thenComparingInt(aggregate -> skillOrder(aggregate.skillCode))
+                .thenComparing(aggregate -> aggregate.skillCode));
+
+        return sorted.stream()
+                .map(aggregate -> AdminPracticeInsightsResponse.SkillAnalyticsItem.builder()
+                        .skillCode(aggregate.skillCode)
+                        .skillName(skillNameForCode(aggregate.skillCode))
+                        .issueCount(aggregate.issueCount)
+                        .affectedRoundCount((long) aggregate.roundIds.size())
+                        .affectedSubmissionCount((long) aggregate.submissionIds.size())
+                        .commonErrorTypes(commonErrorTypes(aggregate))
+                        .impactRate(rate(aggregate.roundIds.size(), totalRounds))
+                        .build())
+                .toList();
+    }
+
+    private List<String> commonErrorTypes(SkillAggregate aggregate) {
+        return aggregate.errorTypeCounts.entrySet().stream()
+                .sorted((left, right) -> {
+                    int countComparison = Long.compare(right.getValue(), left.getValue());
+                    if (countComparison != 0) {
+                        return countComparison;
+                    }
+                    return left.getKey().compareTo(right.getKey());
+                })
+                .limit(3)
+                .map(Map.Entry::getKey)
+                .toList();
+    }
+
+    private String skillCodeForErrorType(String errorType) {
+        String normalized = normalizeIssueType(errorType);
+        if (normalized.isBlank()) {
+            return null;
+        }
+        if (normalized.contains("PASS")
+                || normalized.contains("NO_ERROR")
+                || normalized.contains("NO_ISSUE")
+                || normalized.contains("NO_PROBLEM")) {
+            return null;
+        }
+        if (normalized.contains("CARDINALITY")
+                || normalized.contains("PARTICIPATION")
+                || normalized.contains("OPTIONALITY")
+                || normalized.contains("MIN_MAX")
+                || normalized.contains("ONE_TO_MANY")
+                || normalized.contains("MANY_TO_MANY")
+                || normalized.contains("ONE_TO_ONE")) {
+            return "CARDINALITY";
+        }
+        if (normalized.contains("RELATIONSHIP")
+                || normalized.contains("ASSOCIATION")
+                || normalized.contains("ASSOCIATIVE")
+                || normalized.contains("BRIDGE")
+                || normalized.contains("JOIN_TABLE")) {
+            return "RELATIONSHIP_MODELING";
+        }
+        if (normalized.contains("NORMAL")
+                || normalized.contains("1NF")
+                || normalized.contains("2NF")
+                || normalized.contains("3NF")
+                || normalized.contains("BCNF")
+                || normalized.contains("DEPENDENCY")
+                || normalized.contains("REPEATING_GROUP")
+                || normalized.contains("MULTIVALUED")) {
+            return "NORMALIZATION";
+        }
+        if (normalized.contains("INTEGRITY")
+                || normalized.contains("CONSTRAINT")
+                || normalized.contains("FOREIGN_KEY")
+                || normalized.contains("REFERENTIAL")
+                || normalized.contains("UNIQUE")
+                || normalized.contains("NOT_NULL")
+                || normalized.contains("CHECK")) {
+            return "INTEGRITY_CONSTRAINT";
+        }
+        if (normalized.contains("ATTRIBUTE")
+                || normalized.contains("PRIMARY_KEY")
+                || normalized.contains("PRIMARY")
+                || normalized.contains("MISSING_PK")
+                || normalized.contains("_PK")
+                || normalized.endsWith("PK")
+                || normalized.contains("_KEY")
+                || normalized.endsWith("KEY")) {
+            return "ATTRIBUTE_AND_KEY";
+        }
+        if (normalized.contains("ENTITY")
+                || normalized.contains("TABLE")
+                || normalized.contains("WEAK_ENTITY")) {
+            return "ENTITY_MODELING";
+        }
+        if (normalized.contains("SCOPE")
+                || normalized.contains("COMPLETE")
+                || normalized.contains("INCOMPLETE")
+                || normalized.contains("REQUIREMENT")
+                || normalized.contains("MISSING")
+                || normalized.contains("OMITTED")) {
+            return "SCOPE_COMPLETENESS";
+        }
+        return "OTHER";
+    }
+
+    private String normalizeIssueType(String errorType) {
+        if (errorType == null || errorType.isBlank()) {
+            return "";
+        }
+        return errorType.trim()
+                .replace('-', '_')
+                .replace(' ', '_')
+                .replace('/', '_')
+                .toUpperCase(Locale.ROOT);
+    }
+
+    private String skillNameForCode(String skillCode) {
+        return switch (skillCode) {
+            case "ENTITY_MODELING" -> "Entity modeling";
+            case "ATTRIBUTE_AND_KEY" -> "Attributes and keys";
+            case "RELATIONSHIP_MODELING" -> "Relationship modeling";
+            case "CARDINALITY" -> "Cardinality";
+            case "NORMALIZATION" -> "Normalization";
+            case "INTEGRITY_CONSTRAINT" -> "Integrity constraints";
+            case "SCOPE_COMPLETENESS" -> "Scope completeness";
+            default -> "Other issues";
+        };
+    }
+
+    private int skillOrder(String skillCode) {
+        int index = SKILL_ORDER.indexOf(skillCode);
+        return index >= 0 ? index : SKILL_ORDER.size();
+    }
+
     private List<AdminEvaluationRoundResponse> mapAdminRecentRounds(List<Object[]> rows) {
-        return rows.stream()
+        return safeRows(rows).stream()
                 .map(row -> AdminEvaluationRoundResponse.builder()
                         .roundId(longAt(row, 0))
                         .submissionId(longAt(row, 1))
@@ -312,7 +615,7 @@ public class PracticeInsightsServiceImpl implements PracticeInsightsService {
 
     private List<InstructorExerciseInsightsResponse.AnonymizedSubmissionSummary> mapAnonymizedSubmissionSummaries(
             List<Object[]> rows) {
-        return rows.stream()
+        return safeRows(rows).stream()
                 .map(row -> InstructorExerciseInsightsResponse.AnonymizedSubmissionSummary.builder()
                         .submissionId(longAt(row, 0))
                         .exerciseScope(practiceScopeAt(row, 1))
@@ -324,6 +627,22 @@ public class PracticeInsightsServiceImpl implements PracticeInsightsService {
                         .gradedAt(localDateTimeAt(row, 7))
                         .build())
                 .toList();
+    }
+
+    private static class SkillAggregate {
+        private final String skillCode;
+        private long issueCount;
+        private final Set<Long> roundIds = new HashSet<>();
+        private final Set<Long> submissionIds = new HashSet<>();
+        private final Map<String, Long> errorTypeCounts = new HashMap<>();
+
+        private SkillAggregate(String skillCode) {
+            this.skillCode = skillCode;
+        }
+    }
+
+    private List<Object[]> safeRows(List<Object[]> rows) {
+        return rows == null ? List.of() : rows;
     }
 
     private LocalDateTime parseBoundary(String value, boolean endOfDay) {
@@ -414,6 +733,20 @@ public class PracticeInsightsServiceImpl implements PracticeInsightsService {
             return timestamp.toLocalDateTime();
         }
         return null;
+    }
+
+    private LocalDate localDateAt(Object[] row, int index) {
+        Object value = valueAt(row, index);
+        if (value instanceof LocalDate localDate) {
+            return localDate;
+        }
+        if (value instanceof Date date) {
+            return date.toLocalDate();
+        }
+        if (value instanceof Timestamp timestamp) {
+            return timestamp.toLocalDateTime().toLocalDate();
+        }
+        return value == null ? null : LocalDate.parse(String.valueOf(value));
     }
 
     private SubmissionStatus submissionStatusAt(Object[] row, int index) {

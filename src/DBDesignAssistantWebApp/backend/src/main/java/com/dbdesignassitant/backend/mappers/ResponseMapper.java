@@ -55,6 +55,8 @@ public final class ResponseMapper {
                 .baseExerciseId(exercise.getBaseExercise() == null ? null : exercise.getBaseExercise().getExerciseId())
                 .baseExerciseCode(exercise.getBaseExercise() == null ? null : exercise.getBaseExercise().getExerciseCode())
                 .isPublished(exercise.getIsPublished())
+                .studentArchived(Boolean.TRUE.equals(exercise.getStudentArchived()))
+                .studentArchivedAt(exercise.getStudentArchivedAt())
                 .build();
     }
 

@@ -68,6 +68,7 @@ def health_check() -> dict[str, Any]:
         "redisWorkerEnabled": settings.redis_worker_enabled,
         "evaluationProvider": settings.evaluation_provider,
         "geminiModel": settings.gemini_model,
+        "deepseekModel": settings.deepseek_model,
     }
 
 

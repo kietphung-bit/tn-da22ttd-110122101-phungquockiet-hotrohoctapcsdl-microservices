@@ -39,7 +39,7 @@ const StudentExerciseDetailPage = () => {
             navigate(`/student/workspace/${draft.submissionId}`);
         } catch (error) {
             console.error("Failed to create draft:", error);
-            alert("Không thể tạo bản nháp. Vui lòng thử lại.");
+            alert("Không thể tạo bản nháp từ bài tập AI này. Vui lòng thử lại.");
         } finally {
             setSubmitting(false);
         }
@@ -50,13 +50,13 @@ const StudentExerciseDetailPage = () => {
         navigate("/login");
     };
 
-    if (loading) return <StudentLayout title="Loading..." onSignOut={handleSignOut}><div>Loading...</div></StudentLayout>;
-    if (!exercise) return <StudentLayout title="Not Found" onSignOut={handleSignOut}><div>Exercise not found.</div></StudentLayout>;
+    if (loading) return <StudentLayout title="Đang tải..." onSignOut={handleSignOut}><div>Đang tải...</div></StudentLayout>;
+    if (!exercise) return <StudentLayout title="Không tìm thấy" onSignOut={handleSignOut}><div>Không tìm thấy bài tập AI.</div></StudentLayout>;
 
     return (
-        <StudentLayout title={`Chi tiết Bài tập: ${exercise.exTitle}`} onSignOut={handleSignOut}>
+        <StudentLayout title={`Chi tiết bài tập AI: ${exercise.exTitle}`} onSignOut={handleSignOut}>
             <div className="page-header">
-                <h2>Chi tiết Bài tập: {exercise.exTitle}</h2>
+                <h2>Chi tiết bài tập AI: {exercise.exTitle}</h2>
                 <button
                     onClick={() => navigate("/student/exercises")}
                     className="btn btn-outline"

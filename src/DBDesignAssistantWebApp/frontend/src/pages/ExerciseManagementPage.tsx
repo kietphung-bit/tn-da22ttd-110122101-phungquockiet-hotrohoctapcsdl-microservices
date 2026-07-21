@@ -4,11 +4,110 @@ import axios from "axios";
 import exerciseApi from "../services/exerciseApi";
 import type { Exercise, ExerciseRequest } from "../types";
 import { useAuth } from "../hooks/useAuth";
+import ConfirmDialog from "../components/common/ConfirmDialog";
 import AdminLayout from "../components/layouts/AdminLayout";
 import ScenarioDataEditor from "../components/admin/ScenarioDataEditor";
+import {
+    ExercisePublishBadge,
+    ExerciseReviewStatusBadge,
+    ExerciseSourceBadge,
+} from "../components/exercises/ExerciseStatusBadges";
+import {
+    getExerciseCategory,
+    isStaffGeneratedAiExercise,
+    readExerciseReviewMetadata,
+} from "../utils/exerciseReview";
 import { useTranslation } from "react-i18next";
+import "../components/exercises/ExerciseAiReviewPanel.css";
 
-import { Eye, Edit2, Trash2, CheckCircle, XCircle, Plus } from "lucide-react";
+import { Eye, Edit2, Trash2, CheckCircle, XCircle, Plus, Sparkles } from "lucide-react";
+
+type ReviewStatusFilter = "ALL" | "DRAFT" | "APPROVED" | "REJECTED";
+type ExerciseCategoryFilter = "LIBRARY" | "MANUAL" | "STAFF_AI_TRIAL" | "STUDENT_PRIVATE_AI";
+
+type ExerciseListFilters = {
+    searchText: string;
+    sourceFilter: ExerciseCategoryFilter;
+    publishedFilter: string;
+    reviewStatusFilter: ReviewStatusFilter;
+};
+
+type PendingPublishAction = {
+    exercise: Exercise;
+};
+
+type PendingDeleteAction = {
+    exercise: Exercise;
+};
+
+const DEFAULT_EXERCISE_LIST_FILTERS: ExerciseListFilters = {
+    searchText: "",
+    sourceFilter: "LIBRARY",
+    publishedFilter: "ALL",
+    reviewStatusFilter: "ALL",
+};
+
+const matchesExerciseListFilters = (exercise: Exercise, filters: ExerciseListFilters) => {
+    const query = filters.searchText.trim().toLowerCase();
+    if (query) {
+        const searchable = [
+            exercise.exerciseCode,
+            exercise.exTitle,
+            exercise.exDescription,
+            exercise.createdBy?.fullName,
+            exercise.createdBy?.userEmail,
+        ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+        if (!searchable.includes(query)) {
+            return false;
+        }
+    }
+
+    const category = getExerciseCategory(exercise);
+    if (filters.sourceFilter === "LIBRARY" && category === "STUDENT_PRIVATE_AI") {
+        return false;
+    }
+    if (filters.sourceFilter !== "LIBRARY" && category !== filters.sourceFilter) {
+        return false;
+    }
+
+    if (filters.publishedFilter !== "ALL") {
+        const publishState = exercise.isPublished ? "PUBLISHED" : "UNPUBLISHED";
+        if (publishState !== filters.publishedFilter) {
+            return false;
+        }
+    }
+
+    if (filters.reviewStatusFilter !== "ALL") {
+        if (!isStaffGeneratedAiExercise(exercise)) {
+            return false;
+        }
+        const metadata = readExerciseReviewMetadata(exercise.scenarioData);
+        if (metadata.effectiveStatus !== filters.reviewStatusFilter) {
+            return false;
+        }
+    }
+
+    return true;
+};
+
+const hasActiveExerciseFilters = (filters: ExerciseListFilters) =>
+    Boolean(filters.searchText.trim())
+    || filters.sourceFilter !== "LIBRARY"
+    || filters.publishedFilter !== "ALL"
+    || filters.reviewStatusFilter !== "ALL";
+
+const getEmptyVariant = (filters: ExerciseListFilters) => {
+    if (!hasActiveExerciseFilters(filters)) {
+        return "noExercises";
+    }
+    if (filters.reviewStatusFilter === "DRAFT") {
+        return "noAiDraft";
+    }
+    return "noFilterResults";
+};
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -26,8 +125,14 @@ const ExerciseManagementPage = () => {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [formCreatedById, setFormCreatedById] = useState<number | null>(null);
     const [searchText, setSearchText] = useState("");
-    const [sourceFilter, setSourceFilter] = useState("ALL");
+    const [sourceFilter, setSourceFilter] = useState<ExerciseCategoryFilter>("LIBRARY");
+    const [reviewStatusFilter, setReviewStatusFilter] = useState<ReviewStatusFilter>("ALL");
     const [publishedFilter, setPublishedFilter] = useState("ALL");
+    const [pendingPublishAction, setPendingPublishAction] = useState<PendingPublishAction | null>(null);
+    const [pendingDeleteAction, setPendingDeleteAction] = useState<PendingDeleteAction | null>(null);
+    const [appliedFilters, setAppliedFilters] = useState<ExerciseListFilters>(
+        DEFAULT_EXERCISE_LIST_FILTERS,
+    );
     const [formData, setFormData] = useState({
         exTitle: "",
         exDescription: "",
@@ -39,11 +144,23 @@ const ExerciseManagementPage = () => {
         const trimmed = searchText.trim();
         return {
             search: trimmed ? trimmed : undefined,
-            exerciseSource: sourceFilter === "ALL" ? undefined : sourceFilter,
+            exerciseSource:
+                sourceFilter === "MANUAL"
+                    ? "MANUAL"
+                    : sourceFilter === "STAFF_AI_TRIAL" || sourceFilter === "STUDENT_PRIVATE_AI"
+                        ? "AI_GENERATED"
+                        : undefined,
             isPublished:
                 publishedFilter === "ALL" ? undefined : publishedFilter === "PUBLISHED",
         };
     };
+
+    const buildAppliedFilters = (): ExerciseListFilters => ({
+        searchText: searchText.trim(),
+        sourceFilter,
+        publishedFilter,
+        reviewStatusFilter,
+    });
 
     const loadExercises = useCallback(async (filters?: {
         search?: string;
@@ -70,27 +187,36 @@ const ExerciseManagementPage = () => {
     }, [loadExercises]);
 
     const handleApplyFilters = () => {
+        setAppliedFilters(buildAppliedFilters());
         loadExercises(buildFilters());
     };
 
     const handleResetFilters = () => {
         setSearchText("");
-        setSourceFilter("ALL");
+        setSourceFilter("LIBRARY");
+        setReviewStatusFilter("ALL");
         setPublishedFilter("ALL");
+        setAppliedFilters(DEFAULT_EXERCISE_LIST_FILTERS);
         loadExercises({});
     };
 
-    const handleDelete = async (exerciseId: number) => {
-        if (!window.confirm(t("admin.exercises.confirmDelete"))) {
-            return;
-        }
+    const requestDelete = (exercise: Exercise) => {
+        setPendingDeleteAction({ exercise });
+    };
+
+    const handleDelete = async (exercise: Exercise) => {
+        setPendingDeleteAction(null);
         setError(null);
         try {
-            await exerciseApi.deleteExercise(exerciseId);
-            setExercises((prev) => prev.filter((e) => e.exerciseId !== exerciseId));
+            await exerciseApi.deleteExercise(exercise.exerciseId);
+            setExercises((prev) => prev.filter((e) => e.exerciseId !== exercise.exerciseId));
         } catch {
             setError(t("admin.exercises.deleteError"));
         }
+    };
+
+    const requestTogglePublish = (exercise: Exercise) => {
+        setPendingPublishAction({ exercise });
     };
 
     const handleTogglePublish = async (exercise: Exercise) => {
@@ -105,6 +231,15 @@ const ExerciseManagementPage = () => {
         } catch {
             setError(t("admin.exercises.publishError"));
         }
+    };
+
+    const handleConfirmTogglePublish = () => {
+        const action = pendingPublishAction;
+        if (!action) {
+            return;
+        }
+        setPendingPublishAction(null);
+        void handleTogglePublish(action.exercise);
     };
 
     const resetForm = () => {
@@ -210,12 +345,42 @@ const ExerciseManagementPage = () => {
         navigate("/login");
     };
 
+    const filteredExercises = exercises.filter((exercise) =>
+        matchesExerciseListFilters(exercise, appliedFilters)
+    );
+    const emptyVariant = getEmptyVariant(appliedFilters);
+    const pendingPublishKind = pendingPublishAction?.exercise.isPublished ? "unpublish" : "publish";
+
     return (
         <AdminLayout
             title={t("admin.exercises.title")}
             subtitle={t("admin.exercises.subtitle")}
             onSignOut={handleSignOut}
         >
+            <ConfirmDialog
+                open={Boolean(pendingPublishAction)}
+                title={t(`admin.exercises.confirmations.${pendingPublishKind}.title`)}
+                message={t(`admin.exercises.confirmations.${pendingPublishKind}.message`)}
+                confirmLabel={t(`admin.exercises.actions.${pendingPublishKind}`)}
+                cancelLabel={t("common.cancel")}
+                variant={pendingPublishAction?.exercise.isPublished ? "warning" : "normal"}
+                onCancel={() => setPendingPublishAction(null)}
+                onConfirm={handleConfirmTogglePublish}
+            />
+            <ConfirmDialog
+                open={Boolean(pendingDeleteAction)}
+                title={t("admin.exercises.confirmations.delete.title")}
+                message={t("admin.exercises.confirmations.delete.message")}
+                confirmLabel={t("common.delete")}
+                cancelLabel={t("common.cancel")}
+                variant="danger"
+                onCancel={() => setPendingDeleteAction(null)}
+                onConfirm={() => {
+                    if (pendingDeleteAction) {
+                        void handleDelete(pendingDeleteAction.exercise);
+                    }
+                }}
+            />
             {error && <div className="alert">{error}</div>}
 
             {/* Create/Edit Exercise Modal */}
@@ -295,14 +460,25 @@ const ExerciseManagementPage = () => {
 
             {/* Exercises Table Section */}
             <section className="section-card">
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
+                <div className="exercise-list-toolbar">
                     <div>
                         <h2 style={{ margin: 0 }}>{t("admin.exercises.title")}</h2>
                         <p style={{ margin: 0, color: "var(--ink-soft)" }}>{t("admin.exercises.subtitle")}</p>
                     </div>
-                    <button type="button" className="btn btn-primary" onClick={handleOpenCreate}>
-                        <Plus size={12} /> {t("admin.exercises.form.openCreate")}
-                    </button>
+                    <div className="exercise-list-toolbar__actions">
+                        <button
+                            type="button"
+                            className="btn btn-outline"
+                            onClick={() => navigate("/admin/exercises/ai-generate")}
+                        >
+                            <Sparkles size={16} aria-hidden="true" />
+                            {t("admin.exercises.aiReview.openGenerator")}
+                        </button>
+                        <button type="button" className="btn btn-primary" onClick={handleOpenCreate}>
+                            <Plus size={16} aria-hidden="true" />
+                            {t("admin.exercises.form.openCreate")}
+                        </button>
+                    </div>
                 </div>
 
                 {/* Filters */}
@@ -327,12 +503,32 @@ const ExerciseManagementPage = () => {
                     <select
                         className="input"
                         value={sourceFilter}
-                        onChange={(event) => setSourceFilter(event.target.value)}
-                        style={{ maxWidth: 160 }}
+                        onChange={(event) =>
+                            setSourceFilter(event.target.value as ExerciseCategoryFilter)
+                        }
+                        style={{ maxWidth: 220 }}
                     >
-                        <option value="ALL">{t("admin.exercises.filters.allSources")}</option>
+                        <option value="LIBRARY">{t("admin.exercises.filters.staffLibrary")}</option>
                         <option value="MANUAL">{t("admin.exercises.filters.manual")}</option>
-                        <option value="AI_GENERATED">{t("admin.exercises.filters.aiGenerated")}</option>
+                        <option value="STAFF_AI_TRIAL">
+                            {t("admin.exercises.filters.staffAiTrial")}
+                        </option>
+                        <option value="STUDENT_PRIVATE_AI">
+                            {t("admin.exercises.filters.studentPrivateAi")}
+                        </option>
+                    </select>
+                    <select
+                        className="input"
+                        value={reviewStatusFilter}
+                        onChange={(event) =>
+                            setReviewStatusFilter(event.target.value as ReviewStatusFilter)
+                        }
+                        style={{ maxWidth: 180 }}
+                    >
+                        <option value="ALL">{t("admin.exercises.filters.allReviewStatuses")}</option>
+                        <option value="DRAFT">{t("admin.exercises.aiReview.status.draft")}</option>
+                        <option value="APPROVED">{t("admin.exercises.aiReview.status.approved")}</option>
+                        <option value="REJECTED">{t("admin.exercises.aiReview.status.rejected")}</option>
                     </select>
                     <select
                         className="input"
@@ -355,20 +551,28 @@ const ExerciseManagementPage = () => {
                 {/* Table */}
                 {loading ? (
                     <p>{t("admin.exercises.loading")}</p>
+                ) : filteredExercises.length === 0 ? (
+                    <div className="exercise-list-empty">
+                        <h3>{t(`admin.exercises.empty.${emptyVariant}.title`)}</h3>
+                        <p>{t(`admin.exercises.empty.${emptyVariant}.body`)}</p>
+                    </div>
                 ) : (
                     <table className="table">
                         <thead>
                             <tr>
                                 <th>{t("admin.exercises.columns.code")}</th>
                                 <th>{t("admin.exercises.columns.title")}</th>
-                                {/* <th>{t("admin.exercises.columns.source")}</th> */}
+                                <th>{t("admin.exercises.columns.source")}</th>
+                                <th>{t("admin.exercises.columns.review")}</th>
                                 <th>{t("admin.exercises.columns.creator")}</th>
                                 <th>{t("admin.exercises.columns.published")}</th>
-                                <th style={{ width: 140 }}>{t("admin.exercises.columns.actions")}</th>
+                                <th style={{ width: 160 }}>{t("admin.exercises.columns.actions")}</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {exercises.map((exercise) => (
+                            {filteredExercises.map((exercise) => {
+                                const canPublishExercise = exercise.exerciseSource === "MANUAL";
+                                return (
                                 <tr key={exercise.exerciseId}>
                                     <td>
                                         <code style={{ fontSize: "0.85rem" }}>
@@ -385,20 +589,19 @@ const ExerciseManagementPage = () => {
                                             </p>
                                         )}
                                     </td>
-                                    {/* <td>
-                                        <span className={`tag ${exercise.exerciseSource === "AI_GENERATED" ? "tag--ai" : ""}`}>
-                                            {exercise.exerciseSource === "AI_GENERATED"
-                                                ? t("admin.exercises.filters.aiGenerated")
-                                                : t("admin.exercises.filters.manual")}
-                                        </span>
-                                    </td> */}
+                                    <td>
+                                        <ExerciseSourceBadge exercise={exercise} />
+                                    </td>
+                                    <td>
+                                        {isStaffGeneratedAiExercise(exercise) ? (
+                                            <ExerciseReviewStatusBadge exercise={exercise} />
+                                        ) : (
+                                            <span style={{ color: "var(--ink-soft)" }}>-</span>
+                                        )}
+                                    </td>
                                     <td>{exercise.createdBy?.fullName || "—"}</td>
                                     <td>
-                                        <span className={`tag ${exercise.isPublished ? "tag--published" : ""}`}>
-                                            {exercise.isPublished
-                                                ? t("admin.exercises.yes")
-                                                : t("admin.exercises.no")}
-                                        </span>
+                                        <ExercisePublishBadge exercise={exercise} />
                                     </td>
                                     <td>
                                         <div style={{ display: "flex", gap: 8 }}>
@@ -416,32 +619,36 @@ const ExerciseManagementPage = () => {
                                             <button
                                                 type="button"
                                                 className="btn btn-icon"
-                                                title={t("admin.exercises.actions.edit")}
+                                                title={exercise.exerciseSource === "AI_GENERATED"
+                                                    ? t("admin.exercises.aiReview.actions.reviewInsteadOfEdit")
+                                                    : t("admin.exercises.actions.edit")}
                                                 onClick={() => handleEdit(exercise)}
+                                                disabled={exercise.exerciseSource === "AI_GENERATED"}
                                                 aria-label={t("admin.exercises.actions.edit")}
                                             >
                                                 <Edit2 size={18} />
                                             </button>
-                                            {/* Publish / Unpublish */}
-                                            <button
-                                                type="button"
-                                                className="btn btn-icon"
-                                                title={exercise.isPublished
-                                                    ? t("admin.exercises.actions.unpublish")
-                                                    : t("admin.exercises.actions.publish")}
-                                                onClick={() => handleTogglePublish(exercise)}
-                                                aria-label={exercise.isPublished
-                                                    ? t("admin.exercises.actions.unpublish")
-                                                    : t("admin.exercises.actions.publish")}
-                                            >
-                                                {exercise.isPublished ? <XCircle size={18} /> : <CheckCircle size={18} />}
-                                            </button>
+                                            {canPublishExercise ? (
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-icon"
+                                                    title={exercise.isPublished
+                                                        ? t("admin.exercises.actions.unpublish")
+                                                        : t("admin.exercises.actions.publish")}
+                                                    onClick={() => requestTogglePublish(exercise)}
+                                                    aria-label={exercise.isPublished
+                                                        ? t("admin.exercises.actions.unpublish")
+                                                        : t("admin.exercises.actions.publish")}
+                                                >
+                                                    {exercise.isPublished ? <XCircle size={18} /> : <CheckCircle size={18} />}
+                                                </button>
+                                            ) : null}
                                             {/* Delete */}
                                             <button
                                                 type="button"
                                                 className="btn btn-icon btn-danger"
                                                 title={t("admin.exercises.actions.delete")}
-                                                onClick={() => handleDelete(exercise.exerciseId)}
+                                                onClick={() => requestDelete(exercise)}
                                                 aria-label={t("admin.exercises.actions.delete")}
                                             >
                                                 <Trash2 size={18} />
@@ -449,7 +656,8 @@ const ExerciseManagementPage = () => {
                                         </div>
                                     </td>
                                 </tr>
-                            ))}
+                                );
+                            })}
                         </tbody>
                     </table>
                 )}

@@ -6,11 +6,11 @@ import com.dbdesignassitant.backend.entities.Submission;
 import com.dbdesignassitant.backend.repositories.AIEvaluationRepository;
 import com.dbdesignassitant.backend.repositories.EvaluationDetailRepository;
 import com.dbdesignassitant.backend.services.MockEvaluationService;
+import com.dbdesignassitant.backend.utils.DiagramCardinalityNormalizer;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -68,7 +68,7 @@ public class MockEvaluationServiceImpl implements MockEvaluationService {
         if (entities.isEmpty()) {
             details.add(new MockDetail(
                     "MISSING_ENTITY",
-                    "Diagram chua co entity nao. Hay xac dinh cac doi tuong chinh trong de bai truoc khi thiet ke relationship.",
+                    "Sơ đồ chưa có entity nào. Hãy xác định các đối tượng chính trong đề bài trước khi thiết kế relationship.",
                     "Diagram"));
         }
 
@@ -79,7 +79,7 @@ public class MockEvaluationServiceImpl implements MockEvaluationService {
             if (!hasPrimaryKey) {
                 details.add(new MockDetail(
                         "MISSING_PRIMARY_KEY",
-                        "Entity nen co primary key de dinh danh moi ban ghi mot cach ro rang.",
+                        "Entity nên có primary key để định danh mỗi bản ghi một cách rõ ràng.",
                         "Entity: " + entityName));
             }
         }
@@ -87,26 +87,25 @@ public class MockEvaluationServiceImpl implements MockEvaluationService {
         if (relationships.isEmpty()) {
             details.add(new MockDetail(
                     "MISSING_RELATIONSHIP",
-                    "Diagram chua co relationship. Hay mo ta lien ket va rang buoc giua cac entity neu de bai co nhieu doi tuong.",
+                    "Sơ đồ chưa có relationship. Hãy mô tả liên kết và ràng buộc giữa các entity nếu đề bài có nhiều đối tượng.",
                     "Relationships"));
         }
 
         for (Map<String, Object> relationship : relationships) {
             String relationshipName = readString(relationship, "name", "Unnamed relationship");
-            String cardinality = readString(relationship, "cardinality", "");
-            if (cardinality.isBlank()) {
+            var cardinality = DiagramCardinalityNormalizer.normalizeRelationship(relationship);
+            if (!cardinality.hasCardinality()) {
                 details.add(new MockDetail(
                         "MISSING_CARDINALITY",
-                        "Relationship can co cardinality de the hien rang buoc 1-1, 1-N, N-1 hoac N-N.",
+                        "Relationship cần có cardinality để thể hiện ràng buộc mỗi đầu: 1-1, 0-1, 1-N hoặc 0-N.",
                         "Relationship: " + relationshipName));
                 continue;
             }
 
-            String normalizedCardinality = cardinality.toUpperCase(Locale.ROOT).replace(" ", "");
-            if ("N-N".equals(normalizedCardinality) || "M-N".equals(normalizedCardinality)) {
+            if (cardinality.isManyToMany()) {
                 details.add(new MockDetail(
                         "MANY_TO_MANY_HINT",
-                        "Relationship N-N thuong can can nhac bang trung gian khi chuyen sang thiet ke logic.",
+                        "Relationship có nhiều bản ghi ở cả hai đầu thường cần cân nhắc bảng trung gian khi chuyển sang thiết kế logic.",
                         "Relationship: " + relationshipName));
             }
         }
@@ -114,7 +113,7 @@ public class MockEvaluationServiceImpl implements MockEvaluationService {
         if (details.isEmpty()) {
             details.add(new MockDetail(
                     "MOCK_PASS",
-                    "Danh gia demo/MOCK khong phat hien loi cau truc co ban trong diagram hien tai.",
+                    "Đánh giá MOCK chưa phát hiện lỗi cấu trúc cơ bản trong sơ đồ hiện tại.",
                     "Diagram"));
         }
 

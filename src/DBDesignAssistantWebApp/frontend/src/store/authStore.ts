@@ -10,6 +10,7 @@ type AuthState = {
     login: (payload: LoginRequest) => Promise<AuthResponse>;
     register: (payload: RegisterRequest) => Promise<AuthResponse>;
     logout: () => void;
+    setUser: (user: User) => void;
     checkAuth: () => void;
 };
 
@@ -61,11 +62,23 @@ const userFromJwt = (token: string): User | null => {
     };
 };
 
-const toUserFromAuth = (auth: AuthResponse): User => {
+const persistUser = (user: User) => {
+    localStorage.setItem("authUser", JSON.stringify(user));
+    localStorage.setItem(
+        "authMeta",
+        JSON.stringify({
+            userId: user.userId,
+            roleName: user.role.roleName,
+            userEmail: user.userEmail,
+        })
+    );
+};
+
+const toUserFromAuth = (auth: AuthResponse, userEmail: string, fullName = ""): User => {
     return {
         userId: auth.userId,
-        userEmail: "",
-        fullName: "",
+        userEmail,
+        fullName,
         userGender: null,
         userDob: null,
         userPhone: null,
@@ -102,32 +115,26 @@ export const useAuthStore = create<AuthState>((set) => ({
     isInitialized: false,
     login: async (payload: LoginRequest) => {
         const data = await authApi.login(payload);
+        const authUser = toUserFromAuth(data, payload.userEmail);
         localStorage.setItem("token", data.accessToken);
-        localStorage.setItem("authUser", JSON.stringify(toUserFromAuth(data)));
-        localStorage.setItem(
-            "authMeta",
-            JSON.stringify({ userId: data.userId, roleName: data.roleName, userEmail: payload.userEmail })
-        );
+        persistUser(authUser);
         set({
             token: data.accessToken,
             isAuthenticated: true,
-            user: toUserFromAuth(data),
+            user: authUser,
             isInitialized: true,
         });
         return data;
     },
     register: async (payload: RegisterRequest) => {
         const data = await authApi.register(payload);
+        const authUser = toUserFromAuth(data, payload.userEmail, payload.fullName);
         localStorage.setItem("token", data.accessToken);
-        localStorage.setItem("authUser", JSON.stringify(toUserFromAuth(data)));
-        localStorage.setItem(
-            "authMeta",
-            JSON.stringify({ userId: data.userId, roleName: data.roleName, userEmail: payload.userEmail })
-        );
+        persistUser(authUser);
         set({
             token: data.accessToken,
             isAuthenticated: true,
-            user: toUserFromAuth(data),
+            user: authUser,
             isInitialized: true,
         });
         return data;
@@ -137,6 +144,10 @@ export const useAuthStore = create<AuthState>((set) => ({
         localStorage.removeItem("authUser");
         localStorage.removeItem("authMeta");
         set({ user: null, token: null, isAuthenticated: false, isInitialized: true });
+    },
+    setUser: (user: User) => {
+        persistUser(user);
+        set({ user });
     },
     checkAuth: () => {
         const token = localStorage.getItem("token");

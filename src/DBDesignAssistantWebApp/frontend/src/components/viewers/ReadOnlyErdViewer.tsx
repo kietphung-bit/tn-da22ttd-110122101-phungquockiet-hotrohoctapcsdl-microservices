@@ -1,19 +1,25 @@
 import { useMemo } from "react";
-import { Background, Controls, MarkerType, ReactFlow } from "@xyflow/react";
+import { Background, Controls, ReactFlow } from "@xyflow/react";
 import type { Edge, Node } from "@xyflow/react";
 import { useTranslation } from "react-i18next";
 import "@xyflow/react/dist/style.css";
 import "../../features/erd-workspace/erd-workspace.css";
 import "./viewers.css";
 import { normalizeDiagramData } from "../../features/erd-workspace";
+import {
+    formatEndpointCardinalityLabel,
+    parseRelationshipEndpointCardinalities,
+} from "../../features/erd-workspace/diagramData";
+import ErdEndpointCardinalityEdge from "../../features/erd-workspace/ErdEndpointCardinalityEdge";
 import ErdEntityNode from "../../features/erd-workspace/ErdEntityNode";
-import type { ErdDiagramData, ErdEntity } from "../../features/erd-workspace";
+import type { ErdDiagramData, ErdEntity, ErdRelationship } from "../../features/erd-workspace";
 
 type ReadOnlyErdViewerProps = {
     data: Record<string, unknown> | null | undefined;
 };
 
 const nodeTypes = { entity: ErdEntityNode };
+const edgeTypes = { endpointCardinality: ErdEndpointCardinalityEdge };
 
 const getDefaultPosition = (index: number) => ({
     x: 80 + (index % 3) * 300,
@@ -28,23 +34,39 @@ const toNodes = (diagram: ErdDiagramData): Node<ErdEntity>[] =>
         position: entity.position ?? getDefaultPosition(index),
     }));
 
+const getRelationshipEndpointLabels = (relationship: ErdRelationship) => {
+    const fallback = parseRelationshipEndpointCardinalities(relationship.cardinality);
+    return {
+        sourceCardinality: formatEndpointCardinalityLabel(
+            relationship.sourceCardinality ?? fallback.sourceCardinality,
+        ),
+        targetCardinality: formatEndpointCardinalityLabel(
+            relationship.targetCardinality ?? fallback.targetCardinality,
+        ),
+    };
+};
+
+const formatRelationshipCardinalitySummary = (relationship: ErdRelationship) => {
+    const endpointLabels = getRelationshipEndpointLabels(relationship);
+    return `${endpointLabels.sourceCardinality} - ${endpointLabels.targetCardinality}`;
+};
+
 const toEdges = (diagram: ErdDiagramData): Edge[] => {
     const entityIds = new Set(diagram.entities.map((entity) => entity.id));
     return diagram.relationships.flatMap((relationship) => {
         if (!entityIds.has(relationship.fromEntityId) || !entityIds.has(relationship.toEntityId)) return [];
+        const endpointCardinality = getRelationshipEndpointLabels(relationship);
         return [{
             id: relationship.id,
             source: relationship.fromEntityId,
             target: relationship.toEntityId,
-            label: `${relationship.name} (${relationship.cardinality})`,
-            type: "smoothstep",
+            type: "endpointCardinality",
             animated: false,
             style: { strokeWidth: 2 },
-            markerEnd: { type: MarkerType.ArrowClosed },
-            labelStyle: { fontSize: 11, fontWeight: 600, fill: "#334155" },
-            labelBgStyle: { fill: "#fff", fillOpacity: 0.9 },
-            labelBgPadding: [6, 3] as [number, number],
-            labelBgBorderRadius: 4,
+            data: {
+                relationshipName: relationship.name,
+                ...endpointCardinality,
+            },
         }];
     });
 };
@@ -87,6 +109,7 @@ const ReadOnlyErdViewer = ({ data }: ReadOnlyErdViewerProps) => {
                                 nodes={nodes}
                                 edges={edges}
                                 nodeTypes={nodeTypes}
+                                edgeTypes={edgeTypes}
                                 nodesDraggable={false}
                                 nodesConnectable={false}
                                 elementsSelectable={false}
@@ -135,7 +158,7 @@ const ReadOnlyErdViewer = ({ data }: ReadOnlyErdViewerProps) => {
                                             <p className="viewer-muted">
                                                 {entityById.get(relationship.fromEntityId) ?? relationship.fromEntityId}
                                                 {" "}
-                                                {relationship.cardinality}
+                                                {formatRelationshipCardinalitySummary(relationship)}
                                                 {" "}
                                                 {entityById.get(relationship.toEntityId) ?? relationship.toEntityId}
                                             </p>

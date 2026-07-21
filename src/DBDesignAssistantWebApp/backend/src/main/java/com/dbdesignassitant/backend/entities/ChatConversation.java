@@ -45,11 +45,21 @@ public class ChatConversation {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Builder.Default
+    @Column(name = "student_archived")
+    private Boolean studentArchived = false;
+
+    @Column(name = "student_archived_at")
+    private LocalDateTime studentArchivedAt;
+
     @PrePersist
     protected void onCreate() {
         LocalDateTime now = LocalDateTime.now();
         if (createdAt == null) {
             createdAt = now;
+        }
+        if (studentArchived == null) {
+            studentArchived = false;
         }
         updatedAt = now;
     }

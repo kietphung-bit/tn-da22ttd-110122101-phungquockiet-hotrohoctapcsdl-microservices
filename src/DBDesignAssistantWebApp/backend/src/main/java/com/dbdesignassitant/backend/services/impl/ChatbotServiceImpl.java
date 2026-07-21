@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -104,9 +105,9 @@ public class ChatbotServiceImpl implements ChatbotService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ChatConversationSummaryResponse> listConversations() {
+    public List<ChatConversationSummaryResponse> listConversations(boolean archived) {
         User currentUser = currentUserProvider.getCurrentUser();
-        return chatConversationRepository.findByUser_UserIdOrderByUpdatedAtDescCreatedAtDesc(currentUser.getUserId())
+        return chatConversationRepository.findByUserIdAndArchiveState(currentUser.getUserId(), archived)
                 .stream()
                 .map(this::toSummaryResponse)
                 .toList();
@@ -131,8 +132,23 @@ public class ChatbotServiceImpl implements ChatbotService {
                 .title(conversation.getTitle())
                 .createdAt(conversation.getCreatedAt())
                 .updatedAt(conversation.getUpdatedAt())
+                .studentArchived(Boolean.TRUE.equals(conversation.getStudentArchived()))
+                .studentArchivedAt(conversation.getStudentArchivedAt())
                 .messages(messages)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public ChatConversationSummaryResponse setConversationArchived(String conversationId, boolean archived) {
+        User currentUser = currentUserProvider.getCurrentUser();
+        ChatConversation conversation = chatConversationRepository
+                .findByConversationIdAndUser_UserId(conversationId, currentUser.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
+
+        conversation.setStudentArchived(archived);
+        conversation.setStudentArchivedAt(archived ? LocalDateTime.now() : null);
+        return toSummaryResponse(chatConversationRepository.save(conversation));
     }
 
     private ChatConversation resolveConversation(ChatRequest request, User currentUser) {
@@ -189,36 +205,42 @@ public class ChatbotServiceImpl implements ChatbotService {
 
     private String buildPrompt(String question, List<ChatMessage> recentHistory, List<RetrievedKnowledgeResponse> sources) {
         StringBuilder builder = new StringBuilder();
-        builder.append("Ban la tro giang co so du lieu cho sinh vien.\n");
-        builder.append("Chi tra loi dua tren CONTEXT duoc cung cap. Neu CONTEXT khong phu hop, noi ro chua tim thay tai lieu lien quan.\n");
-        builder.append("Khong giai ho toan bo bai tap thiet ke CSDL/ERD; chi dua goi y ngan gon, de hieu, theo tung buoc khi can.\n\n");
-        builder.append("CHAT_HISTORY_GAN_DAY:\n");
+        builder.append("Bạn là trợ giảng cơ sở dữ liệu cho sinh viên.\n");
+        builder.append("Trả lời tự nhiên, ngắn gọn và dễ hiểu như đang hướng dẫn trong lớp.\n");
+        builder.append("Chỉ dựa trên học liệu tham khảo được cung cấp. Nếu học liệu không phù hợp, hãy nói rằng chưa tìm thấy tài liệu liên quan.\n");
+        builder.append("Không nhắc từ CONTEXT và không viết câu kiểu \"Theo tài liệu trong CONTEXT\". Nếu cần ghi nguồn, có thể nói ngắn gọn \"Dựa trên học liệu hiện có...\".\n");
+        builder.append("Không giải hộ toàn bộ bài tập thiết kế CSDL/ERD; chỉ đưa gợi ý từng bước để sinh viên tự hoàn thiện.\n\n");
+        builder.append("LICH_SU_TRAO_DOI_GAN_DAY:\n");
         if (recentHistory.isEmpty()) {
-            builder.append("(Chua co lich su hoi thoai truoc do.)\n\n");
+            builder.append("(Chưa có lịch sử hội thoại trước đó.)\n\n");
         } else {
             for (ChatMessage message : recentHistory) {
-                builder.append(message.getRole() == ChatMessageRole.USER ? "Sinh vien: " : "Tro giang: ")
+                builder.append(message.getRole() == ChatMessageRole.USER ? "Sinh viên: " : "Trợ giảng: ")
                         .append(limitHistoryContent(message.getContent()))
                         .append("\n");
             }
             builder.append("\n");
         }
-        builder.append("CONTEXT:\n");
+        builder.append("HOC_LIEU_THAM_KHAO:\n");
         if (sources.isEmpty()) {
-            builder.append("(Khong co tai lieu phu hop trong KnowledgeBase da duyet.)\n");
+            builder.append("(Không có tài liệu phù hợp trong kho học liệu đã duyệt.)\n");
         } else {
             for (int i = 0; i < sources.size(); i++) {
                 RetrievedKnowledgeResponse source = sources.get(i);
                 builder.append(i + 1)
                         .append(". Title: ").append(nullToEmpty(source.getKbTitle()))
+                        .append("\nRank: ").append(source.getRank() == null ? i + 1 : source.getRank())
+                        .append("\nKnowledgeScope: ").append(source.getKnowledgeScope() == null
+                                ? ""
+                                : source.getKnowledgeScope().name())
                         .append("\nCategory: ").append(nullToEmpty(source.getKbCategory()))
                         .append("\nSource: ").append(nullToEmpty(source.getKbSource()))
                         .append("\nSnippet: ").append(nullToEmpty(source.getSnippet()))
                         .append("\n\n");
             }
         }
-        builder.append("QUESTION:\n").append(question).append("\n\n");
-        builder.append("ANSWER:");
+        builder.append("CAU_HOI:\n").append(question).append("\n\n");
+        builder.append("TRA_LOI:");
         return builder.toString();
     }
 
@@ -250,6 +272,8 @@ public class ChatbotServiceImpl implements ChatbotService {
                 .createdAt(conversation.getCreatedAt())
                 .updatedAt(conversation.getUpdatedAt())
                 .lastMessagePreview(preview)
+                .studentArchived(Boolean.TRUE.equals(conversation.getStudentArchived()))
+                .studentArchivedAt(conversation.getStudentArchivedAt())
                 .build();
     }
 

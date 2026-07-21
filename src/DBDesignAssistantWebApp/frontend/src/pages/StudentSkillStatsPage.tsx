@@ -5,7 +5,7 @@ import type { StudentSkillStats } from "../types";
 import { useAuth } from "../hooks/useAuth";
 import AdminLayout from "../components/layouts/AdminLayout";
 import { useTranslation } from "react-i18next";
-import { Eye } from "lucide-react";
+import { BarChart3, Eye, Info } from "lucide-react";
 
 const StudentSkillStatsPage = () => {
     const navigate = useNavigate();
@@ -82,6 +82,34 @@ const StudentSkillStatsPage = () => {
             onSignOut={handleSignOut}
         >
             {error && <div className="alert">{error}</div>}
+
+            <section className="section-card" style={{ borderLeft: "4px solid var(--warning)", marginBottom: 16 }}>
+                <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                    <Info size={20} style={{ color: "var(--warning)", marginTop: 2 }} />
+                    <div style={{ flex: 1 }}>
+                        <h2 style={{ margin: 0, fontSize: "1rem" }}>
+                            {t(
+                                "admin.studentSkillStats.legacyNoticeTitle",
+                                "Ch\u1ee9c n\u0103ng d\u1ef1 ki\u1ebfn, kh\u00f4ng ph\u1ea3i th\u1ed1ng k\u00ea demo ch\u00ednh"
+                            )}
+                        </h2>
+                        <p style={{ margin: "6px 0 0", color: "var(--text-secondary)" }}>
+                            {t(
+                                "admin.studentSkillStats.legacyNoticeBody",
+                                "C\u00e1c d\u00f2ng n\u00e0y \u0111\u1ebfn t\u1eeb StudentSkillStats legacy/seeded. Lu\u1ed3ng production hi\u1ec7n ghi t\u00edn hi\u1ec7u ch\u1ea5m b\u00e0i th\u1eadt v\u00e0o EvaluationRounds, n\u00ean khi b\u1ea3o v\u1ec7 h\u00e3y d\u00f9ng Practice Insights."
+                            )}
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        className="btn btn-outline"
+                        onClick={() => navigate("/admin/practice-insights")}
+                    >
+                        <BarChart3 size={16} />
+                        {t("admin.studentSkillStats.openPracticeInsights", "M\u1edf Practice Insights")}
+                    </button>
+                </div>
+            </section>
 
             {/* Detail Modal */}
             {isDetailOpen && selectedItem && (

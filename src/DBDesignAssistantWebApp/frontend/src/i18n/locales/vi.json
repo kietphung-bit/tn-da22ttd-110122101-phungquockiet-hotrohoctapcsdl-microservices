@@ -18,13 +18,16 @@
         "show": "Hiện",
         "approve": "Duyệt",
         "reject": "Từ chối",
-        "submit": "Gửi duyệt"
+        "submit": "Gửi duyệt",
+        "close": "Đóng",
+        "showPassword": "Hiện mật khẩu",
+        "hidePassword": "Ẩn mật khẩu"
     },
     "login": {
         "heroTitle": "Chào mừng đến với hệ thống",
         "heroSubtitle": "Đăng nhập để truy cập nền tảng học tập.",
         "heading": "Truy cập hệ thống",
-        "subheading": "Dùng tài khoản quản trị để tiếp tục.",
+        "subheading": "Nhập thông tin tài khoản để tiếp tục.",
         "email": "Email",
         "password": "Mật khẩu",
         "submit": "Đăng nhập",
@@ -41,11 +44,73 @@
         "fullName": "Họ và tên",
         "email": "Email",
         "password": "Mật khẩu",
+        "confirmPassword": "Xác nhận mật khẩu",
+        "confirmMismatch": "Mật khẩu xác nhận không khớp.",
+        "next": "Tiếp tục",
+        "back": "Quay lại",
+        "gender": "Giới tính",
+        "genderEmpty": "Chọn giới tính",
+        "genderMale": "Nam",
+        "genderFemale": "Nữ",
+        "genderOther": "Khác",
+        "dob": "Ngày sinh",
+        "phone": "Số điện thoại",
+        "address": "Địa chỉ",
+        "steps": {
+            "ariaLabel": "Các bước đăng ký",
+            "account": "Bước 1",
+            "profile": "Bước 2"
+        },
         "submit": "Đăng ký",
         "submitting": "Đang tạo...",
         "error": "Đăng ký thất bại. Vui lòng thử lại.",
         "haveAccount": "Đã có tài khoản?",
         "loginLink": "Đăng nhập"
+    },
+    "account": {
+        "trigger": "Tài khoản",
+        "unknownName": "Chưa có tên",
+        "unknownEmail": "Chưa có email",
+        "roles": {
+            "admin": "Quản trị viên",
+            "instructor": "Giảng viên",
+            "student": "Sinh viên",
+            "unknown": "Chưa xác định"
+        },
+        "profile": {
+            "action": "Thông tin cá nhân",
+            "title": "Thông tin cá nhân",
+            "subtitle": "Cập nhật các thông tin an toàn của tài khoản.",
+            "email": "Email",
+            "role": "Vai trò",
+            "fullName": "Họ và tên",
+            "gender": "Giới tính",
+            "genderEmpty": "Chọn giới tính",
+            "genderMale": "Nam",
+            "genderFemale": "Nữ",
+            "genderOther": "Khác",
+            "dob": "Ngày sinh",
+            "phone": "Số điện thoại",
+            "address": "Địa chỉ",
+            "save": "Lưu thông tin",
+            "saving": "Đang lưu...",
+            "success": "Đã cập nhật thông tin cá nhân.",
+            "error": "Không thể cập nhật thông tin cá nhân.",
+            "requiredName": "Vui lòng nhập họ và tên."
+        },
+        "password": {
+            "action": "Đổi mật khẩu",
+            "title": "Đổi mật khẩu",
+            "subtitle": "Nhập mật khẩu hiện tại trước khi đặt mật khẩu mới.",
+            "currentPassword": "Mật khẩu hiện tại",
+            "newPassword": "Mật khẩu mới",
+            "confirmPassword": "Xác nhận mật khẩu mới",
+            "save": "Đổi mật khẩu",
+            "saving": "Đang đổi...",
+            "success": "Đã đổi mật khẩu.",
+            "error": "Không thể đổi mật khẩu. Vui lòng kiểm tra mật khẩu hiện tại.",
+            "confirmMismatch": "Mật khẩu xác nhận không khớp."
+        }
     },
     "admin": {
         "sidebar": {
@@ -70,6 +135,20 @@
             "confirmDisable": "Bạn có chắc muốn khóa tài khoản này?",
             "confirmEnable": "Bạn có chắc muốn mở khóa tài khoản này?",
             "confirmDelete": "Bạn có chắc muốn xóa tài khoản này?",
+            "confirmations": {
+                "disable": {
+                    "title": "Khóa tài khoản?",
+                    "message": "Tài khoản này sẽ không thể đăng nhập cho đến khi được mở khóa lại."
+                },
+                "enable": {
+                    "title": "Mở khóa tài khoản?",
+                    "message": "Tài khoản sẽ có thể đăng nhập lại nếu thông tin hợp lệ."
+                },
+                "delete": {
+                    "title": "Xóa tài khoản?",
+                    "message": "Thao tác này sẽ xóa tài khoản khỏi hệ thống nếu backend cho phép. Hãy chắc chắn tài khoản không còn cần sử dụng."
+                }
+            },
             "loading": "Đang tải người dùng...",
             "view": "Xem",
             "detailTitle": "Thông tin người dùng",
@@ -93,6 +172,8 @@
             "disable": "Khóa",
             "enable": "Mở khóa",
             "delete": "Xóa",
+            "protectedAdmin": "Tài khoản ADMIN được bảo vệ",
+            "protectedSelf": "Tài khoản hiện tại",
             "roles": {
                 "student": "Sinh viên",
                 "instructor": "Giảng viên"
@@ -127,7 +208,116 @@
             "confirmDelete": "Bạn có chắc muốn xóa bài tập này?",
             "saveError": "Không thể lưu bài tập.",
             "publishError": "Không thể cập nhật trạng thái xuất bản.",
+            "confirmations": {
+                "publish": {
+                    "title": "Xuất bản bài tập mẫu?",
+                    "message": "Sinh viên có thể nhìn thấy và làm bài tập này sau khi xuất bản."
+                },
+                "unpublish": {
+                    "title": "Hủy xuất bản bài tập mẫu?",
+                    "message": "Sinh viên sẽ không còn thấy bài tập này trong danh sách bài tập công khai. Các bài nộp đã có không bị xóa."
+                },
+                "delete": {
+                    "title": "Xóa bài tập?",
+                    "message": "Thao tác này sẽ xóa bài tập khỏi hệ thống nếu backend cho phép. Hãy chắc chắn rằng bài tập không còn cần sử dụng."
+                }
+            },
             "loading": "Đang tải bài tập...",
+            "aiReview": {
+                "pageTitle": "Kiểm tra sinh đề AI",
+                "pageSubtitle": "Tạo bản kiểm tra AI từ bài mẫu hoặc prompt để đánh giá chất lượng sinh đề, không xuất bản trực tiếp cho sinh viên.",
+                "openGenerator": "Kiểm tra sinh đề AI",
+                "backToList": "Quay lại danh sách bài tập",
+                "title": "Kiểm tra AI sinh bài",
+                "subtitle": "Sinh bản kiểm tra từ bài mẫu hoặc prompt, xem preview rồi duyệt bài mẫu gốc đủ điều kiện làm nguồn sinh đề AI.",
+                "fields": {
+                    "baseExercise": "Bài mẫu cần kiểm tra",
+                    "loadingBases": "Đang tải bài mẫu...",
+                    "noBaseExercise": "Không chọn bài mẫu",
+                    "selectedBase": "Đang dùng bài mẫu: {{title}}",
+                    "fixedBaseExercise": "Bài mẫu đang kiểm tra",
+                    "baseAlreadyEligible": "Bài mẫu này đã được duyệt đủ điều kiện sinh đề AI qua bản kiểm tra #{{trialId}}.",
+                    "baseNotEligible": "Bài mẫu này chưa được duyệt đủ điều kiện sinh đề AI.",
+                    "customPrompt": "Gợi ý kiểm tra",
+                    "businessContext": "Bối cảnh nghiệp vụ",
+                    "difficulty": "Độ khó",
+                    "businessDomain": "Lĩnh vực",
+                    "additionalRequirements": "Yêu cầu bổ sung",
+                    "rejectReason": "Lý do từ chối"
+                },
+                "placeholders": {
+                    "customPrompt": "VD: Tạo bài tập thiết kế CSDL cho hệ thống quản lý đặt phòng khách sạn...",
+                    "businessContext": "Mô tả bối cảnh, đối tượng, quy trình nghiệp vụ...",
+                    "businessDomain": "VD: khách sạn, thư viện, phòng khám",
+                    "additionalRequirements": "Ràng buộc, mục tiêu học tập, các điểm cần nhấn mạnh...",
+                    "rejectReason": "Nhập lý do nếu bài chưa đạt yêu cầu..."
+                },
+                "difficulty": {
+                    "easy": "Dễ",
+                    "medium": "Trung bình",
+                    "hard": "Khó"
+                },
+                "actions": {
+                    "generate": "Tạo bản kiểm tra AI",
+                    "regenerate": "Tạo lại bản kiểm tra AI",
+                    "generating": "Đang tạo...",
+                    "approve": "Duyệt kiểm tra",
+                    "reject": "Từ chối",
+                    "reviewing": "Đang cập nhật...",
+                    "approveBeforePublish": "Cần duyệt trước khi xuất bản",
+                    "trialCannotPublish": "Bài AI không xuất bản trực tiếp từ màn hình quản lý này",
+                    "reviewInsteadOfEdit": "Bản kiểm tra AI cần được xem ở trang chi tiết",
+                    "noReviewActions": "Không còn thao tác duyệt phù hợp với trạng thái hiện tại."
+                },
+                "status": {
+                    "draft": "DRAFT",
+                    "approved": "APPROVED",
+                    "rejected": "REJECTED"
+                },
+                "messages": {
+                    "generated": "Đã tạo bản kiểm tra AI. Hãy xem preview trước khi duyệt hoặc từ chối.",
+                    "approved": "Đã duyệt bản kiểm tra AI; nếu có bài mẫu gốc, bài mẫu đã được đánh dấu đủ điều kiện sinh đề AI.",
+                    "approvedPublished": "Đã duyệt bản kiểm tra AI.",
+                    "rejected": "Đã từ chối bản kiểm tra AI."
+                },
+                "errors": {
+                    "inputRequired": "Cần chọn bài mẫu hoặc nhập prompt/bối cảnh để tạo bản kiểm tra.",
+                    "generate": "Không thể tạo bản kiểm tra AI.",
+                    "approve": "Không thể duyệt bản kiểm tra AI.",
+                    "reject": "Không thể từ chối bản kiểm tra AI.",
+                    "rejectReasonRequired": "Vui lòng nhập lý do từ chối để lần tạo lại có ngữ cảnh cải thiện."
+                },
+                "empty": {
+                    "title": "Chưa có preview",
+                    "body": "Tạo bản kiểm tra AI để xem tiêu đề, mô tả và kịch bản trước khi duyệt."
+                },
+                "detail": {
+                    "creator": "Người tạo",
+                    "reviewPurpose": "Mục đích kiểm tra",
+                    "reviewSource": "Nguồn duyệt",
+                    "reviewCreatedAt": "Thời điểm tạo bản kiểm tra",
+                    "reviewedAt": "Thời điểm duyệt",
+                    "reviewedByRole": "Vai trò người duyệt",
+                    "baseExercise": "Bài mẫu",
+                    "approvedForGeneration": "Đủ điều kiện sinh đề",
+                    "revisionOfExercise": "Tạo lại từ bản",
+                    "rejectReason": "Lý do từ chối",
+                    "publishGuard": "Bản kiểm tra AI chỉ dùng để đánh giá chất lượng sinh đề, không phải bài public cho sinh viên.",
+                    "approvedPublished": "Bản kiểm tra AI này đã được duyệt.",
+                    "approvedTrial": "Bản kiểm tra AI này đã được duyệt; bài mẫu gốc có thể được dùng làm nguồn sinh đề AI nếu có liên kết base."
+                }
+            },
+            "sources": {
+                "manual": "Bài mẫu",
+                "ai_generated": "AI_GENERATED",
+                "staff_ai_trial": "Bản kiểm tra AI",
+                "student_private_ai": "Bài AI riêng của sinh viên"
+            },
+            "publishStatus": {
+                "published": "Đã xuất bản",
+                "unpublished": "Chưa xuất bản",
+                "notApplicable": "Không công bố cho sinh viên"
+            },
             "form": {
                 "createTitle": "Tạo bài tập",
                 "editTitle": "Chỉnh sửa bài tập",
@@ -144,10 +334,14 @@
             },
             "filters": {
                 "searchPlaceholder": "Tìm theo tiêu đề, mã, mô tả...",
-                "allSources": "Tất cả nguồn",
-                "manual": "Manual",
-                "aiGenerated": "AI-generated",
-                "allPublish": "Tất cả trạng thái",
+                "allSources": "Tất cả phân loại",
+                "staffLibrary": "Bài mẫu và bản kiểm tra AI",
+                "manual": "Bài mẫu",
+                "aiGenerated": "AI_GENERATED",
+                "staffAiTrial": "Bản kiểm tra AI",
+                "studentPrivateAi": "Bài AI riêng của sinh viên",
+                "allReviewStatuses": "Tất cả trạng thái duyệt",
+                "allPublish": "Tất cả trạng thái xuất bản",
                 "published": "Đã xuất bản",
                 "unpublished": "Chưa xuất bản",
                 "apply": "Lọc",
@@ -162,10 +356,25 @@
                 "code": "Mã bài tập",
                 "title": "Tiêu đề",
                 "description": "Mô tả",
-                "source": "Nguồn",
+                "source": "Phân loại",
+                "review": "Kiểm tra AI",
                 "creator": "Người tạo",
                 "published": "Trạng thái",
                 "actions": "Hành động"
+            },
+            "empty": {
+                "noExercises": {
+                    "title": "Chưa có bài tập",
+                    "body": "Hãy tạo bài mẫu thủ công hoặc tạo bản kiểm tra AI để đánh giá nguồn sinh đề."
+                },
+                "noAiDraft": {
+                    "title": "Chưa có bản kiểm tra AI cần duyệt",
+                    "body": "Dùng Kiểm tra sinh đề AI để tạo bản kiểm tra, sau đó xem preview và duyệt hoặc từ chối."
+                },
+                "noFilterResults": {
+                    "title": "Không có bài tập phù hợp",
+                    "body": "Thử đổi nguồn, trạng thái duyệt, trạng thái xuất bản hoặc từ khóa tìm kiếm."
+                }
             },
             "edit": "Sửa",
             "delete": "Xóa",
@@ -186,6 +395,12 @@
                 "saveError": "Không thể lưu lời giải mẫu.",
                 "deleteError": "Không thể xóa lời giải mẫu.",
                 "confirmDelete": "Bạn có chắc muốn xóa lời giải mẫu này?",
+                "confirmations": {
+                    "delete": {
+                        "title": "Xóa đáp án mẫu?",
+                        "message": "Đáp án mẫu sẽ bị xóa khỏi bài tập này."
+                    }
+                },
                 "solutionData": "Dữ liệu lời giải (JSON)",
                 "formatJson": "Định dạng JSON",
                 "exerciseLabel": "Bài tập:",
@@ -202,7 +417,7 @@
                 "viewDetail": "Xem chi tiết",
                 "edit": "Chỉnh sửa",
                 "publish": "Xuất bản",
-                "unpublish": "Ẩn bài",
+                "unpublish": "Hủy xuất bản",
                 "delete": "Xóa bài tập"
             },
             "detail": {
@@ -211,12 +426,13 @@
                 "loadError": "Không thể tải thông tin bài tập.",
                 "tabInfo": "Thông tin bài tập",
                 "tabSampleSolution": "Lời giải mẫu",
+                "tabAiGenerationTrial": "Kiểm tra sinh đề AI",
                 "tabInsights": "Thống kê thực hành",
                 "fields": {
                     "code": "Mã bài tập",
                     "title": "Tiêu đề",
                     "description": "Mô tả",
-                    "source": "Nguồn",
+                    "source": "Phân loại",
                     "published": "Trạng thái xuất bản",
                     "creator": "Người tạo",
                     "scenarioData": "Dữ liệu kịch bản"
@@ -389,25 +605,47 @@
             "providerRounds": "{{count}} vòng",
             "providerFallback": "{{count}} fallback",
             "affectedSubmissions": "{{count}} bài nộp bị ảnh hưởng",
+            "affectedCoverage": "{{submissions}} bài nộp, {{rounds}} vòng bị ảnh hưởng",
+            "scoreBucketHint": "{{submissions}} bài nộp, điểm TB {{average}}",
+            "roundBucketHint": "{{failed}} lỗi, {{processing}} đang xử lý, điểm TB {{average}}",
+            "trendScoreHint": "Điểm TB {{score}}",
             "recentRoundsHint": "Danh sách vòng chấm gần nhất theo whitelist an toàn của backend.",
             "totalRecentRounds": "{{count}} vòng gần nhất",
+            "skillAnalytics": {
+                "impact": "{{rate}} vòng bị ảnh hưởng",
+                "coverage": "{{submissions}} bài nộp, {{rounds}} vòng - {{errors}}",
+                "noCommonErrors": "Chưa có loại lỗi đã map"
+            },
             "chartDescriptions": {
                 "status": "Sức khỏe luồng chấm bài qua số bài nộp ở từng trạng thái.",
                 "provider": "Độ ổn định provider AI qua tổng số vòng chấm và số vòng phải fallback.",
+                "score": "Phân bố điểm từ dữ liệu thật trong evaluation_rounds.overall_score.",
+                "rounds": "Mức sử dụng vòng 1-3 từ evaluation_rounds.round_number.",
+                "trend": "Xu hướng theo ngày nộp: số bài nộp, vòng đã chấm và điểm trung bình khi có dữ liệu.",
+                "skillAnalytics": "Nhóm kỹ năng được suy luận từ errorType trong evaluation_rounds.details_snapshot.",
                 "issues": "Lỗi sinh viên thường gặp để ưu tiên cải thiện bài tập và hướng dẫn."
             },
             "emptyCharts": {
                 "status": "Chưa có dữ liệu trạng thái bài nộp cho bộ lọc hiện tại.",
                 "provider": "Chưa có dữ liệu provider hoặc fallback cho bộ lọc hiện tại.",
+                "score": "Chưa đủ dữ liệu điểm để hiển thị phân bố điểm.",
+                "rounds": "Chưa có dữ liệu vòng chấm cho bộ lọc hiện tại.",
+                "trend": "Chưa đủ dữ liệu nộp/chấm để hiển thị xu hướng.",
+                "skillAnalytics": "Chưa có lỗi đánh giá để suy luận nhóm kỹ năng.",
                 "issues": "Chưa có dữ liệu loại lỗi phổ biến cho bộ lọc hiện tại."
             },
             "chart": {
                 "count": "{{count}} mục",
+                "submissions": "{{count}} bài nộp",
                 "rounds": "{{count}} vòng",
+                "gradedRounds": "{{count}} đã chấm",
+                "roundNumber": "Vòng {{number}}",
                 "fallbackRounds": "{{count}} fallback",
                 "occurrences": "{{count}} lượt",
                 "roundLegend": "Tổng vòng chấm",
-                "fallbackLegend": "Vòng fallback"
+                "fallbackLegend": "Vòng fallback",
+                "submissionLegend": "Bài nộp",
+                "gradedLegend": "Vòng đã chấm"
             },
             "sources": {
                 "manual": "Manual",
@@ -445,8 +683,22 @@
             "sections": {
                 "statusBreakdown": "Phân bố trạng thái",
                 "providerBreakdown": "Provider và fallback",
+                "scoreDistribution": "Phân bố điểm",
+                "roundDistribution": "Phân bố vòng",
+                "trend": "Xu hướng theo ngày nộp",
+                "skillAnalytics": "Kỹ năng cần cải thiện",
                 "topIssueTypes": "Loại lỗi phổ biến",
                 "recentRounds": "Vòng chấm gần đây"
+            },
+            "skills": {
+                "ENTITY_MODELING": "Xác định thực thể",
+                "ATTRIBUTE_AND_KEY": "Thuộc tính và khóa",
+                "RELATIONSHIP_MODELING": "Mô hình hóa quan hệ",
+                "CARDINALITY": "Bản số",
+                "NORMALIZATION": "Chuẩn hóa",
+                "INTEGRITY_CONSTRAINT": "Ràng buộc toàn vẹn",
+                "SCOPE_COMPLETENESS": "Độ đầy đủ phạm vi",
+                "OTHER": "Lỗi khác"
             }
         },
         "knowledgeBase": {
@@ -477,6 +729,24 @@
             "confirmShow": "Bạn có chắc muốn hiển thị mục kiến thức này?",
             "toggleError": "Không thể cập nhật trạng thái hiển thị.",
             "confirmApprove": "Bạn có chắc muốn duyệt mục kiến thức này?",
+            "confirmations": {
+                "delete": {
+                    "title": "Xóa học liệu?",
+                    "message": "Mục kiến thức này sẽ bị xóa khỏi kho học liệu nếu backend cho phép."
+                },
+                "hide": {
+                    "title": "Ẩn học liệu?",
+                    "message": "Mục kiến thức sẽ không còn được dùng trong danh sách hiển thị mặc định sau khi ẩn."
+                },
+                "show": {
+                    "title": "Hiển thị học liệu?",
+                    "message": "Mục kiến thức sẽ được hiển thị lại nếu đã được duyệt và backend cho phép."
+                },
+                "approve": {
+                    "title": "Duyệt học liệu?",
+                    "message": "Mục kiến thức đã duyệt có thể được dùng làm nguồn tham khảo cho chatbot."
+                }
+            },
             "approveError": "Không thể duyệt mục kiến thức.",
             "rejectError": "Không thể từ chối mục kiến thức.",
             "filter": {
@@ -501,6 +771,22 @@
             "skillCategory": "Danh mục",
             "delete": "Xóa",
             "confirmDelete": "Bạn có chắc muốn xóa kỹ năng này?",
+            "confirmHide": "Bạn có chắc muốn ẩn kỹ năng này?",
+            "confirmShow": "Bạn có chắc muốn hiển thị kỹ năng này?",
+            "confirmations": {
+                "delete": {
+                    "title": "Xóa kỹ năng?",
+                    "message": "Thao tác này sẽ xóa kỹ năng khỏi hệ thống nếu backend cho phép."
+                },
+                "hide": {
+                    "title": "Ẩn kỹ năng?",
+                    "message": "Kỹ năng sẽ không còn hiển thị trong các danh sách đang dùng trạng thái hoạt động."
+                },
+                "show": {
+                    "title": "Hiển thị kỹ năng?",
+                    "message": "Kỹ năng sẽ được hiển thị lại trong các danh sách phù hợp."
+                }
+            },
             "deleteError": "Không thể xóa kỹ năng.",
             "status": {
                 "active": "Hiển thị",
@@ -533,17 +819,290 @@
             "historyLoading": "Đang tải lịch sử hội thoại...",
             "historyError": "Không thể tải lịch sử hội thoại.",
             "noHistory": "Chưa có hội thoại nào.",
+            "noArchivedHistory": "Chưa có cuộc trò chuyện đã lưu trữ.",
+            "historyFilter": "Lọc lịch sử hội thoại",
+            "activeConversations": "Đang hiển thị",
+            "archivedConversations": "Đã lưu trữ",
+            "archiveNote": "Cuộc trò chuyện chỉ bị ẩn khỏi lịch sử, không bị xóa.",
             "untitled": "Hội thoại chưa đặt tên",
             "noPreview": "Chưa có tin nhắn",
             "openingConversation": "Đang mở hội thoại...",
             "openConversationError": "Không thể mở hội thoại này.",
+            "archive": "Lưu trữ",
+            "restore": "Khôi phục",
+            "updatingArchive": "Đang cập nhật...",
+            "archiveError": "Không thể lưu trữ cuộc trò chuyện này.",
+            "restoreError": "Không thể khôi phục cuộc trò chuyện này.",
+            "confirmations": {
+                "archive": {
+                    "title": "Lưu trữ cuộc trò chuyện?",
+                    "message": "Cuộc trò chuyện sẽ được ẩn khỏi lịch sử mặc định. Các tin nhắn cũ vẫn được giữ lại."
+                },
+                "restore": {
+                    "title": "Khôi phục cuộc trò chuyện?",
+                    "message": "Cuộc trò chuyện sẽ hiển thị lại trong lịch sử mặc định."
+                }
+            },
             "sources": "Nguồn đã truy xuất",
             "noSources": "Chưa có nguồn. Hãy gửi một câu hỏi để xem tài liệu liên quan.",
             "providerLabel": "Provider",
             "providerUnknown": "Chưa xác định",
             "sourcesLabel": "Sources",
+            "retrievalLabel": "Truy xuất",
+            "unknown": "Chưa xác định",
+            "sourceCategory": "Danh mục",
+            "sourceOrigin": "Nguồn",
+            "sourceContributor": "Người đóng góp",
+            "sourceScope": {
+                "system": "Hệ thống",
+                "instructor": "Giảng viên đóng góp"
+            },
+            "approval": {
+                "approved": "Đã duyệt"
+            },
+            "retrieval": {
+                "vector": "Vector",
+                "keyword": "Từ khóa"
+            },
+            "relevance": {
+                "high": "Liên quan cao",
+                "medium": "Liên quan vừa",
+                "low": "Liên quan thấp",
+                "match": "Có liên quan",
+                "vectorScore": "Vector {{score}}"
+            },
             "error": "Không thể gửi câu hỏi lúc này. Vui lòng kiểm tra đăng nhập và thử lại sau.",
             "rateLimitError": "Bạn đang gửi câu hỏi quá nhanh. Vui lòng chờ một phút rồi thử lại."
+        },
+        "exerciseGenerator": {
+            "title": "Bắt đầu thực hành",
+            "subtitle": "Chọn hoặc tạo đề bài trước khi vào workspace thiết kế CSDL",
+            "headerTitle": "Khu vực bắt đầu thực hành",
+            "headerSubtitle": "Sau khi có đề bài, bấm Làm bài để mở không gian vẽ ERD.",
+            "tabs": {
+                "ariaLabel": "Chọn cách bắt đầu thực hành",
+                "ai": "Sinh bài tập AI",
+                "manual": "Nhập đề bài"
+            },
+            "difficulty": {
+                "easy": "Cơ bản",
+                "medium": "Trung bình",
+                "hard": "Nâng cao"
+            },
+            "ai": {
+                "noteTitle": "Sinh đề bài riêng",
+                "noteBody": "Đề bài được tạo từ KnowledgeBase đã duyệt và các bài mẫu đã xuất bản."
+            },
+            "manual": {
+                "noteTitle": "Nhập đề bài riêng",
+                "noteBody": "Dán bối cảnh nghiệp vụ tự do; hệ thống sẽ chuẩn hóa thành đề bài để bạn thực hành."
+            },
+            "fields": {
+                "topic": "Chủ đề",
+                "difficulty": "Độ khó",
+                "businessDomain": "Lĩnh vực / ngữ cảnh",
+                "businessDomainOptional": "Lĩnh vực / ngữ cảnh (tùy chọn)",
+                "keywords": "Từ khóa",
+                "baseExercise": "Bài mẫu",
+                "baseExerciseAuto": "Tự chọn theo ngữ cảnh phù hợp",
+                "selectedBase": "Đang dựa trên: {{title}}",
+                "additionalRequirements": "Yêu cầu bổ sung",
+                "customPrompt": "Đề bài / bối cảnh nghiệp vụ"
+            },
+            "placeholders": {
+                "topic": "Ví dụ: ERD, chuẩn hóa, quan hệ n-n",
+                "businessDomain": "Ví dụ: phòng khám, thư viện, nhà hàng",
+                "manualBusinessDomain": "Ví dụ: khách sạn, phòng khám, nhà hàng",
+                "keywords": "customer, booking, invoice",
+                "additionalRequirements": "Ví dụ: cần có lịch sử giao dịch, ràng buộc trạng thái, báo cáo thống kê",
+                "manualAdditionalRequirements": "Ví dụ: nhấn mạnh đặt phòng theo ngày, thanh toán, hủy đặt phòng",
+                "customPrompt": "Ví dụ: Hãy thiết kế CSDL cho hệ thống quản lý đặt phòng khách sạn..."
+            },
+            "actions": {
+                "exerciseList": "Bài tập AI của tôi",
+                "generate": "Sinh bài tập",
+                "generateFromPrompt": "Tạo bài tập từ đề bài",
+                "generating": "Đang sinh bài tập...",
+                "start": "Làm bài",
+                "startingDraft": "Đang tạo bản nháp...",
+                "viewDetail": "Xem chi tiết"
+            },
+            "result": {
+                "businessContext": "Bối cảnh nghiệp vụ",
+                "requirements": "Yêu cầu chức năng",
+                "constraints": "Ràng buộc dữ liệu",
+                "designHints": "Gợi ý phạm vi thiết kế",
+                "scenarioJson": "Dữ liệu kỹ thuật"
+            },
+            "empty": {
+                "title": "Chưa có đề bài",
+                "ai": "Điền form và bấm Sinh bài tập để tạo đề thực hành mới.",
+                "manual": "Nhập đề bài tự do và bấm Tạo bài tập từ đề bài để bắt đầu thực hành."
+            },
+            "errors": {
+                "generate": "Không thể sinh bài tập. Vui lòng thử lại.",
+                "createDraft": "Không thể tạo bản nháp. Vui lòng thử lại.",
+                "manualPromptRequired": "Vui lòng nhập đề bài hoặc bối cảnh nghiệp vụ."
+            }
+        },
+        "exerciseList": {
+            "title": "Bài tập AI của tôi",
+            "subtitle": "Danh sách bài thực hành AI riêng bạn đã tạo từ trang Sinh bài tập.",
+            "loading": "Đang tải bài tập AI của bạn...",
+            "empty": "Bạn chưa có bài tập AI nào. Hãy vào Sinh bài tập để tạo bài thực hành riêng.",
+            "emptyArchived": "Chưa có bài AI riêng đã lưu trữ.",
+            "searchPlaceholder": "Tìm kiếm bài tập AI của tôi...",
+            "filters": {
+                "ariaLabel": "Lọc danh sách bài tập AI của tôi",
+                "active": "Đang hiển thị",
+                "archived": "Đã lưu trữ"
+            },
+            "columns": {
+                "id": "ID",
+                "exerciseCode": "Mã BT",
+                "title": "Tiêu đề",
+                "source": "Nguồn",
+                "archivedAt": "Lưu trữ lúc",
+                "actions": "Hành động"
+            },
+            "sources": {
+                "MANUAL": "Bài mẫu",
+                "AI_GENERATED": "AI riêng",
+                "unknown": "Chưa xác định"
+            },
+            "actions": {
+                "search": "Tìm kiếm",
+                "viewDetail": "Xem chi tiết",
+                "archive": "Lưu trữ",
+                "archiving": "Đang lưu trữ...",
+                "restore": "Khôi phục",
+                "restoring": "Đang khôi phục..."
+            },
+            "confirmations": {
+                "archive": {
+                    "title": "Lưu trữ bài tập AI?",
+                    "message": "Bài tập AI riêng này sẽ được ẩn khỏi danh sách mặc định. Các bài nộp đã tạo từ bài tập này vẫn được giữ lại."
+                },
+                "restore": {
+                    "title": "Khôi phục bài tập AI?",
+                    "message": "Bài tập AI này sẽ hiển thị lại trong danh sách mặc định."
+                }
+            },
+            "errors": {
+                "load": "Không tải được danh sách bài tập AI.",
+                "archive": "Không thể lưu trữ bài tập AI này.",
+                "restore": "Không thể khôi phục bài tập AI này."
+            }
+        },
+        "submissionStatus": {
+            "DRAFT": "Bản nháp",
+            "SUBMITTED": "Đã nộp",
+            "PROCESSING": "Đang chấm",
+            "GRADED": "Đã chấm",
+            "FAILED": "Chấm lỗi"
+        },
+        "submissionHistory": {
+            "title": "Lịch sử nộp bài",
+            "subtitle": "Xem lại bài đã nộp hoặc tiếp tục chỉnh sửa nếu vẫn còn lượt đánh giá.",
+            "loading": "Đang tải lịch sử nộp bài...",
+            "empty": "Chưa có lịch sử nộp bài.",
+            "emptyArchived": "Chưa có bài làm đã lưu trữ.",
+            "roundCounter": "{{used}}/{{max}} lượt",
+            "filters": {
+                "ariaLabel": "Lọc lịch sử bài làm",
+                "active": "Đang hiển thị",
+                "archived": "Đã lưu trữ"
+            },
+            "columns": {
+                "id": "ID",
+                "exerciseCode": "Mã BT",
+                "exerciseTitle": "Tiêu đề BT",
+                "status": "Trạng thái",
+                "rounds": "Lượt đánh giá",
+                "createdAt": "Ngày tạo",
+                "submittedAt": "Ngày nộp",
+                "actions": "Hành động"
+            },
+            "actions": {
+                "viewDetail": "Xem chi tiết",
+                "openDraft": "Mở bài làm",
+                "continue": "Tiếp tục làm bài",
+                "reopening": "Đang mở lại...",
+                "archive": "Lưu trữ",
+                "archiving": "Đang lưu trữ...",
+                "restore": "Khôi phục",
+                "restoring": "Đang khôi phục..."
+            },
+            "confirmations": {
+                "archive": {
+                    "title": "Lưu trữ bài nộp?",
+                    "message": "Bài nộp sẽ được ẩn khỏi danh sách mặc định. Dữ liệu bài làm và kết quả chấm vẫn được giữ lại."
+                },
+                "restore": {
+                    "title": "Khôi phục bài nộp?",
+                    "message": "Bài nộp sẽ hiển thị lại trong danh sách mặc định."
+                }
+            },
+            "errors": {
+                "load": "Không tải được lịch sử nộp bài.",
+                "reopen": "Không mở lại được bài làm.",
+                "noRounds": "Bài này hiện không còn lượt đánh giá để tiếp tục.",
+                "archive": "Không thể lưu trữ bài làm này.",
+                "restore": "Không thể khôi phục bài làm này."
+            }
+        },
+        "submissionDetail": {
+            "title": "Chi tiết bài nộp: {{title}}",
+            "loadingTitle": "Đang tải...",
+            "loading": "Đang tải chi tiết bài nộp...",
+            "notFoundTitle": "Không tìm thấy",
+            "notFound": "Không tìm thấy bài nộp.",
+            "roundCounter": "Lượt đánh giá {{used}}/{{max}}",
+            "actions": {
+                "back": "Quay lại",
+                "openDraft": "Mở bài làm",
+                "continue": "Tiếp tục làm bài",
+                "reopening": "Đang mở lại..."
+            },
+            "notices": {
+                "draft": "Bài này đang là bản nháp. Bạn có thể mở workspace để tiếp tục làm bài.",
+                "canContinue": "Bạn còn lượt đánh giá, có thể tiếp tục chỉnh sửa và nộp lại.",
+                "exhausted": "Đã hết lượt đánh giá. Bài nộp này chỉ còn chế độ xem lại.",
+                "processing": "Bài đang được chấm. Vui lòng chờ kết quả trước khi chỉnh sửa tiếp."
+            },
+            "fields": {
+                "exerciseCode": "Mã bài tập",
+                "status": "Trạng thái",
+                "createdAt": "Ngày tạo",
+                "submittedAt": "Ngày nộp"
+            },
+            "diagram": {
+                "title": "Sơ đồ bài làm"
+            },
+            "evaluation": {
+                "title": "Kết quả đánh giá AI",
+                "help": "Bạn có thể xem lại feedback; nếu còn lượt, hãy tiếp tục chỉnh sửa để nộp vòng tiếp theo.",
+                "score": "Điểm tổng quan",
+                "evaluatedAt": "Thời gian chấm",
+                "details": "Chi tiết lỗi",
+                "type": "Loại lỗi",
+                "description": "Mô tả",
+                "location": "Vị trí",
+                "noDetails": "Không tìm thấy lỗi nào. Chúc mừng bạn!",
+                "empty": "Chưa có kết quả đánh giá cho bài nộp này."
+            },
+            "rounds": {
+                "title": "Lịch sử feedback",
+                "help": "Mở từng vòng để xem lại trạng thái và gợi ý đã lưu.",
+                "roundWithMax": "Vòng {{round}}/{{max}}",
+                "gradedAt": "Thời gian chấm",
+                "noDetails": "Vòng này chưa có chi tiết feedback."
+            },
+            "errors": {
+                "load": "Không tải được chi tiết bài nộp.",
+                "reopen": "Không mở lại được bài làm.",
+                "noRounds": "Bài này hiện không còn lượt đánh giá để tiếp tục."
+            }
         },
         "workspacePage": {
             "title": "Workspace: {{title}}",
@@ -551,14 +1110,16 @@
             "loading": "Đang tải workspace...",
             "notFoundTitle": "Không tìm thấy workspace",
             "notFound": "Không tìm thấy submission.",
-            "exit": "Thoát",
+            "exit": "Quay lại",
             "saveDraft": "Lưu nháp",
             "saving": "Đang lưu...",
             "submit": "Nộp bài",
             "submitting": "Đang nộp...",
-            "editAgain": "Sửa bài",
-            "confirmSubmit": "Bạn có chắc chắn muốn nộp bài? Sau khi nộp, workspace sẽ bị khóa theo rule hiện tại.",
-            "readOnly": "Submission này đã nộp hoặc đang được chấm. Bạn chỉ có thể xem workspace theo rule hiện tại.",
+            "reopening": "Đang mở lại...",
+            "editAgain": "Tiếp tục chỉnh sửa",
+            "confirmSubmit": "Bạn có chắc chắn muốn nộp bài? Sau khi nộp, bài làm sẽ tạm khóa để hệ thống chấm.",
+            "readOnly": "Bài làm này đã nộp hoặc đang được chấm. Bạn chỉ có thể xem lại trong lúc chờ kết quả.",
+            "revisionAvailable": "Feedback đã sẵn sàng. Bấm Tiếp tục chỉnh sửa để mở lại bài làm và nộp vòng {{nextRound}}/{{max}}.",
             "noDescription": "Chưa có mô tả chi tiết.",
             "messages": {
                 "saveSuccess": "Lưu nháp thành công.",
@@ -584,7 +1145,7 @@
                 "current": "Vòng hiện tại",
                 "currentStatus": "Trạng thái vòng hiện tại",
                 "history": "Lịch sử feedback",
-                "historyHelp": "Mở từng vòng để xem lại provider, model và gợi ý đã lưu.",
+                "historyHelp": "Mở từng vòng để xem lại gợi ý đã lưu.",
                 "round": "Vòng",
                 "roundWithMax": "Vòng {{round}}/{{max}}",
                 "latestFeedback": "Feedback mới nhất",
@@ -609,7 +1170,7 @@
                 "processing": "Bài nộp đang được xử lý. Kết quả sẽ hiển thị khi trạng thái là GRADED.",
                 "processingWithPrevious": "Vòng hiện tại đang được xử lý. Feedback mới nhất bên dưới là vòng đã chấm gần nhất.",
                 "failed": "Quá trình chấm bài thất bại. Vui lòng thử lại sau hoặc liên hệ giảng viên nếu lỗi tiếp tục xảy ra.",
-                "failedCanRevise": "Quá trình chấm vòng hiện tại thất bại. Bạn vẫn còn lượt, hãy bấm Sửa bài để chỉnh sửa và nộp vòng tiếp theo.",
+                "failedCanRevise": "Quá trình chấm vòng hiện tại thất bại. Bạn vẫn còn lượt, hãy bấm Tiếp tục chỉnh sửa để chỉnh sửa và nộp vòng tiếp theo.",
                 "failedNoRounds": "Quá trình chấm vòng hiện tại thất bại và bạn đã hết lượt feedback.",
                 "polling": "Đang tự động kiểm tra mỗi {{seconds}} giây.",
                 "pollTimeout": "Quá trình chấm đang lâu hơn bình thường. Bạn có thể reload trang sau ít phút để xem kết quả.",
@@ -682,6 +1243,11 @@
                 "name": "Tên Relationship",
                 "fromEntity": "Từ Entity",
                 "toEntity": "Đến Entity",
+                "entityOne": "Entity 1",
+                "entityTwo": "Entity 2",
+                "sourceCardinality": "Bản số phía Entity 1",
+                "targetCardinality": "Bản số phía Entity 2",
+                "endpointCardinalityHelp": "Hiển thị gần entity: {{value}}",
                 "selectEntity": "Chọn entity",
                 "cardinality": "Cardinality",
                 "cardinalityHelp": {
@@ -714,7 +1280,8 @@
             "requirements": "Yêu cầu thiết kế",
             "constraints": "Ràng buộc nghiệp vụ",
             "noRequirements": "Chưa có yêu cầu cụ thể.",
-            "noConstraints": "Chưa có ràng buộc cụ thể."
+            "noConstraints": "Chưa có ràng buộc cụ thể.",
+            "designHints": "Gợi ý phạm vi thiết kế"
         },
         "erd": {
             "invalid": "Dữ liệu sơ đồ chưa đúng định dạng nên chưa thể hiển thị đầy đủ. Vui lòng xem dữ liệu kỹ thuật bên dưới.",
@@ -733,6 +1300,16 @@
             "subtitle": "Đóng góp và tra cứu tài liệu học thuật",
             "loadError": "Không thể tải dữ liệu kiến thức.",
             "confirmSubmit": "Bạn có chắc muốn gửi tài liệu này cho Admin duyệt? Sau khi gửi sẽ không thể chỉnh sửa.",
+            "confirmations": {
+                "submit": {
+                    "title": "Gửi duyệt học liệu?",
+                    "message": "Tài liệu sẽ được gửi cho Admin duyệt. Sau khi gửi, bạn sẽ không thể chỉnh sửa cho đến khi có kết quả."
+                },
+                "delete": {
+                    "title": "Xóa bản nháp học liệu?",
+                    "message": "Bản nháp học liệu sẽ bị xóa khỏi danh sách của bạn nếu backend cho phép."
+                }
+            },
             "submitError": "Không thể gửi duyệt mục kiến thức.",
             "tabs": {
                 "my": "Kiến thức của tôi",
@@ -750,23 +1327,58 @@
             "chooseExercise": "Chọn một bài tập để xem KPI, biểu đồ lỗi thường gặp và bảng bài nộp ẩn danh.",
             "privacyNote": "Trang này chỉ dùng dữ liệu tổng hợp/ẩn danh; không hiển thị tên, email sinh viên, diagram raw, lỗi provider raw hoặc dead-letter payload.",
             "viewExerciseDetail": "Mở chi tiết bài tập",
+            "scoreBucketHint": "{{submissions}} bài nộp, điểm TB {{average}}",
+            "roundBucketHint": "{{failed}} lỗi, {{processing}} đang xử lý, điểm TB {{average}}",
+            "trendScoreHint": "Điểm TB {{score}}",
+            "skillAnalytics": {
+                "impact": "{{rate}} vòng bị ảnh hưởng",
+                "coverage": "{{submissions}} bài nộp, {{rounds}} vòng - {{errors}}",
+                "noCommonErrors": "Chưa có loại lỗi đã map"
+            },
             "sections": {
                 "scopeBreakdown": "Phạm vi bài nộp",
-                "statusBreakdown": "Trạng thái chấm bài"
+                "statusBreakdown": "Trạng thái chấm bài",
+                "scoreDistribution": "Phân bố điểm",
+                "roundDistribution": "Phân bố vòng",
+                "trend": "Xu hướng theo ngày nộp",
+                "skillAnalytics": "Kỹ năng cần cải thiện"
             },
             "chartDescriptions": {
                 "scope": "So sánh bài nộp trực tiếp với bài nộp từ bài AI phát sinh để giảng viên biết mức độ lan tỏa của đề.",
                 "status": "Tình trạng các bài đã chấm, lỗi hoặc đang xử lý trong phạm vi đang chọn.",
+                "score": "Phân bố điểm từ dữ liệu thật trong evaluation_rounds.overall_score.",
+                "rounds": "Mức sử dụng vòng 1-3 từ evaluation_rounds.round_number.",
+                "trend": "Xu hướng theo ngày nộp trong phạm vi bài tập đang chọn.",
+                "skillAnalytics": "Nhóm kỹ năng được suy luận từ lỗi trong details_snapshot, chỉ hiển thị tín hiệu tổng hợp/ẩn danh.",
                 "issues": "Những loại lỗi sinh viên gặp nhiều nhất, dùng để điều chỉnh đề bài hoặc bổ sung hướng dẫn."
             },
             "emptyCharts": {
                 "scope": "Chưa có dữ liệu phạm vi bài nộp cho bài tập này.",
                 "status": "Chưa có dữ liệu trạng thái chấm bài cho bài tập này.",
+                "score": "Chưa đủ dữ liệu điểm để hiển thị phân bố điểm.",
+                "rounds": "Chưa có dữ liệu vòng chấm cho bài tập này.",
+                "trend": "Chưa đủ dữ liệu nộp/chấm để hiển thị xu hướng.",
+                "skillAnalytics": "Chưa có lỗi đánh giá để suy luận nhóm kỹ năng.",
                 "issues": "Chưa có dữ liệu loại lỗi phổ biến cho bài tập này."
             },
             "chart": {
                 "submissions": "{{count}} bài nộp",
-                "occurrences": "{{count}} lượt"
+                "rounds": "{{count}} vòng",
+                "gradedRounds": "{{count}} đã chấm",
+                "roundNumber": "Vòng {{number}}",
+                "occurrences": "{{count}} lượt",
+                "submissionLegend": "Bài nộp",
+                "gradedLegend": "Vòng đã chấm"
+            },
+            "skills": {
+                "ENTITY_MODELING": "Xác định thực thể",
+                "ATTRIBUTE_AND_KEY": "Thuộc tính và khóa",
+                "RELATIONSHIP_MODELING": "Mô hình hóa quan hệ",
+                "CARDINALITY": "Bản số",
+                "NORMALIZATION": "Chuẩn hóa",
+                "INTEGRITY_CONSTRAINT": "Ràng buộc toàn vẹn",
+                "SCOPE_COMPLETENESS": "Độ đầy đủ phạm vi",
+                "OTHER": "Lỗi khác"
             }
         },
         "exerciseInsights": {
@@ -778,6 +1390,7 @@
             "unknown": "Chưa xác định",
             "roundNumber": "Vòng {{number}}",
             "affectedSubmissions": "{{count}} bài nộp bị ảnh hưởng",
+            "affectedCoverage": "{{submissions}} bài nộp, {{rounds}} vòng bị ảnh hưởng",
             "anonymizedHint": "Bảng này chỉ hiển thị mã bài nộp và trạng thái tổng hợp, không hiển thị tên hoặc email sinh viên.",
             "totalSubmissions": "{{count}} bài nộp",
             "scopes": {

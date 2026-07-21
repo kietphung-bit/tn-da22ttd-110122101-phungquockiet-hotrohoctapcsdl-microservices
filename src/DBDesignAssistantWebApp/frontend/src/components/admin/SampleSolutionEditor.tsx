@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
+import ConfirmDialog from "../common/ConfirmDialog";
 import sampleSolutionApi from "../../services/sampleSolutionApi";
 import { instructorSampleSolutionApi } from "../../services/instructorSampleSolutionApi";
 import type { SampleSolution } from "../../types";
@@ -119,6 +120,7 @@ const SampleSolutionEditor = ({ exerciseId, exerciseSource, apiType = 'admin' }:
     const [loadError, setLoadError] = useState<string | null>(null);
     const [formError, setFormError] = useState<string | null>(null);
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
+    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
     const [mode, setMode] = useState<"form" | "raw">("form");
     const [form, setForm] = useState<SolutionFormData>({
@@ -251,9 +253,13 @@ const SampleSolutionEditor = ({ exerciseId, exerciseSource, apiType = 'admin' }:
         }
     };
 
+    const requestDelete = () => {
+        setIsDeleteConfirmOpen(true);
+    };
+
     const handleDelete = async () => {
         if (!solution?.sampleSolutionId) return;
-        if (!window.confirm(t("admin.exercises.sampleSolution.confirmDelete"))) return;
+        setIsDeleteConfirmOpen(false);
         setFormError(null);
         setSuccessMsg(null);
         try {
@@ -351,6 +357,18 @@ const SampleSolutionEditor = ({ exerciseId, exerciseSource, apiType = 'admin' }:
 
     return (
         <div className="solution-editor">
+            <ConfirmDialog
+                open={isDeleteConfirmOpen}
+                title={t("admin.exercises.sampleSolution.confirmations.delete.title")}
+                message={t("admin.exercises.sampleSolution.confirmations.delete.message")}
+                confirmLabel={t("common.delete")}
+                cancelLabel={t("common.cancel")}
+                variant="danger"
+                onCancel={() => setIsDeleteConfirmOpen(false)}
+                onConfirm={() => {
+                    void handleDelete();
+                }}
+            />
             {/* Mode toggle */}
             <div className="editor-mode-bar">
                 <button
@@ -600,7 +618,7 @@ const SampleSolutionEditor = ({ exerciseId, exerciseSource, apiType = 'admin' }:
                         <button
                             type="button"
                             className="btn btn-outline"
-                            onClick={handleDelete}
+                            onClick={requestDelete}
                         >
                             {t("admin.exercises.sampleSolution.delete")}
                         </button>

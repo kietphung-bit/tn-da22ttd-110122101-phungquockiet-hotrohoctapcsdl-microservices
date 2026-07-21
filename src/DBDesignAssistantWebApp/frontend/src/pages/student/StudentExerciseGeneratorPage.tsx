@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { Eye, Play, Plus } from "lucide-react";
 import StudentLayout from "../../components/layouts/StudentLayout";
 import { useAuth } from "../../hooks/useAuth";
 import { studentExerciseApi } from "../../services/studentExerciseApi";
@@ -7,7 +9,7 @@ import { studentSubmissionApi } from "../../services/studentSubmissionApi";
 import type { Exercise, ExerciseGenerationResponse } from "../../types";
 import "./StudentExerciseGeneratorPage.css";
 
-type GeneratorForm = {
+type AiGeneratorForm = {
     topic: string;
     difficulty: string;
     businessDomain: string;
@@ -16,9 +18,25 @@ type GeneratorForm = {
     additionalRequirements: string;
 };
 
+type ManualPromptForm = {
+    customPrompt: string;
+    difficulty: string;
+    businessDomain: string;
+    additionalRequirements: string;
+};
+
 type PracticeStartTab = "manual" | "ai";
 
-const initialForm: GeneratorForm = {
+type ApiErrorLike = {
+    response?: {
+        data?: {
+            message?: string;
+        };
+    };
+    message?: string;
+};
+
+const initialAiForm: AiGeneratorForm = {
     topic: "",
     difficulty: "MEDIUM",
     businessDomain: "",
@@ -27,23 +45,37 @@ const initialForm: GeneratorForm = {
     additionalRequirements: "",
 };
 
-const difficultyOptions = [
-    { value: "EASY", label: "Cơ bản" },
-    { value: "MEDIUM", label: "Trung bình" },
-    { value: "HARD", label: "Nâng cao" },
-];
+const initialManualForm: ManualPromptForm = {
+    customPrompt: "",
+    difficulty: "MEDIUM",
+    businessDomain: "",
+    additionalRequirements: "",
+};
+
+const initialGeneratedByTab: Record<PracticeStartTab, ExerciseGenerationResponse | null> = {
+    ai: null,
+    manual: null,
+};
 
 const StudentExerciseGeneratorPage = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const { logout } = useAuth();
-    const [form, setForm] = useState<GeneratorForm>(initialForm);
+    const [aiForm, setAiForm] = useState<AiGeneratorForm>(initialAiForm);
+    const [manualForm, setManualForm] = useState<ManualPromptForm>(initialManualForm);
     const [sampleExercises, setSampleExercises] = useState<Exercise[]>([]);
     const [loadingSamples, setLoadingSamples] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [startingDraft, setStartingDraft] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [generated, setGenerated] = useState<ExerciseGenerationResponse | null>(null);
+    const [generatedByTab, setGeneratedByTab] = useState(initialGeneratedByTab);
     const [activeTab, setActiveTab] = useState<PracticeStartTab>("ai");
+
+    const difficultyOptions = [
+        { value: "EASY", label: t("student.exerciseGenerator.difficulty.easy") },
+        { value: "MEDIUM", label: t("student.exerciseGenerator.difficulty.medium") },
+        { value: "HARD", label: t("student.exerciseGenerator.difficulty.hard") },
+    ];
 
     useEffect(() => {
         let isCancelled = false;
@@ -72,39 +104,77 @@ const StudentExerciseGeneratorPage = () => {
     }, []);
 
     const selectedBaseExercise = useMemo(() => {
-        const id = Number(form.baseExerciseId);
+        const id = Number(aiForm.baseExerciseId);
         if (!Number.isFinite(id)) {
             return null;
         }
         return sampleExercises.find((exercise) => exercise.exerciseId === id) ?? null;
-    }, [form.baseExerciseId, sampleExercises]);
+    }, [aiForm.baseExerciseId, sampleExercises]);
 
-    const handleChange = (
+    const generated = generatedByTab[activeTab];
+    const scenario = generated?.scenarioData ?? {};
+
+    const handleAiChange = (
         event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
     ) => {
         const { name, value } = event.target;
-        setForm((current) => ({ ...current, [name]: value }));
+        setAiForm((current) => ({ ...current, [name]: value }));
     };
 
-    const handleSubmit = async (event: React.FormEvent) => {
+    const handleManualChange = (
+        event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
+    ) => {
+        const { name, value } = event.target;
+        setManualForm((current) => ({ ...current, [name]: value }));
+    };
+
+    const handleTabChange = (tab: PracticeStartTab) => {
+        setActiveTab(tab);
+        setError(null);
+    };
+
+    const handleAiSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
         setError(null);
         setSubmitting(true);
         try {
             const data = await studentExerciseApi.generate({
-                topic: toOptional(form.topic),
-                difficulty: form.difficulty,
-                businessDomain: toOptional(form.businessDomain),
-                keywords: toOptional(form.keywords),
-                baseExerciseId: form.baseExerciseId ? Number(form.baseExerciseId) : null,
-                additionalRequirements: toOptional(form.additionalRequirements),
+                topic: toOptional(aiForm.topic),
+                difficulty: aiForm.difficulty,
+                businessDomain: toOptional(aiForm.businessDomain),
+                keywords: toOptional(aiForm.keywords),
+                baseExerciseId: aiForm.baseExerciseId ? Number(aiForm.baseExerciseId) : null,
+                additionalRequirements: toOptional(aiForm.additionalRequirements),
             });
-            setGenerated(data);
+            setGeneratedByTab((current) => ({ ...current, ai: data }));
         } catch (requestError) {
-            const message = requestError instanceof Error
-                ? requestError.message
-                : "Không thể sinh bài tập. Vui lòng thử lại.";
-            setError(message);
+            setError(getErrorMessage(requestError, t("student.exerciseGenerator.errors.generate")));
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleManualSubmit = async (event: React.FormEvent) => {
+        event.preventDefault();
+        const customPrompt = manualForm.customPrompt.trim();
+        if (!customPrompt) {
+            setError(t("student.exerciseGenerator.errors.manualPromptRequired"));
+            return;
+        }
+
+        setError(null);
+        setSubmitting(true);
+        try {
+            const data = await studentExerciseApi.generate({
+                customPrompt,
+                businessContext: customPrompt,
+                difficulty: manualForm.difficulty,
+                businessDomain: toOptional(manualForm.businessDomain),
+                additionalRequirements: toOptional(manualForm.additionalRequirements),
+            });
+            setGeneratedByTab((current) => ({ ...current, manual: data }));
+        } catch (requestError) {
+            setError(getErrorMessage(requestError, t("student.exerciseGenerator.errors.generate")));
         } finally {
             setSubmitting(false);
         }
@@ -121,10 +191,7 @@ const StudentExerciseGeneratorPage = () => {
             const draft = await studentSubmissionApi.createDraft(generated.exerciseId);
             navigate(`/student/workspace/${draft.submissionId}`);
         } catch (requestError) {
-            const message = requestError instanceof Error
-                ? requestError.message
-                : "Không thể tạo bản nháp. Vui lòng thử lại.";
-            setError(message);
+            setError(getErrorMessage(requestError, t("student.exerciseGenerator.errors.createDraft")));
         } finally {
             setStartingDraft(false);
         }
@@ -135,121 +202,104 @@ const StudentExerciseGeneratorPage = () => {
         navigate("/login");
     };
 
-    const scenario = generated?.scenarioData ?? {};
-
     return (
         <StudentLayout
-            title="Bắt đầu thực hành"
-            subtitle="Chọn hoặc tạo đề bài trước khi vào workspace thiết kế CSDL"
+            title={t("student.exerciseGenerator.title")}
+            subtitle={t("student.exerciseGenerator.subtitle")}
             onSignOut={handleSignOut}
         >
             <div className="page-header">
                 <div>
-                    <h2>Khu vực bắt đầu thực hành</h2>
-                    <p className="muted-text">
-                        Sau khi có đề bài, bấm Làm bài để tạo bản nháp thật và vào workspace production.
-                    </p>
+                    <h2>{t("student.exerciseGenerator.headerTitle")}</h2>
+                    <p className="muted-text">{t("student.exerciseGenerator.headerSubtitle")}</p>
                 </div>
-                <button className="btn btn-outline" onClick={() => navigate("/student/exercises")}>
-                    Danh sách bài tập
-                </button>
             </div>
 
-            <div className="practice-start-tabs" role="tablist" aria-label="Chọn cách bắt đầu thực hành">
+            <div
+                className="practice-start-tabs"
+                role="tablist"
+                aria-label={t("student.exerciseGenerator.tabs.ariaLabel")}
+            >
                 <button
                     type="button"
                     role="tab"
                     aria-selected={activeTab === "ai"}
                     className={`practice-start-tab${activeTab === "ai" ? " practice-start-tab--active" : ""}`}
-                    onClick={() => setActiveTab("ai")}
+                    onClick={() => handleTabChange("ai")}
                 >
-                    Sinh bài tập AI
+                    {t("student.exerciseGenerator.tabs.ai")}
                 </button>
                 <button
                     type="button"
                     role="tab"
                     aria-selected={activeTab === "manual"}
                     className={`practice-start-tab${activeTab === "manual" ? " practice-start-tab--active" : ""}`}
-                    onClick={() => setActiveTab("manual")}
+                    onClick={() => handleTabChange("manual")}
                 >
-                    Nhập đề bài
+                    {t("student.exerciseGenerator.tabs.manual")}
                 </button>
             </div>
 
-            {activeTab === "ai" ? (
-                <div className="exercise-generator-grid">
-                    <form className="section-card" onSubmit={handleSubmit}>
+            <div className="exercise-generator-grid">
+                {activeTab === "ai" ? (
+                    <form className="section-card" onSubmit={handleAiSubmit}>
                         <div className="card-body">
-                            <div className="practice-note">
-                                <strong>Sinh đề bài riêng</strong>
-                                <span>Đề bài được tạo từ KnowledgeBase đã duyệt và các bài mẫu đã xuất bản.</span>
-                            </div>
-
                             <div className="form-group">
-                                <label htmlFor="topic">Chủ đề</label>
+                                <label htmlFor="topic">{t("student.exerciseGenerator.fields.topic")}</label>
                                 <input
                                     id="topic"
                                     name="topic"
                                     className="input"
-                                    value={form.topic}
-                                    onChange={handleChange}
-                                    placeholder="Ví dụ: ERD, chuẩn hóa, quan hệ n-n"
+                                    value={aiForm.topic}
+                                    onChange={handleAiChange}
+                                    placeholder={t("student.exerciseGenerator.placeholders.topic")}
                                 />
                             </div>
 
-                            <div className="form-group">
-                                <label htmlFor="difficulty">Độ khó</label>
-                                <select
-                                    id="difficulty"
-                                    name="difficulty"
-                                    className="input"
-                                    value={form.difficulty}
-                                    onChange={handleChange}
-                                    required
-                                >
-                                    {difficultyOptions.map((option) => (
-                                        <option key={option.value} value={option.value}>
-                                            {option.label}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                            <DifficultySelect
+                                id="aiDifficulty"
+                                name="difficulty"
+                                value={aiForm.difficulty}
+                                options={difficultyOptions}
+                                label={t("student.exerciseGenerator.fields.difficulty")}
+                                onChange={handleAiChange}
+                            />
 
                             <div className="form-group">
-                                <label htmlFor="businessDomain">Lĩnh vực / ngữ cảnh</label>
+                                <label htmlFor="businessDomain">{t("student.exerciseGenerator.fields.businessDomain")}</label>
                                 <input
                                     id="businessDomain"
                                     name="businessDomain"
                                     className="input"
-                                    value={form.businessDomain}
-                                    onChange={handleChange}
-                                    placeholder="Ví dụ: phòng khám, thư viện, nhà hàng"
+                                    value={aiForm.businessDomain}
+                                    onChange={handleAiChange}
+                                    placeholder={t("student.exerciseGenerator.placeholders.businessDomain")}
                                 />
                             </div>
 
                             <div className="form-group">
-                                <label htmlFor="keywords">Từ khóa</label>
+                                <label htmlFor="keywords">{t("student.exerciseGenerator.fields.keywords")}</label>
                                 <input
                                     id="keywords"
                                     name="keywords"
                                     className="input"
-                                    value={form.keywords}
-                                    onChange={handleChange}
-                                    placeholder="customer, booking, invoice"
+                                    value={aiForm.keywords}
+                                    onChange={handleAiChange}
+                                    placeholder={t("student.exerciseGenerator.placeholders.keywords")}
                                 />
                             </div>
 
                             <div className="form-group">
-                                <label htmlFor="baseExerciseId">Bài mẫu</label>
+                                <label htmlFor="baseExerciseId">{t("student.exerciseGenerator.fields.baseExercise")}</label>
                                 <select
                                     id="baseExerciseId"
                                     name="baseExerciseId"
                                     className="input"
-                                    value={form.baseExerciseId}
-                                    onChange={handleChange}
+                                    value={aiForm.baseExerciseId}
+                                    onChange={handleAiChange}
                                     disabled={loadingSamples}
                                 >
-                                    <option value="">Tự chọn theo ngữ cảnh phù hợp</option>
+                                    <option value="">{t("student.exerciseGenerator.fields.baseExerciseAuto")}</option>
                                     {sampleExercises.map((exercise) => (
                                         <option key={exercise.exerciseId} value={exercise.exerciseId}>
                                             {exercise.exerciseCode ? `${exercise.exerciseCode} - ` : ""}
@@ -258,102 +308,198 @@ const StudentExerciseGeneratorPage = () => {
                                     ))}
                                 </select>
                                 {selectedBaseExercise ? (
-                                    <p className="muted-text">Đang dựa trên: {selectedBaseExercise.exTitle}</p>
+                                    <p className="muted-text">
+                                        {t("student.exerciseGenerator.fields.selectedBase", {
+                                            title: selectedBaseExercise.exTitle,
+                                        })}
+                                    </p>
                                 ) : null}
                             </div>
 
                             <div className="form-group">
-                                <label htmlFor="additionalRequirements">Yêu cầu bổ sung</label>
+                                <label htmlFor="additionalRequirements">
+                                    {t("student.exerciseGenerator.fields.additionalRequirements")}
+                                </label>
                                 <textarea
                                     id="additionalRequirements"
                                     name="additionalRequirements"
                                     className="input"
                                     rows={4}
-                                    value={form.additionalRequirements}
-                                    onChange={handleChange}
-                                    placeholder="Ví dụ: cần có lịch sử giao dịch, ràng buộc trạng thái, báo cáo thống kê"
+                                    value={aiForm.additionalRequirements}
+                                    onChange={handleAiChange}
+                                    placeholder={t("student.exerciseGenerator.placeholders.additionalRequirements")}
                                 />
                             </div>
 
                             {error ? <div className="alert alert-error">{error}</div> : null}
 
                             <button className="btn btn-primary" type="submit" disabled={submitting}>
-                                {submitting ? "Đang sinh bài tập..." : "Sinh bài tập"}
+                                <Plus size={16} aria-hidden="true" />
+                                {submitting
+                                    ? t("student.exerciseGenerator.actions.generating")
+                                    : t("student.exerciseGenerator.actions.generate")}
                             </button>
                         </div>
                     </form>
-
-                    <section className="section-card">
+                ) : (
+                    <form className="section-card manual-practice-form" onSubmit={handleManualSubmit}>
                         <div className="card-body">
-                            {generated ? (
-                                <div className="generated-exercise">
-                                    <div className="badge-row">
-                                        <span className="status-badge status-badge--info">{generated.exerciseSource}</span>
-                                        <span className="status-badge">{generated.exerciseCode}</span>
-                                    </div>
-                                    <h3>{generated.title}</h3>
-                                    <p>{generated.description}</p>
+                            <div className="form-group">
+                                <label htmlFor="customPrompt">{t("student.exerciseGenerator.fields.customPrompt")}</label>
+                                <textarea
+                                    id="customPrompt"
+                                    name="customPrompt"
+                                    className="input manual-prompt-textarea"
+                                    rows={9}
+                                    value={manualForm.customPrompt}
+                                    onChange={handleManualChange}
+                                    placeholder={t("student.exerciseGenerator.placeholders.customPrompt")}
+                                    required
+                                />
+                            </div>
 
-                                    <GeneratedSection title="Bối cảnh nghiệp vụ" value={scenario.businessContext} />
-                                    <GeneratedList title="Yêu cầu chức năng" value={scenario.functionalRequirements} />
-                                    <GeneratedList title="Ràng buộc dữ liệu" value={scenario.dataConstraints} />
-                                    <GeneratedList title="Gợi ý phạm vi thiết kế" value={scenario.designScopeHints} />
+                            <DifficultySelect
+                                id="manualDifficulty"
+                                name="difficulty"
+                                value={manualForm.difficulty}
+                                options={difficultyOptions}
+                                label={t("student.exerciseGenerator.fields.difficulty")}
+                                onChange={handleManualChange}
+                            />
 
-                                    <div className="action-group">
-                                        <button
-                                            className="btn btn-primary"
-                                            onClick={handleStartGeneratedExercise}
-                                            disabled={startingDraft}
-                                        >
-                                            {startingDraft ? "Đang tạo bản nháp..." : "Làm bài"}
-                                        </button>
-                                        <button
-                                            className="btn btn-outline"
-                                            onClick={() => navigate(`/student/exercises/${generated.exerciseId}`)}
-                                        >
-                                            Xem chi tiết
-                                        </button>
-                                    </div>
+                            <div className="form-group">
+                                <label htmlFor="manualBusinessDomain">
+                                    {t("student.exerciseGenerator.fields.businessDomainOptional")}
+                                </label>
+                                <input
+                                    id="manualBusinessDomain"
+                                    name="businessDomain"
+                                    className="input"
+                                    value={manualForm.businessDomain}
+                                    onChange={handleManualChange}
+                                    placeholder={t("student.exerciseGenerator.placeholders.manualBusinessDomain")}
+                                />
+                            </div>
 
-                                    <details className="json-details">
-                                        <summary>Scenario JSON</summary>
-                                        <pre>{JSON.stringify(generated.scenarioData, null, 2)}</pre>
-                                    </details>
-                                </div>
-                            ) : (
-                                <div className="empty-state">
-                                    <h3>Chưa có đề bài</h3>
-                                    <p>Điền form và bấm Sinh bài tập để tạo đề thực hành mới.</p>
-                                </div>
-                            )}
+                            <div className="form-group">
+                                <label htmlFor="manualAdditionalRequirements">
+                                    {t("student.exerciseGenerator.fields.additionalRequirements")}
+                                </label>
+                                <textarea
+                                    id="manualAdditionalRequirements"
+                                    name="additionalRequirements"
+                                    className="input"
+                                    rows={3}
+                                    value={manualForm.additionalRequirements}
+                                    onChange={handleManualChange}
+                                    placeholder={t("student.exerciseGenerator.placeholders.manualAdditionalRequirements")}
+                                />
+                            </div>
+
+                            {error ? <div className="alert alert-error">{error}</div> : null}
+
+                            <button
+                                className="btn btn-primary"
+                                type="submit"
+                                disabled={submitting || manualForm.customPrompt.trim().length === 0}
+                            >
+                                <Plus size={16} aria-hidden="true" />
+                                {submitting
+                                    ? t("student.exerciseGenerator.actions.generating")
+                                    : t("student.exerciseGenerator.actions.generateFromPrompt")}
+                            </button>
                         </div>
-                    </section>
-                </div>
-            ) : (
-                <section className="section-card manual-practice-placeholder">
+                    </form>
+                )}
+
+                <section className="section-card">
                     <div className="card-body">
-                        <div>
-                            <h3>Nhập đề bài riêng</h3>
-                            <p className="muted-text">
-                                Flow này sẽ cho phép sinh viên dán đề bài, khóa đề, rồi bấm Làm bài để tạo bản nháp production.
-                            </p>
-                        </div>
-                        <textarea
-                            className="input"
-                            rows={8}
-                            placeholder="Dán mô tả nghiệp vụ cần thiết kế ERD..."
-                            disabled
-                        />
-                        <div className="practice-note practice-note--warning">
-                            <strong>TODO</strong>
-                            <span>Chưa có backend tạo exercise từ đề bài nhập tay trong production, nên tạm thời chưa tạo bản nháp.</span>
-                        </div>
+                        {generated ? (
+                            <div className="generated-exercise">
+                                <div className="badge-row">
+                                    <span className="status-badge">{generated.exerciseCode}</span>
+                                </div>
+                                <h3>{generated.title}</h3>
+                                <p>{generated.description}</p>
+
+                                <GeneratedSection
+                                    title={t("student.exerciseGenerator.result.businessContext")}
+                                    value={getScenarioValue(scenario, ["businessContext", "context", "problemContext"])}
+                                />
+                                <GeneratedList
+                                    title={t("student.exerciseGenerator.result.requirements")}
+                                    value={getScenarioValue(scenario, ["requirements", "functionalRequirements", "businessRequirements"])}
+                                />
+                                <GeneratedList
+                                    title={t("student.exerciseGenerator.result.constraints")}
+                                    value={getScenarioValue(scenario, ["constraints", "dataConstraints", "businessRules"])}
+                                />
+                                <GeneratedList
+                                    title={t("student.exerciseGenerator.result.designHints")}
+                                    value={getScenarioValue(scenario, ["designScopeHints", "scopeHints"])}
+                                />
+
+                                <div className="action-group">
+                                    <button
+                                        className="btn btn-primary"
+                                        onClick={handleStartGeneratedExercise}
+                                        disabled={startingDraft}
+                                        type="button"
+                                    >
+                                        <Play size={16} aria-hidden="true" />
+                                        {startingDraft
+                                            ? t("student.exerciseGenerator.actions.startingDraft")
+                                            : t("student.exerciseGenerator.actions.start")}
+                                    </button>
+                                    <button
+                                        className="btn btn-outline"
+                                        onClick={() => navigate(`/student/exercises/${generated.exerciseId}`)}
+                                        type="button"
+                                    >
+                                        <Eye size={16} aria-hidden="true" />
+                                        {t("student.exerciseGenerator.actions.viewDetail")}
+                                    </button>
+                                </div>
+
+                                <details className="json-details">
+                                    <summary>{t("student.exerciseGenerator.result.scenarioJson")}</summary>
+                                    <pre>{JSON.stringify(generated.scenarioData, null, 2)}</pre>
+                                </details>
+                            </div>
+                        ) : (
+                            <div className="empty-state">
+                                <h3>{t("student.exerciseGenerator.empty.title")}</h3>
+                                <p>{t(`student.exerciseGenerator.empty.${activeTab}`)}</p>
+                            </div>
+                        )}
                     </div>
                 </section>
-            )}
+            </div>
         </StudentLayout>
     );
 };
+
+type DifficultySelectProps = {
+    id: string;
+    name: string;
+    value: string;
+    label: string;
+    options: Array<{ value: string; label: string }>;
+    onChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+};
+
+const DifficultySelect = ({ id, name, value, label, options, onChange }: DifficultySelectProps) => (
+    <div className="form-group">
+        <label htmlFor={id}>{label}</label>
+        <select id={id} name={name} className="input" value={value} onChange={onChange} required>
+            {options.map((option) => (
+                <option key={option.value} value={option.value}>
+                    {option.label}
+                </option>
+            ))}
+        </select>
+    </div>
+);
 
 const GeneratedSection = ({ title, value }: { title: string; value: unknown }) => {
     if (typeof value !== "string" || !value.trim()) {
@@ -369,9 +515,7 @@ const GeneratedSection = ({ title, value }: { title: string; value: unknown }) =
 };
 
 const GeneratedList = ({ title, value }: { title: string; value: unknown }) => {
-    const items = Array.isArray(value)
-        ? value.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
-        : [];
+    const items = toTextList(value);
 
     if (items.length === 0) {
         return null;
@@ -381,8 +525,8 @@ const GeneratedList = ({ title, value }: { title: string; value: unknown }) => {
         <section className="generated-section">
             <h4>{title}</h4>
             <ul>
-                {items.map((item) => (
-                    <li key={item}>{item}</li>
+                {items.map((item, index) => (
+                    <li key={`${item}-${index}`}>{item}</li>
                 ))}
             </ul>
         </section>
@@ -392,6 +536,45 @@ const GeneratedList = ({ title, value }: { title: string; value: unknown }) => {
 const toOptional = (value: string) => {
     const trimmed = value.trim();
     return trimmed.length > 0 ? trimmed : undefined;
+};
+
+const getScenarioValue = (scenario: Record<string, unknown>, keys: string[]) => {
+    for (const key of keys) {
+        const value = scenario[key];
+        if (value !== undefined && value !== null) {
+            return value;
+        }
+    }
+    return undefined;
+};
+
+const toTextList = (value: unknown): string[] => {
+    if (Array.isArray(value)) {
+        return value.flatMap((item) => {
+            if (typeof item === "string" || typeof item === "number") {
+                const text = String(item).trim();
+                return text ? [text] : [];
+            }
+            return [];
+        });
+    }
+
+    if (typeof value === "string") {
+        return value
+            .split(/\r?\n/)
+            .map((item) => item.trim())
+            .filter(Boolean);
+    }
+
+    return [];
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+    if (typeof error === "object" && error !== null) {
+        const candidate = error as ApiErrorLike;
+        return candidate.response?.data?.message || candidate.message || fallback;
+    }
+    return fallback;
 };
 
 export default StudentExerciseGeneratorPage;

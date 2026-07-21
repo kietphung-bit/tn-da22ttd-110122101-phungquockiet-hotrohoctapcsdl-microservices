@@ -57,6 +57,29 @@ public interface KnowledgeBaseRepository extends JpaRepository<KnowledgeBase, Lo
             @Param("topK") int topK);
 
     @Query(value = """
+            select
+              kb.kb_id as "kbId",
+              kb.kb_title as "kbTitle",
+              kb.kb_content as "kbContent",
+              kb.kb_source as "kbSource",
+              kb.kb_category as "kbCategory",
+              kb.approval_status as "approvalStatus",
+              kb.knowledge_scope as "knowledgeScope",
+              u.full_name as "createdByName",
+              (1 - (kb.kb_vector <=> cast(:queryVector as vector))) as "relevanceScore"
+            from knowledge_base kb
+            left join users u on u.user_id = kb.created_by
+            where kb.is_active = true
+              and kb.approval_status = 'APPROVED'
+              and kb.kb_vector is not null
+            order by (kb.kb_vector <=> cast(:queryVector as vector)), kb.kb_id
+            limit :topK
+            """, nativeQuery = true)
+    List<KnowledgeSearchProjection> findTopKProjectedByVectorSimilarity(
+            @Param("queryVector") String queryVector,
+            @Param("topK") int topK);
+
+    @Query(value = """
             select *
             from knowledge_base
             where is_active = true
@@ -67,6 +90,30 @@ public interface KnowledgeBaseRepository extends JpaRepository<KnowledgeBase, Lo
             limit :topK
             """, nativeQuery = true)
     List<KnowledgeBase> findTopKByTextVectorCastSimilarity(
+            @Param("queryVector") String queryVector,
+            @Param("topK") int topK);
+
+    @Query(value = """
+            select
+              kb.kb_id as "kbId",
+              kb.kb_title as "kbTitle",
+              kb.kb_content as "kbContent",
+              kb.kb_source as "kbSource",
+              kb.kb_category as "kbCategory",
+              kb.approval_status as "approvalStatus",
+              kb.knowledge_scope as "knowledgeScope",
+              u.full_name as "createdByName",
+              (1 - (kb.kb_vector::vector <=> cast(:queryVector as vector))) as "relevanceScore"
+            from knowledge_base kb
+            left join users u on u.user_id = kb.created_by
+            where kb.is_active = true
+              and kb.approval_status = 'APPROVED'
+              and kb.kb_vector is not null
+              and length(trim(kb.kb_vector)) > 0
+            order by (kb.kb_vector::vector <=> cast(:queryVector as vector)), kb.kb_id
+            limit :topK
+            """, nativeQuery = true)
+    List<KnowledgeSearchProjection> findTopKProjectedByTextVectorCastSimilarity(
             @Param("queryVector") String queryVector,
             @Param("topK") int topK);
 

@@ -6,10 +6,16 @@ import { useAuth } from "../hooks/useAuth";
 import AdminLayout from "../components/layouts/AdminLayout";
 import { useTranslation } from "react-i18next";
 import { Eye, Trash2, Lock, Unlock, Plus } from "lucide-react";
+import ConfirmDialog from "../components/common/ConfirmDialog";
+
+type PendingUserAction = {
+    kind: "disable" | "enable" | "delete";
+    user: User;
+};
 
 const UserManagementPage = () => {
     const navigate = useNavigate();
-    const { logout } = useAuth();
+    const { logout, user: currentUser } = useAuth();
     const { t } = useTranslation();
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
@@ -17,6 +23,7 @@ const UserManagementPage = () => {
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [pendingUserAction, setPendingUserAction] = useState<PendingUserAction | null>(null);
     const [formError, setFormError] = useState<string | null>(null);
     const [formData, setFormData] = useState({
         userEmail: "",
@@ -49,13 +56,11 @@ const UserManagementPage = () => {
         init();
     }, [loadUsers]);
 
+    const requestToggleActive = (user: User) => {
+        setPendingUserAction({ kind: user.isActive ? "disable" : "enable", user });
+    };
+
     const handleToggleActive = async (user: User) => {
-        const confirmMessage = user.isActive
-            ? t("admin.users.confirmDisable")
-            : t("admin.users.confirmEnable");
-        if (!window.confirm(confirmMessage)) {
-            return;
-        }
         setError(null);
         try {
             const updated = user.isActive
@@ -68,9 +73,6 @@ const UserManagementPage = () => {
     };
 
     const handleDelete = async (userId: number) => {
-        if (!window.confirm(t("admin.users.confirmDelete"))) {
-            return;
-        }
         setError(null);
         try {
             await userApi.deleteUser(userId);
@@ -147,12 +149,59 @@ const UserManagementPage = () => {
         }
     };
 
+    const requestDelete = (user: User) => {
+        setPendingUserAction({ kind: "delete", user });
+    };
+
+    const handleConfirmUserAction = () => {
+        const action = pendingUserAction;
+        if (!action) {
+            return;
+        }
+        setPendingUserAction(null);
+        if (action.kind === "delete") {
+            void handleDelete(action.user.userId);
+            return;
+        }
+        void handleToggleActive(action.user);
+    };
+
+    const getProtectedUserReason = (user: User) => {
+        if (currentUser?.userId === user.userId) {
+            return t("admin.users.protectedSelf");
+        }
+        if (user.role.roleName === "ADMIN") {
+            return t("admin.users.protectedAdmin");
+        }
+        return null;
+    };
+
+    const pendingUserKind = pendingUserAction?.kind ?? "delete";
+    const pendingUserVariant =
+        pendingUserKind === "delete" ? "danger" : pendingUserKind === "disable" ? "warning" : "normal";
+    const pendingUserConfirmLabel =
+        pendingUserKind === "delete"
+            ? t("common.delete")
+            : pendingUserKind === "disable"
+              ? t("admin.users.disable")
+              : t("admin.users.enable");
+
     return (
         <AdminLayout
             title={t("admin.users.title")}
             subtitle={t("admin.users.subtitle")}
             onSignOut={handleSignOut}
         >
+            <ConfirmDialog
+                open={Boolean(pendingUserAction)}
+                title={t(`admin.users.confirmations.${pendingUserKind}.title`)}
+                message={t(`admin.users.confirmations.${pendingUserKind}.message`)}
+                confirmLabel={pendingUserConfirmLabel}
+                cancelLabel={t("common.cancel")}
+                variant={pendingUserVariant}
+                onCancel={() => setPendingUserAction(null)}
+                onConfirm={handleConfirmUserAction}
+            />
             {error && <div className="alert">{error}</div>}
             {isCreateOpen && (
                 <div className="modal-backdrop" role="dialog" aria-modal="true">
@@ -325,48 +374,58 @@ const UserManagementPage = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {users.map((user) => (
-                                <tr key={user.userId}>
-                                    <td>{user.fullName}</td>
-                                    <td>{user.userEmail}</td>
-                                    <td>{user.role.roleName}</td>
-                                    <td>
-                                        <span className="tag">
-                                            {user.isActive ? t("common.active") : t("common.disabled")}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div style={{ display: "flex", gap: 8 }}>
-                                            <button
-                                                type="button"
-                                                className="btn btn-icon"
-                                                onClick={() => handleToggleActive(user)}
-                                                disabled={user.role.roleName === "ADMIN"}
-                                                title={user.isActive ? t("admin.users.disable") : t("admin.users.enable")}
-                                            >
-                                                {user.isActive ? <Lock size={18} /> : <Unlock size={18} />}
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className="btn btn-icon"
-                                                onClick={() => handleOpenDetail(user.userId)}
-                                                title={t("admin.users.view")}
-                                            >
-                                                <Eye size={18} />
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className="btn btn-icon btn-danger"
-                                                onClick={() => handleDelete(user.userId)}
-                                                disabled={user.role.roleName === "ADMIN"}
-                                                title={t("admin.users.delete")}
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                            {users.map((user) => {
+                                const protectedReason = getProtectedUserReason(user);
+                                return (
+                                    <tr key={user.userId}>
+                                        <td>{user.fullName}</td>
+                                        <td>{user.userEmail}</td>
+                                        <td>{user.role.roleName}</td>
+                                        <td>
+                                            <span className="tag">
+                                                {user.isActive ? t("common.active") : t("common.disabled")}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                                                {!protectedReason && (
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-icon"
+                                                        onClick={() => requestToggleActive(user)}
+                                                        title={user.isActive ? t("admin.users.disable") : t("admin.users.enable")}
+                                                    >
+                                                        {user.isActive ? <Lock size={18} /> : <Unlock size={18} />}
+                                                    </button>
+                                                )}
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-icon"
+                                                    onClick={() => handleOpenDetail(user.userId)}
+                                                    title={t("admin.users.view")}
+                                                >
+                                                    <Eye size={18} />
+                                                </button>
+                                                {!protectedReason && (
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-icon btn-danger"
+                                                        onClick={() => requestDelete(user)}
+                                                        title={t("admin.users.delete")}
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                )}
+                                                {protectedReason && (
+                                                    <span className="tag" title={protectedReason}>
+                                                        {protectedReason}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 )}

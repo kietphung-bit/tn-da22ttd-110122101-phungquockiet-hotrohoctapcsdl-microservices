@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import knowledgeBaseApi from "../services/knowledgeBaseApi";
 import type { KnowledgeBase } from "../types";
@@ -6,6 +6,12 @@ import { useAuth } from "../hooks/useAuth";
 import AdminLayout from "../components/layouts/AdminLayout";
 import { useTranslation } from "react-i18next";
 import { Edit2, Eye, Trash2, Plus, XCircle, CheckCircle, Check, X } from "lucide-react";
+import ConfirmDialog from "../components/common/ConfirmDialog";
+
+type PendingKnowledgeBaseAction = {
+    kind: "delete" | "hide" | "show" | "approve";
+    item: KnowledgeBase;
+};
 
 const KnowledgeBaseManagementPage = () => {
     const navigate = useNavigate();
@@ -21,6 +27,8 @@ const KnowledgeBaseManagementPage = () => {
     const [isRejectOpen, setIsRejectOpen] = useState(false);
     
     const [selectedItem, setSelectedItem] = useState<KnowledgeBase | null>(null);
+    const [pendingKnowledgeBaseAction, setPendingKnowledgeBaseAction] =
+        useState<PendingKnowledgeBaseAction | null>(null);
     const [formError, setFormError] = useState<string | null>(null);
     const [rejectNote, setRejectNote] = useState("");
     const [filterStatus, setFilterStatus] = useState<string>("");
@@ -37,14 +45,14 @@ const KnowledgeBaseManagementPage = () => {
         setLoading(true);
         setError(null);
         try {
-            const data = await knowledgeBaseApi.getAll(filterStatus || undefined);
+            const data = await knowledgeBaseApi.getAll();
             setItems(data);
         } catch {
             setError(t("admin.knowledgeBase.loadError", "Failed to load knowledge base items"));
         } finally {
             setLoading(false);
         }
-    }, [t, filterStatus]);
+    }, [t]);
 
     useEffect(() => {
         const init = async () => {
@@ -52,6 +60,33 @@ const KnowledgeBaseManagementPage = () => {
         };
         init();
     }, [loadItems]);
+
+    const visibleItems = useMemo(() => {
+        if (!filterStatus) {
+            return items;
+        }
+        return items.filter((item) => item.approvalStatus === filterStatus);
+    }, [filterStatus, items]);
+
+    const report = useMemo(() => {
+        const approved = items.filter((item) => item.approvalStatus === "APPROVED");
+        const activeApproved = approved.filter((item) => item.isActive);
+        const categories = new Set(
+            activeApproved
+                .map((item) => item.kbCategory?.trim())
+                .filter((category): category is string => Boolean(category))
+        );
+
+        return {
+            total: items.length,
+            activeApproved: activeApproved.length,
+            systemApproved: activeApproved.filter((item) => item.knowledgeScope === "SYSTEM").length,
+            instructorApproved: activeApproved.filter((item) => item.knowledgeScope === "INSTRUCTOR_CONTRIBUTED").length,
+            pending: items.filter((item) => item.approvalStatus === "SUBMITTED").length,
+            rejected: items.filter((item) => item.approvalStatus === "REJECTED").length,
+            categories: categories.size,
+        };
+    }, [items]);
 
     const handleSignOut = () => {
         logout();
@@ -132,9 +167,7 @@ const KnowledgeBaseManagementPage = () => {
                 kbCategory: formData.kbCategory.trim() || undefined,
                 isActive: formData.isActive,
             });
-            if (!filterStatus || filterStatus === created.approvalStatus) {
-                setItems((prev) => [created, ...prev]);
-            }
+            setItems((prev) => [created, ...prev]);
             handleCloseCreate();
         } catch {
             setFormError(t("admin.knowledgeBase.form.createError", "Failed to create item"));
@@ -166,9 +199,6 @@ const KnowledgeBaseManagementPage = () => {
     };
 
     const handleDelete = async (id: number) => {
-        if (!window.confirm(t("admin.knowledgeBase.confirmDelete", "Are you sure you want to delete this item?"))) {
-            return;
-        }
         try {
             await knowledgeBaseApi.delete(id);
             setItems(prev => prev.filter(item => item.kbId !== id));
@@ -177,13 +207,19 @@ const KnowledgeBaseManagementPage = () => {
         }
     };
 
+    const requestDelete = (item: KnowledgeBase) => {
+        setPendingKnowledgeBaseAction({ kind: "delete", item });
+    };
+
+    const requestToggleActive = (item: KnowledgeBase) => {
+        setPendingKnowledgeBaseAction({ kind: item.isActive ? "hide" : "show", item });
+    };
+
+    const requestApprove = (item: KnowledgeBase) => {
+        setPendingKnowledgeBaseAction({ kind: "approve", item });
+    };
+
     const handleToggleActive = async (item: KnowledgeBase) => {
-        const confirmMessage = item.isActive 
-            ? t("admin.knowledgeBase.confirmHide", "Are you sure you want to hide this item?") 
-            : t("admin.knowledgeBase.confirmShow", "Are you sure you want to show this item?");
-        if (!window.confirm(confirmMessage)) {
-            return;
-        }
         try {
             const updated = await knowledgeBaseApi.update(item.kbId, {
                 kbTitle: item.kbTitle,
@@ -199,13 +235,29 @@ const KnowledgeBaseManagementPage = () => {
     };
 
     const handleApprove = async (id: number) => {
-        if (!window.confirm(t("admin.knowledgeBase.confirmApprove", "Are you sure you want to approve this item?"))) return;
         try {
             const updated = await knowledgeBaseApi.approve(id);
             setItems((prev) => prev.map(item => item.kbId === updated.kbId ? updated : item));
         } catch {
             setError(t("admin.knowledgeBase.approveError", "Failed to approve item"));
         }
+    };
+
+    const handleConfirmKnowledgeBaseAction = () => {
+        const action = pendingKnowledgeBaseAction;
+        if (!action) {
+            return;
+        }
+        setPendingKnowledgeBaseAction(null);
+        if (action.kind === "delete") {
+            void handleDelete(action.item.kbId);
+            return;
+        }
+        if (action.kind === "approve") {
+            void handleApprove(action.item.kbId);
+            return;
+        }
+        void handleToggleActive(action.item);
     };
 
     const handleReject = async (e: React.FormEvent) => {
@@ -220,12 +272,38 @@ const KnowledgeBaseManagementPage = () => {
         }
     };
 
+    const pendingKnowledgeBaseKind = pendingKnowledgeBaseAction?.kind ?? "delete";
+    const pendingKnowledgeBaseVariant =
+        pendingKnowledgeBaseKind === "delete"
+            ? "danger"
+            : pendingKnowledgeBaseKind === "hide"
+              ? "warning"
+              : "normal";
+    const pendingKnowledgeBaseConfirmLabel =
+        pendingKnowledgeBaseKind === "delete"
+            ? t("common.delete", "Delete")
+            : pendingKnowledgeBaseKind === "approve"
+              ? t("common.approve", "Approve")
+              : pendingKnowledgeBaseKind === "hide"
+                ? t("common.hide", "Hide")
+                : t("common.show", "Show");
+
     return (
         <AdminLayout
             title={t("admin.knowledgeBase.title")}
             subtitle={t("admin.knowledgeBase.subtitle", "Quản lý dữ liệu kiến thức cho Chatbot")}
             onSignOut={handleSignOut}
         >
+            <ConfirmDialog
+                open={Boolean(pendingKnowledgeBaseAction)}
+                title={t(`admin.knowledgeBase.confirmations.${pendingKnowledgeBaseKind}.title`)}
+                message={t(`admin.knowledgeBase.confirmations.${pendingKnowledgeBaseKind}.message`)}
+                confirmLabel={pendingKnowledgeBaseConfirmLabel}
+                cancelLabel={t("common.cancel", "Cancel")}
+                variant={pendingKnowledgeBaseVariant}
+                onCancel={() => setPendingKnowledgeBaseAction(null)}
+                onConfirm={handleConfirmKnowledgeBaseAction}
+            />
             {error && <div className="alert">{error}</div>}
             
             {/* Create Modal */}
@@ -363,6 +441,43 @@ const KnowledgeBaseManagementPage = () => {
             )}
 
             <section className="section-card">
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 16 }}>
+                    <div>
+                        <h2 style={{ margin: 0, fontSize: "1rem" }}>
+                            {t("admin.knowledgeBase.report.title", "B\u00e1o c\u00e1o h\u1ecdc li\u1ec7u")}
+                        </h2>
+                        <p style={{ margin: "4px 0 0", color: "var(--text-secondary)" }}>
+                            {t(
+                                "admin.knowledgeBase.report.subtitle",
+                                "T\u00f3m t\u1eaft ch\u1ec9 \u0111\u1ecdc t\u1eeb c\u00e1c h\u1ecdc li\u1ec7u \u0111\u00e3 duy\u1ec7t v\u00e0 \u0111ang hi\u1ec3n th\u1ecb cho RAG."
+                            )}
+                        </p>
+                    </div>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, marginBottom: 20 }}>
+                    {[
+                        [t("admin.knowledgeBase.report.total", "T\u1ed5ng m\u1ee5c"), report.total],
+                        [t("admin.knowledgeBase.report.activeApproved", "\u0110\u00e3 duy\u1ec7t \u0111ang d\u00f9ng"), report.activeApproved],
+                        [t("admin.knowledgeBase.report.systemApproved", "H\u1ec7 th\u1ed1ng"), report.systemApproved],
+                        [t("admin.knowledgeBase.report.instructorApproved", "Gi\u1ea3ng vi\u00ean \u0111\u00f3ng g\u00f3p"), report.instructorApproved],
+                        [t("admin.knowledgeBase.report.pending", "Ch\u1edd duy\u1ec7t"), report.pending],
+                        [t("admin.knowledgeBase.report.rejected", "B\u1ecb t\u1eeb ch\u1ed1i"), report.rejected],
+                        [t("admin.knowledgeBase.report.categories", "Danh m\u1ee5c"), report.categories],
+                    ].map(([label, value]) => (
+                        <div
+                            key={String(label)}
+                            style={{
+                                border: "1px solid var(--border)",
+                                borderRadius: 8,
+                                padding: 12,
+                                background: "var(--surface)",
+                            }}
+                        >
+                            <div style={{ color: "var(--text-secondary)", fontSize: "0.82rem" }}>{label}</div>
+                            <div style={{ fontSize: "1.4rem", fontWeight: 700 }}>{value}</div>
+                        </div>
+                    ))}
+                </div>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 16 }}>
                     <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                         <select className="input" style={{ width: 200 }} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
@@ -377,7 +492,7 @@ const KnowledgeBaseManagementPage = () => {
                 </div>
                 {loading ? (
                     <p>{t("common.loading", "Đang tải...")}</p>
-                ) : items.length === 0 ? (
+                ) : visibleItems.length === 0 ? (
                     <p>{t("common.empty", "Không có dữ liệu")}</p>
                 ) : (
                     <div className="table-responsive">
@@ -393,7 +508,7 @@ const KnowledgeBaseManagementPage = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {items.map((item) => (
+                                {visibleItems.map((item) => (
                                     <tr key={item.kbId}>
                                         <td>{item.kbId}</td>
                                         <td>{item.kbTitle}</td>
@@ -420,7 +535,7 @@ const KnowledgeBaseManagementPage = () => {
                                                 
                                                 {item.approvalStatus === 'SUBMITTED' && (
                                                     <>
-                                                        <button type="button" className="btn btn-icon" style={{ color: "var(--success)" }} onClick={() => handleApprove(item.kbId)} title={t("common.approve", "Duyệt")}>
+                                                        <button type="button" className="btn btn-icon" style={{ color: "var(--success)" }} onClick={() => requestApprove(item)} title={t("common.approve", "Duyệt")}>
                                                             <Check size={18} />
                                                         </button>
                                                         <button type="button" className="btn btn-icon" style={{ color: "var(--danger)" }} onClick={() => handleOpenReject(item)} title={t("common.reject", "Từ chối")}>
@@ -434,10 +549,10 @@ const KnowledgeBaseManagementPage = () => {
                                                         <button type="button" className="btn btn-icon" onClick={() => handleOpenEdit(item)} title={t("common.edit", "Sửa")}>
                                                             <Edit2 size={18} />
                                                         </button>
-                                                        <button type="button" className="btn btn-icon" onClick={() => handleToggleActive(item)} title={item.isActive ? t("common.hide", "Ẩn") : t("common.show", "Hiện")}>
+                                                        <button type="button" className="btn btn-icon" onClick={() => requestToggleActive(item)} title={item.isActive ? t("common.hide", "Ẩn") : t("common.show", "Hiện")}>
                                                             {item.isActive ? <XCircle size={18} /> : <CheckCircle size={18} />}
                                                         </button>
-                                                        <button type="button" className="btn btn-icon btn-danger" onClick={() => handleDelete(item.kbId)} title={t("common.delete", "Xóa")}>
+                                                        <button type="button" className="btn btn-icon btn-danger" onClick={() => requestDelete(item)} title={t("common.delete", "Xóa")}>
                                                             <Trash2 size={18} />
                                                         </button>
                                                     </>

@@ -30,15 +30,15 @@ public class MockLlmClient implements LlmClient {
     public LlmResponse generate(String prompt, List<RetrievedKnowledgeResponse> context) {
         String answer;
         if (context == null || context.isEmpty()) {
-            answer = "Chua tim thay tai lieu lien quan trong kho kien thuc da duyet. Ban co the hoi lai bang tu khoa cu the hon ve ERD, cardinality, chuan hoa hoac khoa.";
+            answer = "Chưa tìm thấy tài liệu phù hợp trong kho học liệu đã duyệt. Bạn có thể hỏi lại bằng từ khóa cụ thể hơn về ERD, cardinality, chuẩn hóa hoặc khóa.";
         } else {
             String sourceTitles = context.stream()
                     .map(RetrievedKnowledgeResponse::getKbTitle)
                     .collect(Collectors.joining(", "));
             String firstSnippet = context.get(0).getSnippet();
-            answer = "Theo cac tai lieu da duyet (" + sourceTitles + "), y chinh la: "
+            answer = "Dựa trên học liệu hiện có (" + sourceTitles + "), ý chính là: "
                     + firstSnippet
-                    + " Hay xem day la goi y hoc tap ngan gon, khong phai loi giai hoan chinh cho bai thiet ke.";
+                    + "\n\nBạn nên xem đây là gợi ý để tự kiểm tra bài làm, không phải đáp án hoàn chỉnh.";
         }
 
         return LlmResponse.builder()

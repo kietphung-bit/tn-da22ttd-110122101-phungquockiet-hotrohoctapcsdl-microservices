@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     evaluation_provider_timeout_seconds: int = 30
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.0-flash"
+    deepseek_api_key: str = ""
+    deepseek_base_url: str = "https://api.deepseek.com"
+    deepseek_model: str = "deepseek-v4-flash"
 
     class Config:
         env_prefix = "AI_WORKER_"

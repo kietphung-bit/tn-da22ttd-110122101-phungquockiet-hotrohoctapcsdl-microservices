@@ -11,9 +11,9 @@ public interface UserService {
 
     UserResponse createUser(AdminCreateUserRequest request);
 
-    UserResponse disableUser(Long userId);
+    UserResponse disableUser(Long currentUserId, Long userId);
 
-    UserResponse enableUser(Long userId);
+    UserResponse enableUser(Long currentUserId, Long userId);
 
-    void deleteUser(Long userId);
+    void deleteUser(Long currentUserId, Long userId);
 }

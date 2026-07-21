@@ -17,5 +17,7 @@ public class ChatConversationDetailResponse {
     private String title;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Boolean studentArchived;
+    private LocalDateTime studentArchivedAt;
     private List<ChatMessageResponse> messages;
 }

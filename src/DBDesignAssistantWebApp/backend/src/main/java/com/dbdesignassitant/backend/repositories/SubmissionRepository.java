@@ -23,6 +23,20 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
     List<Submission> findBySubmissionStatusAndExercise_ExerciseIdAndUser_UserId(
             SubmissionStatus status, Long exerciseId, Long userId);
 
+    @Query("""
+            SELECT s
+            FROM Submission s
+            WHERE s.user.userId = :userId
+              AND (
+                  (:archived = true AND s.studentArchived = true)
+                  OR (:archived = false AND (s.studentArchived = false OR s.studentArchived IS NULL))
+              )
+            ORDER BY s.createdAt DESC
+            """)
+    List<Submission> findStudentSubmissionsByArchiveState(
+            @Param("userId") Long userId,
+            @Param("archived") boolean archived);
+
     @Query(value = """
             SELECT
                 COUNT(DISTINCT s.submission_id),

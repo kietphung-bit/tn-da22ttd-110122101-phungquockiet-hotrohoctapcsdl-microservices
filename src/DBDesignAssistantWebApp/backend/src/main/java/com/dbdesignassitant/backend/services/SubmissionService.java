@@ -24,8 +24,9 @@ public interface SubmissionService {
     SubmissionResponse createDraft(Long userId, Long exerciseId);
     SubmissionResponse updateDraft(Long userId, Long submissionId, com.dbdesignassitant.backend.dtos.request.SubmissionRequest request);
     SubmissionResponse submit(Long userId, Long submissionId, SubmissionRequest request);
-    List<SubmissionResponse> getStudentSubmissions(Long userId);
+    List<SubmissionResponse> getStudentSubmissions(Long userId, boolean archived);
     SubmissionResponse getStudentSubmissionById(Long userId, Long submissionId);
+    SubmissionResponse setStudentSubmissionArchived(Long userId, Long submissionId, boolean archived);
     SubmissionStatusResponse getStudentSubmissionStatus(Long userId, Long submissionId);
     AIEvaluationResponse getStudentEvaluationBySubmissionId(Long userId, Long submissionId);
     List<EvaluationRoundResponse> getStudentEvaluationRounds(Long userId, Long submissionId);

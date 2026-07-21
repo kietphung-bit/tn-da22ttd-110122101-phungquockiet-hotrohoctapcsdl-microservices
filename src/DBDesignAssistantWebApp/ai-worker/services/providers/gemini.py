@@ -8,6 +8,7 @@ from typing import Any
 
 from config import settings
 from models.evaluation_result import EvaluationResult
+from services.evaluator import normalize_diagram_relationship_cardinalities
 from services.prompt_loader import load_prompt_template
 from services.providers.base import EvaluationProvider, EvaluationProviderError, ProviderConfigurationError
 
@@ -31,7 +32,8 @@ class GeminiEvaluationProvider(EvaluationProvider):
 
     def _build_prompt(self, diagram_data: dict[str, Any], context: dict[str, Any]) -> str:
         template = load_prompt_template("evaluation_hinting.md")
-        return template.replace("{{DIAGRAM_DATA_JSON}}", json.dumps(diagram_data, ensure_ascii=False, indent=2)).replace(
+        normalized_diagram_data = normalize_diagram_relationship_cardinalities(diagram_data)
+        return template.replace("{{DIAGRAM_DATA_JSON}}", json.dumps(normalized_diagram_data, ensure_ascii=False, indent=2)).replace(
             "{{EVALUATION_CONTEXT_JSON}}",
             json.dumps(context, ensure_ascii=False, indent=2),
         )

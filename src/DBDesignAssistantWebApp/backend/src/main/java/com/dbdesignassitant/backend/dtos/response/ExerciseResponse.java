@@ -1,6 +1,7 @@
 package com.dbdesignassitant.backend.dtos.response;
 
 import com.dbdesignassitant.backend.enums.ExerciseSource;
+import java.time.LocalDateTime;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,4 +26,6 @@ public class ExerciseResponse {
     private Long baseExerciseId;
     private String baseExerciseCode;
     private Boolean isPublished;
+    private Boolean studentArchived;
+    private LocalDateTime studentArchivedAt;
 }

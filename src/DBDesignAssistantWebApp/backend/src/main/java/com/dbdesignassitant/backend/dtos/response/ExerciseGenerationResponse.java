@@ -22,4 +22,5 @@ public class ExerciseGenerationResponse {
     private ExerciseSource exerciseSource;
     private Long ownerStudentId;
     private Long baseExerciseId;
+    private Boolean isPublished;
 }

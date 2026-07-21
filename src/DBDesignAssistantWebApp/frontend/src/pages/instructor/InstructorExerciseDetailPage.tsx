@@ -6,8 +6,13 @@ import { useAuth } from "../../hooks/useAuth";
 import InstructorLayout from "../../components/layouts/InstructorLayout";
 import SampleSolutionEditor from "../../components/admin/SampleSolutionEditor";
 import ScenarioViewer from "../../components/viewers/ScenarioViewer";
+import ExerciseReviewActions from "../../components/exercises/ExerciseReviewActions";
+import ExerciseReviewSummary from "../../components/exercises/ExerciseReviewSummary";
+import ExerciseAiReviewPanel from "../../components/exercises/ExerciseAiReviewPanel";
+import { ExercisePublishBadge, ExerciseSourceBadge } from "../../components/exercises/ExerciseStatusBadges";
 import { instructorExerciseApi } from "../../services/instructorExerciseApi";
 import practiceInsightsApi from "../../services/practiceInsightsApi";
+import { isStaffGeneratedAiExercise } from "../../utils/exerciseReview";
 import type {
     Exercise,
     InstructorExerciseInsightsFilters,
@@ -17,7 +22,7 @@ import type {
 } from "../../types";
 import "../practiceInsights.css";
 
-type Tab = "info" | "solution" | "insights";
+type Tab = "info" | "solution" | "insights" | "aiTrial";
 
 type FallbackFilter = "" | "true" | "false";
 
@@ -559,33 +564,37 @@ const InstructorExerciseDetailPage = () => {
         navigate("/login");
     };
 
-    useEffect(() => {
-        const load = async () => {
-            if (!id) {
-                setError(t("admin.exercises.detail.loadError"));
-                setLoading(false);
-                return;
-            }
-            const exerciseId = parseInt(id, 10);
-            if (isNaN(exerciseId)) {
-                setError(t("admin.exercises.detail.loadError"));
-                setLoading(false);
-                return;
-            }
+    const loadExercise = useCallback(async () => {
+        if (!id) {
+            setError(t("admin.exercises.detail.loadError"));
+            setLoading(false);
+            return;
+        }
+        const exerciseId = parseInt(id, 10);
+        if (isNaN(exerciseId)) {
+            setError(t("admin.exercises.detail.loadError"));
+            setLoading(false);
+            return;
+        }
 
-            setLoading(true);
-            setError(null);
-            try {
-                const data = await instructorExerciseApi.getById(exerciseId);
-                setExercise(data);
-            } catch {
-                setError(t("admin.exercises.detail.loadError"));
-            } finally {
-                setLoading(false);
-            }
-        };
-        load();
+        setLoading(true);
+        setError(null);
+        try {
+            const data = await instructorExerciseApi.getById(exerciseId);
+            setExercise(data);
+        } catch {
+            setError(t("admin.exercises.detail.loadError"));
+        } finally {
+            setLoading(false);
+        }
     }, [id, t]);
+
+    useEffect(() => {
+        const init = async () => {
+            await loadExercise();
+        };
+        init();
+    }, [loadExercise]);
 
     return (
         <InstructorLayout
@@ -628,6 +637,16 @@ const InstructorExerciseDetailPage = () => {
                         >
                             {t("admin.exercises.detail.tabSampleSolution")}
                         </button>
+                        {exercise.exerciseSource === "MANUAL" ? (
+                            <button
+                                type="button"
+                                id="tab-ai-trial"
+                                className={`detail-tab-btn ${activeTab === "aiTrial" ? "active" : ""}`}
+                                onClick={() => setActiveTab("aiTrial")}
+                            >
+                                {t("admin.exercises.detail.tabAiGenerationTrial")}
+                            </button>
+                        ) : null}
                         <button
                             type="button"
                             id="tab-insights"
@@ -660,31 +679,13 @@ const InstructorExerciseDetailPage = () => {
                                     <span className="detail-field__label">
                                         {t("admin.exercises.detail.fields.source")}
                                     </span>
-                                    <span
-                                        className={`tag ${
-                                            exercise.exerciseSource === "AI_GENERATED"
-                                                ? "tag--ai"
-                                                : ""
-                                        }`}
-                                    >
-                                        {exercise.exerciseSource === "AI_GENERATED"
-                                            ? t("admin.exercises.filters.aiGenerated")
-                                            : t("admin.exercises.filters.manual")}
-                                    </span>
+                                    <ExerciseSourceBadge exercise={exercise} />
                                 </div>
                                 <div className="detail-field">
                                     <span className="detail-field__label">
                                         {t("admin.exercises.detail.fields.published")}
                                     </span>
-                                    <span
-                                        className={`tag ${
-                                            exercise.isPublished ? "tag--published" : ""
-                                        }`}
-                                    >
-                                        {exercise.isPublished
-                                            ? t("admin.exercises.yes")
-                                            : t("admin.exercises.no")}
-                                    </span>
+                                    <ExercisePublishBadge exercise={exercise} />
                                 </div>
                                 {exercise.createdBy && (
                                     <div className="detail-field">
@@ -712,7 +713,17 @@ const InstructorExerciseDetailPage = () => {
                                 <span className="detail-field__label">
                                     {t("admin.exercises.detail.fields.scenarioData")}
                                 </span>
-                                <ScenarioViewer data={exercise.scenarioData} />
+                                <ExerciseReviewSummary exercise={exercise} />
+                                <ExerciseReviewActions
+                                    exercise={exercise}
+                                    approveExercise={instructorExerciseApi.approve}
+                                    rejectExercise={instructorExerciseApi.reject}
+                                    onUpdated={setExercise}
+                                />
+                                <ScenarioViewer
+                                    data={exercise.scenarioData}
+                                    showTechnicalData={!isStaffGeneratedAiExercise(exercise)}
+                                />
                             </div>
                         </div>
                     )}
@@ -724,6 +735,20 @@ const InstructorExerciseDetailPage = () => {
                                 exerciseId={exercise.exerciseId}
                                 exerciseSource={exercise.exerciseSource}
                                 apiType="instructor"
+                            />
+                        </div>
+                    )}
+
+                    {activeTab === "aiTrial" && exercise.exerciseSource === "MANUAL" && (
+                        <div className="detail-tab-content">
+                            <ExerciseAiReviewPanel
+                                loadBaseExercises={() => Promise.resolve([exercise])}
+                                generateExercise={instructorExerciseApi.generate}
+                                approveExercise={instructorExerciseApi.approve}
+                                rejectExercise={instructorExerciseApi.reject}
+                                onExerciseChanged={loadExercise}
+                                fixedBaseExerciseId={exercise.exerciseId}
+                                fixedBaseExercise={exercise}
                             />
                         </div>
                     )}

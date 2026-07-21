@@ -34,6 +34,8 @@ public class SecurityConfig {
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(
 								"/api/auth/**",
+								"/actuator/health",
+								"/actuator/health/**",
 								"/v3/api-docs/**",
 								"/swagger-ui/**",
 								"/swagger-ui.html")
@@ -51,6 +53,7 @@ public class SecurityConfig {
 						.hasRole("ADMIN")
 						.requestMatchers("/api/instructor/**").hasRole("INSTRUCTOR")
 						.requestMatchers("/api/student/**").hasRole("STUDENT")
+						.requestMatchers("/api/account/**").authenticated()
 						.requestMatchers("/api/chatbot/**").authenticated()
 						.anyRequest().authenticated())
 				.authenticationProvider(authenticationProvider())

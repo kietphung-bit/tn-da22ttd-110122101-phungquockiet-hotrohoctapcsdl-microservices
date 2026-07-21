@@ -10,7 +10,9 @@ import java.util.List;
 public interface ChatbotService {
     ChatResponse ask(ChatRequest request);
 
-    List<ChatConversationSummaryResponse> listConversations();
+    List<ChatConversationSummaryResponse> listConversations(boolean archived);
 
     ChatConversationDetailResponse getConversation(String conversationId);
+
+    ChatConversationSummaryResponse setConversationArchived(String conversationId, boolean archived);
 }

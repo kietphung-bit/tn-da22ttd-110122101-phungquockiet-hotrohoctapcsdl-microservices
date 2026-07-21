@@ -12,6 +12,10 @@ import type {
     AdminPracticeStatusBreakdownItem,
     ExerciseSource,
     PracticeIssueTypeItem,
+    PracticeRoundDistributionItem,
+    PracticeScoreDistributionItem,
+    PracticeSkillAnalyticsItem,
+    PracticeTrendItem,
     SubmissionStatus,
 } from "../../types";
 import "../practiceInsights.css";
@@ -161,15 +165,16 @@ const StatusDonutChart = ({
         return <div className="insights-empty insights-empty--compact">{emptyText}</div>;
     }
 
-    let cursor = 0;
     const gradientStops = visibleRows
         .map((row, index) => {
-            const start = cursor;
+            const previousValue = visibleRows
+                .slice(0, index)
+                .reduce((sum, item) => sum + item.value, 0);
+            const start = (previousValue / total) * 100;
             const end =
                 index === visibleRows.length - 1
                     ? 100
-                    : cursor + (row.value / total) * 100;
-            cursor = end;
+                    : ((previousValue + row.value) / total) * 100;
             return `${row.color ?? "#64748b"} ${start.toFixed(2)}% ${end.toFixed(2)}%`;
         })
         .join(", ");
@@ -322,6 +327,25 @@ export default function AdminPracticeInsightsPage() {
         });
     };
 
+    const formatDateOnly = (dateStr: string | null | undefined) => {
+        if (!dateStr) return "-";
+        return new Date(dateStr).toLocaleDateString("vi-VN", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+        });
+    };
+
+    const formatCommonErrorTypes = (errorTypes: string[] | null | undefined) => {
+        const values = (errorTypes ?? []).filter(Boolean).slice(0, 3);
+        if (values.length === 0) {
+            return t("admin.practiceInsights.skillAnalytics.noCommonErrors", {
+                defaultValue: "No mapped issue types",
+            });
+        }
+        return values.join(", ");
+    };
+
     const handleSignOut = () => {
         logout();
         navigate("/login");
@@ -439,19 +463,119 @@ export default function AdminPracticeInsightsPage() {
           }))
         : [];
 
-    const issueChartRows: ChartRow[] = insights
-        ? insights.topIssueTypes.map((item: PracticeIssueTypeItem, index) => ({
-              id: `${item.errorType ?? "unknown"}-${index}`,
-              label: item.errorType ?? t("admin.practiceInsights.unknown"),
-              value: item.count,
-              valueText: t("admin.practiceInsights.chart.occurrences", {
-                  count: formatNumber(item.count),
+    const scoreChartRows: ChartRow[] = insights
+        ? (insights.scoreDistribution ?? []).map(
+              (item: PracticeScoreDistributionItem, index) => ({
+                  id: `${item.bucket ?? "score"}-${index}`,
+                  label: item.bucket ?? t("admin.practiceInsights.unknown"),
+                  value: item.roundCount ?? 0,
+                  valueText: t("admin.practiceInsights.chart.rounds", {
+                      count: formatNumber(item.roundCount ?? 0),
+                  }),
+                  description: t("admin.practiceInsights.scoreBucketHint", {
+                      submissions: formatNumber(item.affectedSubmissionCount ?? 0),
+                      average: formatScore(item.averageScore),
+                  }),
+                  fillClassName: "insights-chart-bar--score",
+              })
+          )
+        : [];
+
+    const roundChartRows: ChartRow[] = insights
+        ? (insights.roundDistribution ?? []).map(
+              (item: PracticeRoundDistributionItem, index) => ({
+                  id: `${item.roundNumber ?? "round"}-${index}`,
+                  label: item.roundNumber
+                      ? t("admin.practiceInsights.chart.roundNumber", {
+                            number: item.roundNumber,
+                        })
+                      : t("admin.practiceInsights.unknown"),
+                  value: item.roundCount ?? 0,
+                  valueText: t("admin.practiceInsights.chart.rounds", {
+                      count: formatNumber(item.roundCount ?? 0),
+                  }),
+                  secondaryValue: item.gradedCount ?? 0,
+                  secondaryText: t("admin.practiceInsights.chart.gradedRounds", {
+                      count: formatNumber(item.gradedCount ?? 0),
+                  }),
+                  description: t("admin.practiceInsights.roundBucketHint", {
+                      failed: formatNumber(item.failedCount ?? 0),
+                      processing: formatNumber(item.processingCount ?? 0),
+                      average: formatScore(item.averageScore),
+                  }),
+                  fillClassName: "insights-chart-bar--round",
+              })
+          )
+        : [];
+
+    const trendChartRows: ChartRow[] = insights
+        ? (insights.trend ?? []).map((item: PracticeTrendItem, index) => ({
+              id: `${item.date ?? "trend"}-${index}`,
+              label: formatDateOnly(item.date),
+              value: item.submissionCount ?? 0,
+              valueText: t("admin.practiceInsights.chart.submissions", {
+                  count: formatNumber(item.submissionCount ?? 0),
               }),
-              description: t("admin.practiceInsights.affectedSubmissions", {
-                  count: formatNumber(item.affectedSubmissionCount),
+              secondaryValue: item.gradedRoundCount ?? 0,
+              secondaryText: t("admin.practiceInsights.chart.gradedRounds", {
+                  count: formatNumber(item.gradedRoundCount ?? 0),
               }),
-              fillClassName: "insights-chart-bar--issue",
+              description: t("admin.practiceInsights.trendScoreHint", {
+                  score: formatScore(item.averageScore),
+              }),
+              fillClassName: "insights-chart-bar--trend",
           }))
+        : [];
+
+    const skillChartRows: ChartRow[] = insights
+        ? (insights.skillAnalytics ?? []).map(
+              (item: PracticeSkillAnalyticsItem, index) => ({
+                  id: `${item.skillCode}-${index}`,
+                  label: t(`admin.practiceInsights.skills.${item.skillCode}`, {
+                      defaultValue: item.skillName ?? item.skillCode,
+                  }),
+                  value: item.issueCount ?? 0,
+                  valueText: t("admin.practiceInsights.chart.occurrences", {
+                      count: formatNumber(item.issueCount ?? 0),
+                  }),
+                  secondaryValue: item.affectedRoundCount ?? 0,
+                  secondaryText: t("admin.practiceInsights.skillAnalytics.impact", {
+                      rate: formatRate(item.impactRate),
+                      defaultValue: "{{rate}} affected rounds",
+                  }),
+                  description: t("admin.practiceInsights.skillAnalytics.coverage", {
+                      submissions: formatNumber(item.affectedSubmissionCount ?? 0),
+                      rounds: formatNumber(item.affectedRoundCount ?? 0),
+                      errors: formatCommonErrorTypes(item.commonErrorTypes),
+                      defaultValue: "{{submissions}} submissions, {{rounds}} rounds - {{errors}}",
+                  }),
+                  fillClassName: "insights-chart-bar--skill",
+              })
+          )
+        : [];
+
+    const issueChartRows: ChartRow[] = insights
+        ? insights.topIssueTypes.map((item: PracticeIssueTypeItem, index) => {
+              const description =
+                  item.affectedRoundCount === undefined
+                      ? t("admin.practiceInsights.affectedSubmissions", {
+                            count: formatNumber(item.affectedSubmissionCount),
+                        })
+                      : t("admin.practiceInsights.affectedCoverage", {
+                            submissions: formatNumber(item.affectedSubmissionCount),
+                            rounds: formatNumber(item.affectedRoundCount),
+                        });
+              return {
+                  id: `${item.errorType ?? "unknown"}-${index}`,
+                  label: item.errorType ?? t("admin.practiceInsights.unknown"),
+                  value: item.count,
+                  valueText: t("admin.practiceInsights.chart.occurrences", {
+                      count: formatNumber(item.count),
+                  }),
+                  description,
+                  fillClassName: "insights-chart-bar--issue",
+              };
+          })
         : [];
 
     return (
@@ -685,6 +809,76 @@ export default function AdminPracticeInsightsPage() {
                                     ariaLabel={t("admin.practiceInsights.sections.providerBreakdown")}
                                     primaryLabel={t("admin.practiceInsights.chart.roundLegend")}
                                     secondaryLabel={t("admin.practiceInsights.chart.fallbackLegend")}
+                                />
+                            </article>
+
+                            <article className="insights-panel insights-panel--trend">
+                                <h3>{t("admin.practiceInsights.sections.trend")}</h3>
+                                <p>{t("admin.practiceInsights.chartDescriptions.trend")}</p>
+                                <div className="insights-chart-legend">
+                                    <span>{t("admin.practiceInsights.chart.submissionLegend")}</span>
+                                    <span>{t("admin.practiceInsights.chart.gradedLegend")}</span>
+                                </div>
+                                <SimpleBarChart
+                                    rows={trendChartRows}
+                                    emptyText={t("admin.practiceInsights.emptyCharts.trend")}
+                                    ariaLabel={t("admin.practiceInsights.sections.trend")}
+                                />
+                            </article>
+                        </section>
+
+                        <section className="insights-section-grid">
+                            <article className="insights-panel insights-panel--score">
+                                <h3>{t("admin.practiceInsights.sections.scoreDistribution")}</h3>
+                                <p>{t("admin.practiceInsights.chartDescriptions.score")}</p>
+                                <SimpleBarChart
+                                    rows={scoreChartRows}
+                                    emptyText={t("admin.practiceInsights.emptyCharts.score")}
+                                    ariaLabel={t(
+                                        "admin.practiceInsights.sections.scoreDistribution"
+                                    )}
+                                />
+                            </article>
+
+                            <article className="insights-panel insights-panel--rounds">
+                                <h3>{t("admin.practiceInsights.sections.roundDistribution")}</h3>
+                                <p>{t("admin.practiceInsights.chartDescriptions.rounds")}</p>
+                                <SimpleBarChart
+                                    rows={roundChartRows}
+                                    emptyText={t("admin.practiceInsights.emptyCharts.rounds")}
+                                    ariaLabel={t(
+                                        "admin.practiceInsights.sections.roundDistribution"
+                                    )}
+                                />
+                            </article>
+
+                            <article className="insights-panel insights-panel--skill">
+                                <h3>
+                                    {t("admin.practiceInsights.sections.skillAnalytics", {
+                                        defaultValue: "Kỹ năng cần cải thiện",
+                                    })}
+                                </h3>
+                                <p>
+                                    {t("admin.practiceInsights.chartDescriptions.skillAnalytics", {
+                                        defaultValue:
+                                            "Tổng hợp nhóm kỹ năng từ lỗi trong các vòng đánh giá.",
+                                    })}
+                                </p>
+                                <SimpleBarChart
+                                    rows={skillChartRows}
+                                    emptyText={t(
+                                        "admin.practiceInsights.emptyCharts.skillAnalytics",
+                                        {
+                                            defaultValue:
+                                                "Chưa có lỗi đánh giá để suy luận nhóm kỹ năng.",
+                                        }
+                                    )}
+                                    ariaLabel={t(
+                                        "admin.practiceInsights.sections.skillAnalytics",
+                                        {
+                                            defaultValue: "Kỹ năng cần cải thiện",
+                                        }
+                                    )}
                                 />
                             </article>
 

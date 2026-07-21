@@ -66,34 +66,43 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse disableUser(Long userId) {
+    public UserResponse disableUser(Long currentUserId, Long userId) {
+        validateProtectedUserAction(currentUserId, userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        if (user.getRole() != null && user.getRole().getRoleName() == RoleName.ADMIN) {
-            throw new BadRequestException("Cannot disable admin user");
-        }
+        validateNotAdminAccount(user, "disable");
         user.setIsActive(false);
         return ResponseMapper.toUserResponse(userRepository.save(user));
     }
 
     @Override
-    public UserResponse enableUser(Long userId) {
+    public UserResponse enableUser(Long currentUserId, Long userId) {
+        validateProtectedUserAction(currentUserId, userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        if (user.getRole() != null && user.getRole().getRoleName() == RoleName.ADMIN) {
-            throw new BadRequestException("Cannot enable admin user");
-        }
+        validateNotAdminAccount(user, "enable");
         user.setIsActive(true);
         return ResponseMapper.toUserResponse(userRepository.save(user));
     }
 
     @Override
-    public void deleteUser(Long userId) {
+    public void deleteUser(Long currentUserId, Long userId) {
+        validateProtectedUserAction(currentUserId, userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        if (user.getRole() != null && user.getRole().getRoleName() == RoleName.ADMIN) {
-            throw new BadRequestException("Cannot delete admin user");
-        }
+        validateNotAdminAccount(user, "delete");
         userRepository.delete(user);
+    }
+
+    private void validateProtectedUserAction(Long currentUserId, Long targetUserId) {
+        if (currentUserId != null && currentUserId.equals(targetUserId)) {
+            throw new BadRequestException("Cannot modify your own account from user management");
+        }
+    }
+
+    private void validateNotAdminAccount(User user, String action) {
+        if (user.getRole() != null && user.getRole().getRoleName() == RoleName.ADMIN) {
+            throw new BadRequestException("Cannot " + action + " admin user");
+        }
     }
 }

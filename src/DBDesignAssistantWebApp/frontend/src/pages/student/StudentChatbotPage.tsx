@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { isAxiosError } from "axios";
+import {  MessageSquarePlus } from "lucide-react";
+import ConfirmDialog from "../../components/common/ConfirmDialog";
 import StudentLayout from "../../components/layouts/StudentLayout";
 import { useAuth } from "../../hooks/useAuth";
 import chatbotApi from "../../services/chatbotApi";
@@ -25,6 +27,13 @@ type ApiErrorPayload = {
     message?: string;
 };
 
+type HistoryView = "active" | "archived";
+
+type PendingConversationArchiveAction = {
+    conversation: ChatConversationSummary;
+    archived: boolean;
+};
+
 const StudentChatbotPage = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -37,6 +46,10 @@ const StudentChatbotPage = () => {
     const [loading, setLoading] = useState(false);
     const [historyLoading, setHistoryLoading] = useState(true);
     const [conversationLoading, setConversationLoading] = useState(false);
+    const [historyView, setHistoryView] = useState<HistoryView>("active");
+    const [historyActionId, setHistoryActionId] = useState<string | null>(null);
+    const [pendingArchiveAction, setPendingArchiveAction] =
+        useState<PendingConversationArchiveAction | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [historyError, setHistoryError] = useState<string | null>(null);
 
@@ -45,9 +58,9 @@ const StudentChatbotPage = () => {
         navigate("/login");
     };
 
-    const loadConversations = useCallback(async () => {
+    const loadConversations = useCallback(async (view: HistoryView = historyView) => {
         try {
-            const data = await chatbotApi.listConversations();
+            const data = await chatbotApi.listConversations(view === "archived");
             setConversations(data);
             setHistoryError(null);
         } catch {
@@ -55,14 +68,14 @@ const StudentChatbotPage = () => {
         } finally {
             setHistoryLoading(false);
         }
-    }, [t]);
+    }, [historyView, t]);
 
     useEffect(() => {
         let isCancelled = false;
 
         const load = async () => {
             try {
-                const data = await chatbotApi.listConversations();
+                const data = await chatbotApi.listConversations(historyView === "archived");
                 if (!isCancelled) {
                     setConversations(data);
                     setHistoryError(null);
@@ -83,7 +96,16 @@ const StudentChatbotPage = () => {
         return () => {
             isCancelled = true;
         };
-    }, [t]);
+    }, [historyView, t]);
+
+    const handleHistoryViewChange = (view: HistoryView) => {
+        if (view === historyView) {
+            return;
+        }
+        setHistoryView(view);
+        setHistoryLoading(true);
+        setHistoryError(null);
+    };
 
     const handleNewChat = () => {
         setMessages([]);
@@ -91,6 +113,51 @@ const StudentChatbotPage = () => {
         setConversationId(undefined);
         setLatestSources([]);
         setError(null);
+        if (historyView !== "active") {
+            setHistoryView("active");
+            setHistoryLoading(true);
+        }
+    };
+
+    const requestArchiveToggle = (conversation: ChatConversationSummary, archived: boolean) => {
+        setPendingArchiveAction({ conversation, archived });
+    };
+
+    const handleArchiveToggle = async (conversation: ChatConversationSummary, archived: boolean) => {
+        setHistoryActionId(conversation.conversationId);
+        setHistoryError(null);
+        try {
+            const updated = archived
+                ? await chatbotApi.archiveConversation(conversation.conversationId)
+                : await chatbotApi.restoreConversation(conversation.conversationId);
+            const shouldRemainInCurrentView = Boolean(updated.studentArchived) === (historyView === "archived");
+            setConversations((current) => {
+                if (!shouldRemainInCurrentView) {
+                    return current.filter((item) => item.conversationId !== updated.conversationId);
+                }
+                return current.map((item) => item.conversationId === updated.conversationId ? updated : item);
+            });
+            if (archived && conversation.conversationId === conversationId) {
+                handleNewChat();
+            }
+        } catch {
+            setHistoryError(
+                archived
+                    ? t("student.chatbot.archiveError")
+                    : t("student.chatbot.restoreError")
+            );
+        } finally {
+            setHistoryActionId(null);
+        }
+    };
+
+    const handleConfirmArchiveToggle = () => {
+        const action = pendingArchiveAction;
+        if (!action) {
+            return;
+        }
+        setPendingArchiveAction(null);
+        void handleArchiveToggle(action.conversation, action.archived);
     };
 
     const handleOpenConversation = async (targetConversationId: string) => {
@@ -122,18 +189,50 @@ const StudentChatbotPage = () => {
         }
     };
 
-    const formatProviderMeta = (provider?: string, model?: string) => {
-        if (!provider && !model) {
-            return t("student.chatbot.providerUnknown");
-        }
-        return [provider, model].filter(Boolean).join(" / ");
-    };
-
     const formatConversationTime = (value?: string) => {
         if (!value) {
             return "";
         }
         return new Date(value).toLocaleString();
+    };
+
+    const formatKnowledgeScope = (scope?: string | null) => {
+        if (scope === "SYSTEM") {
+            return t("student.chatbot.sourceScope.system");
+        }
+        if (scope === "INSTRUCTOR_CONTRIBUTED") {
+            return t("student.chatbot.sourceScope.instructor");
+        }
+        return t("student.chatbot.unknown");
+    };
+
+    const formatApprovalStatus = (status?: string | null) => {
+        if (status === "APPROVED") {
+            return t("student.chatbot.approval.approved");
+        }
+        return status || t("student.chatbot.unknown");
+    };
+
+    const formatRelevanceLabel = (label?: string | null) => {
+        if (label === "HIGH") {
+            return t("student.chatbot.relevance.high");
+        }
+        if (label === "MEDIUM") {
+            return t("student.chatbot.relevance.medium");
+        }
+        if (label === "LOW") {
+            return t("student.chatbot.relevance.low");
+        }
+        return label || t("student.chatbot.relevance.match");
+    };
+
+    const formatSourceRelevance = (source: RetrievedKnowledge) => {
+        if (typeof source.relevanceScore === "number") {
+            return t("student.chatbot.relevance.vectorScore", {
+                score: source.relevanceScore.toFixed(2),
+            });
+        }
+        return formatRelevanceLabel(source.relevanceLabel);
     };
 
     const handleSubmit = async (event: FormEvent) => {
@@ -184,8 +283,21 @@ const StudentChatbotPage = () => {
         }
     };
 
+    const isArchivedView = historyView === "archived";
+    const pendingArchiveKind = pendingArchiveAction?.archived ? "archive" : "restore";
+
     return (
         <StudentLayout title={t("student.chatbot.title")} onSignOut={handleSignOut}>
+            <ConfirmDialog
+                open={Boolean(pendingArchiveAction)}
+                title={t(`student.chatbot.confirmations.${pendingArchiveKind}.title`)}
+                message={t(`student.chatbot.confirmations.${pendingArchiveKind}.message`)}
+                confirmLabel={t(`student.chatbot.${pendingArchiveKind}`)}
+                cancelLabel={t("common.cancel")}
+                variant={pendingArchiveAction?.archived ? "warning" : "normal"}
+                onCancel={() => setPendingArchiveAction(null)}
+                onConfirm={handleConfirmArchiveToggle}
+            />
             <div className="chatbot-toolbar">
                 <div className="page-header" style={{ marginBottom: 0 }}>
                     <div>
@@ -193,9 +305,6 @@ const StudentChatbotPage = () => {
                         <p>{t("student.chatbot.subtitle")}</p>
                     </div>
                 </div>
-                <button type="button" className="btn btn-outline" onClick={handleNewChat}>
-                    {t("student.chatbot.newChat")}
-                </button>
             </div>
 
             <div className="chatbot-page">
@@ -203,39 +312,88 @@ const StudentChatbotPage = () => {
                     <div className="chatbot-history__header">
                         <h3>{t("student.chatbot.history")}</h3>
                         <button type="button" className="btn btn-outline" onClick={handleNewChat}>
+                            <MessageSquarePlus size={16} aria-hidden="true" />
                             {t("student.chatbot.newChat")}
                         </button>
                     </div>
+                    <div
+                        className="chatbot-history__tabs"
+                        role="tablist"
+                        aria-label={t("student.chatbot.historyFilter")}
+                    >
+                        <button
+                            type="button"
+                            role="tab"
+                            aria-selected={historyView === "active"}
+                            className={`btn btn-sm ${historyView === "active" ? "btn-primary" : "btn-outline"}`}
+                            onClick={() => handleHistoryViewChange("active")}
+                        >
+                            {t("student.chatbot.activeConversations")}
+                        </button>
+                        <button
+                            type="button"
+                            role="tab"
+                            aria-selected={historyView === "archived"}
+                            className={`btn btn-sm ${historyView === "archived" ? "btn-primary" : "btn-outline"}`}
+                            onClick={() => handleHistoryViewChange("archived")}
+                        >
+                            {t("student.chatbot.archivedConversations")}
+                        </button>
+                    </div>
+                    <p className="chatbot-history__archive-note">
+                        {t("student.chatbot.archiveNote")}
+                    </p>
                     {historyLoading ? (
                         <p className="chatbot-history__state">{t("student.chatbot.historyLoading")}</p>
                     ) : historyError ? (
                         <p className="chatbot-history__error">{historyError}</p>
                     ) : conversations.length === 0 ? (
-                        <p className="chatbot-history__state">{t("student.chatbot.noHistory")}</p>
+                        <p className="chatbot-history__state">
+                            {isArchivedView
+                                ? t("student.chatbot.noArchivedHistory")
+                                : t("student.chatbot.noHistory")}
+                        </p>
                     ) : (
                         <div className="chatbot-history__list">
                             {conversations.map((conversation) => (
-                                <button
+                                <article
                                     key={conversation.conversationId}
-                                    type="button"
                                     className={`chatbot-history__item${
                                         conversation.conversationId === conversationId
                                             ? " chatbot-history__item--active"
                                             : ""
                                     }`}
-                                    onClick={() => handleOpenConversation(conversation.conversationId)}
-                                    disabled={conversationLoading}
                                 >
-                                    <span className="chatbot-history__title">
-                                        {conversation.title || t("student.chatbot.untitled")}
-                                    </span>
-                                    <span className="chatbot-history__preview">
-                                        {conversation.lastMessagePreview || t("student.chatbot.noPreview")}
-                                    </span>
-                                    <span className="chatbot-history__time">
-                                        {formatConversationTime(conversation.updatedAt)}
-                                    </span>
-                                </button>
+                                    <button
+                                        type="button"
+                                        className="chatbot-history__open"
+                                        onClick={() => handleOpenConversation(conversation.conversationId)}
+                                        disabled={conversationLoading || historyActionId === conversation.conversationId}
+                                    >
+                                        <span className="chatbot-history__title">
+                                            {conversation.title || t("student.chatbot.untitled")}
+                                        </span>
+                                        <span className="chatbot-history__preview">
+                                            {conversation.lastMessagePreview || t("student.chatbot.noPreview")}
+                                        </span>
+                                        <span className="chatbot-history__time">
+                                            {formatConversationTime(conversation.updatedAt)}
+                                        </span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline chatbot-history__action"
+                                        onClick={() => requestArchiveToggle(conversation, !isArchivedView)}
+                                        disabled={historyActionId === conversation.conversationId}
+                                    >
+                                        
+                                        {historyActionId === conversation.conversationId
+                                            ? t("student.chatbot.updatingArchive")
+                                            : isArchivedView
+                                                ? t("student.chatbot.restore")
+                                                : t("student.chatbot.archive")}
+                                    </button>
+                                </article>
                             ))}
                         </div>
                     )}
@@ -255,21 +413,6 @@ const StudentChatbotPage = () => {
                                     className={`chatbot-message chatbot-message--${message.role}`}
                                 >
                                     {message.content}
-                                    {message.role === "assistant" && (
-                                        <div className="chatbot-message__meta">
-                                            <span>
-                                                {t("student.chatbot.providerLabel")}:{" "}
-                                                {formatProviderMeta(message.provider, message.model)}
-                                            </span>
-                                            <span>
-                                                {t("student.chatbot.sourcesLabel")}:{" "}
-                                                {message.sources?.length ?? 0}
-                                            </span>
-                                            {message.retrievalMode && (
-                                                <span>Retrieval: {message.retrievalMode}</span>
-                                            )}
-                                        </div>
-                                    )}
                                 </article>
                             ))
                         )}
@@ -313,14 +456,38 @@ const StudentChatbotPage = () => {
                     ) : (
                         <div className="chatbot-source-list">
                             {latestSources.map((source, index) => (
-                                <article className="chatbot-source" key={source.kbId}>
+                                <article className="chatbot-source" key={`${source.kbId}-${source.rank ?? index}`}>
                                     <div className="chatbot-source__title">
-                                        <span>{index + 1}</span>
-                                        {source.kbTitle}
+                                        <span>{source.rank ?? index + 1}</span>
+                                        <strong>{source.kbTitle}</strong>
                                     </div>
-                                    <div className="chatbot-source__meta">
-                                        {[source.kbCategory, source.kbSource].filter(Boolean).join(" - ")}
+                                    <div className="chatbot-source__badges">
+                                        <span>{formatKnowledgeScope(source.knowledgeScope)}</span>
+                                        {source.approvalStatus && (
+                                            <span>{formatApprovalStatus(source.approvalStatus)}</span>
+                                        )}
+                                        <span>{formatSourceRelevance(source)}</span>
                                     </div>
+                                    <dl className="chatbot-source__meta-list">
+                                        {source.kbCategory && (
+                                            <div>
+                                                <dt>{t("student.chatbot.sourceCategory")}</dt>
+                                                <dd>{source.kbCategory}</dd>
+                                            </div>
+                                        )}
+                                        {source.kbSource && (
+                                            <div>
+                                                <dt>{t("student.chatbot.sourceOrigin")}</dt>
+                                                <dd>{source.kbSource}</dd>
+                                            </div>
+                                        )}
+                                        {source.contributorDisplayName && (
+                                            <div>
+                                                <dt>{t("student.chatbot.sourceContributor")}</dt>
+                                                <dd>{source.contributorDisplayName}</dd>
+                                            </div>
+                                        )}
+                                    </dl>
                                     <div className="chatbot-source__snippet">{source.snippet}</div>
                                 </article>
                             ))}

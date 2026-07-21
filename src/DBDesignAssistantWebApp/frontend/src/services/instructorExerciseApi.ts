@@ -1,8 +1,14 @@
 import axiosClient from './axiosClient';
-import type { Exercise, ExerciseRequest } from '../types';
+import type {
+  Exercise,
+  ExerciseGenerationRequest,
+  ExerciseGenerationResponse,
+  ExerciseRequest,
+  ExerciseReviewRequest,
+} from '../types';
 
 export const instructorExerciseApi = {
-  getAll: (params?: { search?: string; isPublished?: boolean }) => {
+  getAll: (params?: { search?: string; exerciseSource?: string; isPublished?: boolean }) => {
     return axiosClient.get<Exercise[]>('/instructor/exercises', { params }).then(res => res.data);
   },
 
@@ -28,5 +34,19 @@ export const instructorExerciseApi = {
 
   unpublish: (id: number) => {
     return axiosClient.put<Exercise>(`/instructor/exercises/${id}/unpublish`).then(res => res.data);
+  },
+
+  generate: (data: ExerciseGenerationRequest) => {
+    return axiosClient
+      .post<ExerciseGenerationResponse>('/instructor/exercises/generate', data)
+      .then(res => res.data);
+  },
+
+  approve: (id: number, data: ExerciseReviewRequest) => {
+    return axiosClient.put<Exercise>(`/instructor/exercises/${id}/approve`, data).then(res => res.data);
+  },
+
+  reject: (id: number, data: ExerciseReviewRequest) => {
+    return axiosClient.put<Exercise>(`/instructor/exercises/${id}/reject`, data).then(res => res.data);
   },
 };

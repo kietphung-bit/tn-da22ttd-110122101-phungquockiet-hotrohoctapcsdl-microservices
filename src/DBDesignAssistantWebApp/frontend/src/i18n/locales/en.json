@@ -6,7 +6,12 @@
         "actions": "Actions",
         "status": "Status",
         "active": "Active",
-        "disabled": "Disabled"
+        "disabled": "Disabled",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "close": "Close",
+        "showPassword": "Show password",
+        "hidePassword": "Hide password"
     },
     "login": {
         "heroTitle": "Welcome back",
@@ -29,11 +34,73 @@
         "fullName": "Full name",
         "email": "Email",
         "password": "Password",
+        "confirmPassword": "Confirm password",
+        "confirmMismatch": "Password confirmation does not match.",
+        "next": "Continue",
+        "back": "Back",
+        "gender": "Gender",
+        "genderEmpty": "Select gender",
+        "genderMale": "Male",
+        "genderFemale": "Female",
+        "genderOther": "Other",
+        "dob": "Date of birth",
+        "phone": "Phone",
+        "address": "Address",
+        "steps": {
+            "ariaLabel": "Registration steps",
+            "account": "Step 1",
+            "profile": "Step 2"
+        },
         "submit": "Register",
         "submitting": "Creating...",
         "error": "Registration failed. Please try again.",
         "haveAccount": "Already have an account?",
         "loginLink": "Sign in"
+    },
+    "account": {
+        "trigger": "Account",
+        "unknownName": "No name yet",
+        "unknownEmail": "No email yet",
+        "roles": {
+            "admin": "Admin",
+            "instructor": "Instructor",
+            "student": "Student",
+            "unknown": "Unknown"
+        },
+        "profile": {
+            "action": "Profile",
+            "title": "Profile",
+            "subtitle": "Update safe account information.",
+            "email": "Email",
+            "role": "Role",
+            "fullName": "Full name",
+            "gender": "Gender",
+            "genderEmpty": "Select gender",
+            "genderMale": "Male",
+            "genderFemale": "Female",
+            "genderOther": "Other",
+            "dob": "Date of birth",
+            "phone": "Phone",
+            "address": "Address",
+            "save": "Save profile",
+            "saving": "Saving...",
+            "success": "Profile updated.",
+            "error": "Could not update profile.",
+            "requiredName": "Please enter your full name."
+        },
+        "password": {
+            "action": "Change password",
+            "title": "Change password",
+            "subtitle": "Enter your current password before setting a new one.",
+            "currentPassword": "Current password",
+            "newPassword": "New password",
+            "confirmPassword": "Confirm new password",
+            "save": "Change password",
+            "saving": "Changing...",
+            "success": "Password changed.",
+            "error": "Could not change password. Please check your current password.",
+            "confirmMismatch": "Password confirmation does not match."
+        }
     },
     "admin": {
         "sidebar": {
@@ -55,6 +122,20 @@
             "confirmDisable": "Are you sure you want to disable this user?",
             "confirmEnable": "Are you sure you want to enable this user?",
             "confirmDelete": "Are you sure you want to delete this user?",
+            "confirmations": {
+                "disable": {
+                    "title": "Disable account?",
+                    "message": "This account will not be able to sign in until it is enabled again."
+                },
+                "enable": {
+                    "title": "Enable account?",
+                    "message": "This account will be able to sign in again if the credentials are valid."
+                },
+                "delete": {
+                    "title": "Delete account?",
+                    "message": "This will delete the account from the system if the backend allows it. Make sure the account is no longer needed."
+                }
+            },
             "loading": "Loading users...",
             "view": "View",
             "detailTitle": "User details",
@@ -78,6 +159,8 @@
             "disable": "Disable",
             "enable": "Enable",
             "delete": "Delete",
+            "protectedAdmin": "Protected ADMIN account",
+            "protectedSelf": "Current account",
             "roles": {
                 "student": "Student",
                 "instructor": "Instructor"
@@ -112,7 +195,116 @@
             "confirmDelete": "Are you sure you want to delete this exercise?",
             "saveError": "Failed to save exercise.",
             "publishError": "Failed to update publish status.",
+            "confirmations": {
+                "publish": {
+                    "title": "Publish sample exercise?",
+                    "message": "Students can see and work on this exercise after it is published."
+                },
+                "unpublish": {
+                    "title": "Unpublish sample exercise?",
+                    "message": "Students will no longer see this exercise in the public exercise list. Existing submissions are not deleted."
+                },
+                "delete": {
+                    "title": "Delete exercise?",
+                    "message": "This will delete the exercise from the system if the backend allows it. Make sure the exercise is no longer needed."
+                }
+            },
             "loading": "Loading exercises...",
+            "aiReview": {
+                "pageTitle": "Check AI Exercise Generation",
+                "pageSubtitle": "Create an AI generation trial from a base exercise or prompt to review quality, without publishing the trial to students.",
+                "openGenerator": "Check AI generation",
+                "backToList": "Back to exercise list",
+                "title": "Review AI-generated trial",
+                "subtitle": "Generate a trial from a sample exercise or prompt, preview it, then mark the base exercise eligible for student AI generation if the result is acceptable.",
+                "fields": {
+                    "baseExercise": "Base exercise to check",
+                    "loadingBases": "Loading base exercises...",
+                    "noBaseExercise": "No base exercise",
+                    "selectedBase": "Using base exercise: {{title}}",
+                    "fixedBaseExercise": "Base exercise under review",
+                    "baseAlreadyEligible": "This base exercise is already eligible for AI generation via trial #{{trialId}}.",
+                    "baseNotEligible": "This base exercise is not yet eligible for AI generation.",
+                    "customPrompt": "Review prompt",
+                    "businessContext": "Business context",
+                    "difficulty": "Difficulty",
+                    "businessDomain": "Business domain",
+                    "additionalRequirements": "Additional requirements",
+                    "rejectReason": "Reject reason"
+                },
+                "placeholders": {
+                    "customPrompt": "Example: Create a database design exercise for a hotel booking system...",
+                    "businessContext": "Describe business actors, workflow, and important rules...",
+                    "businessDomain": "Example: hotel, library, clinic",
+                    "additionalRequirements": "Constraints, learning goals, or specific points to emphasize...",
+                    "rejectReason": "Add a reason if the exercise is not acceptable..."
+                },
+                "difficulty": {
+                    "easy": "Easy",
+                    "medium": "Medium",
+                    "hard": "Hard"
+                },
+                "actions": {
+                    "generate": "Generate AI trial",
+                    "regenerate": "Regenerate AI trial",
+                    "generating": "Generating...",
+                    "approve": "Approve trial",
+                    "reject": "Reject",
+                    "reviewing": "Updating...",
+                    "approveBeforePublish": "Approve before publishing",
+                    "trialCannotPublish": "AI exercises are not published directly from this management view",
+                    "reviewInsteadOfEdit": "Review AI trials from the detail page",
+                    "noReviewActions": "No review action is needed for the current state."
+                },
+                "status": {
+                    "draft": "DRAFT",
+                    "approved": "APPROVED",
+                    "rejected": "REJECTED"
+                },
+                "messages": {
+                    "generated": "AI trial created. Preview it before approving or rejecting.",
+                    "approved": "AI trial approved; when linked to a base exercise, that base is now marked eligible for AI generation.",
+                    "approvedPublished": "AI trial approved.",
+                    "rejected": "AI trial rejected."
+                },
+                "errors": {
+                    "inputRequired": "Select a base exercise or enter prompt context before generating a trial.",
+                    "generate": "Failed to generate AI trial.",
+                    "approve": "Failed to approve AI trial.",
+                    "reject": "Failed to reject AI trial.",
+                    "rejectReasonRequired": "Enter a reject reason so the next regeneration has useful feedback."
+                },
+                "empty": {
+                    "title": "No preview yet",
+                    "body": "Generate an AI trial to review title, description, and scenario data."
+                },
+                "detail": {
+                    "creator": "Creator",
+                    "reviewPurpose": "Review purpose",
+                    "reviewSource": "Review source",
+                    "reviewCreatedAt": "Trial created at",
+                    "reviewedAt": "Reviewed at",
+                    "reviewedByRole": "Reviewed by role",
+                    "baseExercise": "Base exercise",
+                    "approvedForGeneration": "Eligible for generation",
+                    "revisionOfExercise": "Revision of trial",
+                    "rejectReason": "Reject reason",
+                    "publishGuard": "This AI trial is only for reviewing generation quality and is not a public student exercise.",
+                    "approvedPublished": "This AI trial is approved.",
+                    "approvedTrial": "This AI trial is approved; the linked base exercise can be used as an AI generation source when present."
+                }
+            },
+            "sources": {
+                "manual": "Sample exercise",
+                "ai_generated": "AI_GENERATED",
+                "staff_ai_trial": "AI generation trial",
+                "student_private_ai": "Student-private AI exercise"
+            },
+            "publishStatus": {
+                "published": "Published",
+                "unpublished": "Unpublished",
+                "notApplicable": "Not published to students"
+            },
             "form": {
                 "createTitle": "Create exercise",
                 "editTitle": "Edit exercise",
@@ -129,9 +321,13 @@
             },
             "filters": {
                 "searchPlaceholder": "Search title, code, description...",
-                "allSources": "All sources",
-                "manual": "Manual",
+                "allSources": "All categories",
+                "staffLibrary": "Sample exercises and AI trials",
+                "manual": "Sample exercise",
                 "aiGenerated": "AI-generated",
+                "staffAiTrial": "AI generation trial",
+                "studentPrivateAi": "Student-private AI exercise",
+                "allReviewStatuses": "All review statuses",
                 "allPublish": "All status",
                 "published": "Published",
                 "unpublished": "Unpublished",
@@ -147,10 +343,25 @@
                 "code": "Code",
                 "title": "Title",
                 "description": "Description",
-                "source": "Source",
+                "source": "Category",
+                "review": "AI check",
                 "creator": "Creator",
                 "published": "Published",
                 "actions": "Actions"
+            },
+            "empty": {
+                "noExercises": {
+                    "title": "No exercises yet",
+                    "body": "Create a sample exercise or generate an AI trial to review generation quality."
+                },
+                "noAiDraft": {
+                    "title": "No AI trial is waiting for review",
+                    "body": "Use Check AI generation to create a trial, then preview, approve, or reject it."
+                },
+                "noFilterResults": {
+                    "title": "No matching exercises",
+                    "body": "Try changing the source, review status, publish status, or search text."
+                }
             },
             "edit": "Edit",
             "delete": "Delete",
@@ -171,6 +382,12 @@
                 "saveError": "Failed to save sample solution.",
                 "deleteError": "Failed to delete sample solution.",
                 "confirmDelete": "Are you sure you want to delete this sample solution?",
+                "confirmations": {
+                    "delete": {
+                        "title": "Delete sample solution?",
+                        "message": "The sample solution will be removed from this exercise."
+                    }
+                },
                 "solutionData": "Solution data (JSON)",
                 "formatJson": "Format JSON",
                 "exerciseLabel": "Exercise:",
@@ -196,12 +413,13 @@
                 "loadError": "Failed to load exercise details.",
                 "tabInfo": "Exercise info",
                 "tabSampleSolution": "Sample solution",
+                "tabAiGenerationTrial": "AI generation check",
                 "tabInsights": "Insights",
                 "fields": {
                     "code": "Exercise code",
                     "title": "Title",
                     "description": "Description",
-                    "source": "Source",
+                    "source": "Category",
                     "published": "Publish status",
                     "creator": "Creator",
                     "scenarioData": "Scenario data"
@@ -374,25 +592,47 @@
             "providerRounds": "{{count}} rounds",
             "providerFallback": "{{count}} fallback",
             "affectedSubmissions": "{{count}} affected submissions",
+            "affectedCoverage": "{{submissions}} submissions, {{rounds}} rounds affected",
+            "scoreBucketHint": "{{submissions}} submissions, avg score {{average}}",
+            "roundBucketHint": "{{failed}} failed, {{processing}} processing, avg score {{average}}",
+            "trendScoreHint": "Avg score {{score}}",
             "recentRoundsHint": "Latest grading rounds from the backend safe whitelist.",
             "totalRecentRounds": "{{count}} recent rounds",
+            "skillAnalytics": {
+                "impact": "{{rate}} affected rounds",
+                "coverage": "{{submissions}} submissions, {{rounds}} rounds - {{errors}}",
+                "noCommonErrors": "No mapped issue types"
+            },
             "chartDescriptions": {
                 "status": "Grading flow health through the number of submissions in each status.",
                 "provider": "AI provider stability through total grading rounds and fallback rounds.",
+                "score": "Score buckets from real graded round scores in evaluation_rounds.overall_score.",
+                "rounds": "Round 1-3 usage based on evaluation_rounds.round_number.",
+                "trend": "Daily trend by submitted date: submissions, graded rounds, and average score when available.",
+                "skillAnalytics": "Skill groups inferred from error types stored in evaluation_rounds.details_snapshot.",
                 "issues": "Common student issue types to prioritize exercise and guidance improvements."
             },
             "emptyCharts": {
                 "status": "No submission status data is available for the current filters.",
                 "provider": "No provider or fallback data is available for the current filters.",
+                "score": "Not enough scored grading rounds for a score distribution yet.",
+                "rounds": "No grading round data is available for the current filters.",
+                "trend": "Not enough submitted or graded data for a trend yet.",
+                "skillAnalytics": "No grading issues are available for skill analytics yet.",
                 "issues": "No top issue type data is available for the current filters."
             },
             "chart": {
                 "count": "{{count}} items",
+                "submissions": "{{count}} submissions",
                 "rounds": "{{count}} rounds",
+                "gradedRounds": "{{count}} graded",
+                "roundNumber": "Round {{number}}",
                 "fallbackRounds": "{{count}} fallback",
                 "occurrences": "{{count}} occurrences",
                 "roundLegend": "Total grading rounds",
-                "fallbackLegend": "Fallback rounds"
+                "fallbackLegend": "Fallback rounds",
+                "submissionLegend": "Submissions",
+                "gradedLegend": "Graded rounds"
             },
             "sources": {
                 "manual": "Manual",
@@ -430,8 +670,58 @@
             "sections": {
                 "statusBreakdown": "Status breakdown",
                 "providerBreakdown": "Provider and fallback",
+                "scoreDistribution": "Score distribution",
+                "roundDistribution": "Round distribution",
+                "trend": "Submitted trend",
+                "skillAnalytics": "Skills to improve",
                 "topIssueTypes": "Top issue types",
                 "recentRounds": "Recent rounds"
+            },
+            "skills": {
+                "ENTITY_MODELING": "Entity modeling",
+                "ATTRIBUTE_AND_KEY": "Attributes and keys",
+                "RELATIONSHIP_MODELING": "Relationship modeling",
+                "CARDINALITY": "Cardinality",
+                "NORMALIZATION": "Normalization",
+                "INTEGRITY_CONSTRAINT": "Integrity constraints",
+                "SCOPE_COMPLETENESS": "Scope completeness",
+                "OTHER": "Other issues"
+            }
+        },
+        "knowledgeBase": {
+            "confirmations": {
+                "delete": {
+                    "title": "Delete knowledge item?",
+                    "message": "This knowledge item will be removed from the knowledge base if the backend allows it."
+                },
+                "hide": {
+                    "title": "Hide knowledge item?",
+                    "message": "This knowledge item will no longer be used in the default visible list after it is hidden."
+                },
+                "show": {
+                    "title": "Show knowledge item?",
+                    "message": "This knowledge item will be visible again if it is approved and the backend allows it."
+                },
+                "approve": {
+                    "title": "Approve knowledge item?",
+                    "message": "Approved knowledge can be used as reference material for the chatbot."
+                }
+            }
+        },
+        "skills": {
+            "confirmations": {
+                "delete": {
+                    "title": "Delete skill?",
+                    "message": "This will delete the skill from the system if the backend allows it."
+                },
+                "hide": {
+                    "title": "Hide skill?",
+                    "message": "The skill will no longer appear in lists that use active skills."
+                },
+                "show": {
+                    "title": "Show skill?",
+                    "message": "The skill will appear again in the appropriate lists."
+                }
             }
         }
     },
@@ -441,7 +731,7 @@
             "chatbotDemo": "QA chat demo",
             "title": "Learning space",
             "practice": "Start practice",
-            "exercises": "Exercise list",
+            "exercises": "My AI exercises",
             "submissions": "Submission history"
         },
         "chatbot": {
@@ -460,17 +750,290 @@
             "historyLoading": "Loading conversations...",
             "historyError": "Could not load conversation history.",
             "noHistory": "No conversations yet.",
+            "noArchivedHistory": "No archived conversations yet.",
+            "historyFilter": "Filter conversation history",
+            "activeConversations": "Active",
+            "archivedConversations": "Archived",
+            "archiveNote": "Archived conversations are only hidden from history, not deleted.",
             "untitled": "Untitled chat",
             "noPreview": "No messages yet",
             "openingConversation": "Opening conversation...",
             "openConversationError": "Could not open this conversation.",
+            "archive": "Archive",
+            "restore": "Restore",
+            "updatingArchive": "Updating...",
+            "archiveError": "Could not archive this conversation.",
+            "restoreError": "Could not restore this conversation.",
+            "confirmations": {
+                "archive": {
+                    "title": "Archive conversation?",
+                    "message": "This conversation will be hidden from the default history. Old messages are still kept."
+                },
+                "restore": {
+                    "title": "Restore conversation?",
+                    "message": "This conversation will appear in the default history again."
+                }
+            },
             "sources": "Retrieved sources",
             "noSources": "No sources yet. Send a question to see related materials.",
             "providerLabel": "Provider",
             "providerUnknown": "Unknown",
             "sourcesLabel": "Sources",
+            "retrievalLabel": "Retrieval",
+            "unknown": "Unknown",
+            "sourceCategory": "Category",
+            "sourceOrigin": "Source",
+            "sourceContributor": "Contributor",
+            "sourceScope": {
+                "system": "System",
+                "instructor": "Instructor contributed"
+            },
+            "approval": {
+                "approved": "Approved"
+            },
+            "retrieval": {
+                "vector": "Vector",
+                "keyword": "Keyword"
+            },
+            "relevance": {
+                "high": "High relevance",
+                "medium": "Medium relevance",
+                "low": "Low relevance",
+                "match": "Matched",
+                "vectorScore": "Vector {{score}}"
+            },
             "error": "Could not send the question right now. Please check your session and try again.",
             "rateLimitError": "You are sending questions too quickly. Please wait a minute and try again."
+        },
+        "exerciseGenerator": {
+            "title": "Start practice",
+            "subtitle": "Choose or create an exercise before entering the database design workspace",
+            "headerTitle": "Practice starting point",
+            "headerSubtitle": "After an exercise is ready, use Start to open the ERD workspace.",
+            "tabs": {
+                "ariaLabel": "Choose how to start practice",
+                "ai": "Generate AI exercise",
+                "manual": "Enter prompt"
+            },
+            "difficulty": {
+                "easy": "Basic",
+                "medium": "Intermediate",
+                "hard": "Advanced"
+            },
+            "ai": {
+                "noteTitle": "Generate a private exercise",
+                "noteBody": "The exercise is generated from approved KnowledgeBase material and published sample exercises."
+            },
+            "manual": {
+                "noteTitle": "Enter your own exercise brief",
+                "noteBody": "Paste a free-form business context; the system will normalize it into a practice exercise."
+            },
+            "fields": {
+                "topic": "Topic",
+                "difficulty": "Difficulty",
+                "businessDomain": "Domain / context",
+                "businessDomainOptional": "Domain / context (optional)",
+                "keywords": "Keywords",
+                "baseExercise": "Sample exercise",
+                "baseExerciseAuto": "Auto-select by matching context",
+                "selectedBase": "Using: {{title}}",
+                "additionalRequirements": "Additional requirements",
+                "customPrompt": "Exercise brief / business context"
+            },
+            "placeholders": {
+                "topic": "Example: ERD, normalization, many-to-many relationships",
+                "businessDomain": "Example: clinic, library, restaurant",
+                "manualBusinessDomain": "Example: hotel, clinic, restaurant",
+                "keywords": "customer, booking, invoice",
+                "additionalRequirements": "Example: include transaction history, status rules, reporting",
+                "manualAdditionalRequirements": "Example: emphasize date-based bookings, payment, and cancellation",
+                "customPrompt": "Example: Design a database for a hotel room booking management system..."
+            },
+            "actions": {
+                "exerciseList": "My AI exercises",
+                "generate": "Generate exercise",
+                "generateFromPrompt": "Create exercise from prompt",
+                "generating": "Generating exercise...",
+                "start": "Start",
+                "startingDraft": "Creating draft...",
+                "viewDetail": "View details"
+            },
+            "result": {
+                "businessContext": "Business context",
+                "requirements": "Functional requirements",
+                "constraints": "Data constraints",
+                "designHints": "Design scope hints",
+                "scenarioJson": "Technical data"
+            },
+            "empty": {
+                "title": "No exercise yet",
+                "ai": "Fill out the form and generate a new practice exercise.",
+                "manual": "Enter a free-form brief and create an exercise to start practicing."
+            },
+            "errors": {
+                "generate": "Could not generate the exercise. Please try again.",
+                "createDraft": "Could not create a draft. Please try again.",
+                "manualPromptRequired": "Please enter an exercise brief or business context."
+            }
+        },
+        "exerciseList": {
+            "title": "My AI exercises",
+            "subtitle": "Private AI practice exercises you created from the generator.",
+            "loading": "Loading your AI exercises...",
+            "empty": "You have not created any AI exercises yet. Use Generate exercise to create a private practice exercise.",
+            "emptyArchived": "No archived private AI exercises yet.",
+            "searchPlaceholder": "Search my AI exercises...",
+            "filters": {
+                "ariaLabel": "Filter my AI exercises",
+                "active": "Visible",
+                "archived": "Archived"
+            },
+            "columns": {
+                "id": "ID",
+                "exerciseCode": "Exercise code",
+                "title": "Title",
+                "source": "Source",
+                "archivedAt": "Archived at",
+                "actions": "Actions"
+            },
+            "sources": {
+                "MANUAL": "Sample",
+                "AI_GENERATED": "Private AI",
+                "unknown": "Unknown"
+            },
+            "actions": {
+                "search": "Search",
+                "viewDetail": "View details",
+                "archive": "Archive",
+                "archiving": "Archiving...",
+                "restore": "Restore",
+                "restoring": "Restoring..."
+            },
+            "confirmations": {
+                "archive": {
+                    "title": "Archive AI exercise?",
+                    "message": "This private AI exercise will be hidden from the default list. Submissions created from it are still kept."
+                },
+                "restore": {
+                    "title": "Restore AI exercise?",
+                    "message": "This AI exercise will appear in the default list again."
+                }
+            },
+            "errors": {
+                "load": "Could not load AI exercises.",
+                "archive": "Could not archive this AI exercise.",
+                "restore": "Could not restore this AI exercise."
+            }
+        },
+        "submissionStatus": {
+            "DRAFT": "Draft",
+            "SUBMITTED": "Submitted",
+            "PROCESSING": "Processing",
+            "GRADED": "Graded",
+            "FAILED": "Failed"
+        },
+        "submissionHistory": {
+            "title": "Submission history",
+            "subtitle": "Review submitted work or continue editing when feedback rounds remain.",
+            "loading": "Loading submission history...",
+            "empty": "No submissions yet.",
+            "emptyArchived": "No archived submissions yet.",
+            "roundCounter": "{{used}}/{{max}} rounds",
+            "filters": {
+                "ariaLabel": "Filter submission history",
+                "active": "Visible",
+                "archived": "Archived"
+            },
+            "columns": {
+                "id": "ID",
+                "exerciseCode": "Exercise code",
+                "exerciseTitle": "Exercise title",
+                "status": "Status",
+                "rounds": "Feedback rounds",
+                "createdAt": "Created at",
+                "submittedAt": "Submitted at",
+                "actions": "Actions"
+            },
+            "actions": {
+                "viewDetail": "View details",
+                "openDraft": "Open work",
+                "continue": "Continue work",
+                "reopening": "Reopening...",
+                "archive": "Archive",
+                "archiving": "Archiving...",
+                "restore": "Restore",
+                "restoring": "Restoring..."
+            },
+            "confirmations": {
+                "archive": {
+                    "title": "Archive submission?",
+                    "message": "This submission will be hidden from the default list. The work data and grading results are still kept."
+                },
+                "restore": {
+                    "title": "Restore submission?",
+                    "message": "This submission will appear in the default list again."
+                }
+            },
+            "errors": {
+                "load": "Could not load submission history.",
+                "reopen": "Could not reopen this submission.",
+                "noRounds": "No feedback rounds remain for this submission.",
+                "archive": "Could not archive this submission.",
+                "restore": "Could not restore this submission."
+            }
+        },
+        "submissionDetail": {
+            "title": "Submission detail: {{title}}",
+            "loadingTitle": "Loading...",
+            "loading": "Loading submission detail...",
+            "notFoundTitle": "Not found",
+            "notFound": "Submission not found.",
+            "roundCounter": "Feedback rounds {{used}}/{{max}}",
+            "actions": {
+                "back": "Back",
+                "openDraft": "Open work",
+                "continue": "Continue work",
+                "reopening": "Reopening..."
+            },
+            "notices": {
+                "draft": "This submission is a draft. Open the workspace to continue working.",
+                "canContinue": "You still have a feedback round left, so you can continue editing and submit again.",
+                "exhausted": "All feedback rounds have been used. This submission is review-only.",
+                "processing": "This submission is being evaluated. Wait for the result before editing again."
+            },
+            "fields": {
+                "exerciseCode": "Exercise code",
+                "status": "Status",
+                "createdAt": "Created at",
+                "submittedAt": "Submitted at"
+            },
+            "diagram": {
+                "title": "Submitted diagram"
+            },
+            "evaluation": {
+                "title": "AI evaluation result",
+                "help": "Review the feedback here; when rounds remain, continue editing to submit the next round.",
+                "score": "Overall score",
+                "evaluatedAt": "Evaluated at",
+                "details": "Error details",
+                "type": "Error type",
+                "description": "Description",
+                "location": "Location",
+                "noDetails": "No issues found. Nice work!",
+                "empty": "No evaluation result is available for this submission yet."
+            },
+            "rounds": {
+                "title": "Feedback history",
+                "help": "Open a round to review the saved status and hints.",
+                "roundWithMax": "Round {{round}}/{{max}}",
+                "gradedAt": "Graded at",
+                "noDetails": "This round has no feedback details yet."
+            },
+            "errors": {
+                "load": "Could not load submission detail.",
+                "reopen": "Could not reopen this submission.",
+                "noRounds": "No feedback rounds remain for this submission."
+            }
         },
         "workspacePage": {
             "title": "Workspace: {{title}}",
@@ -478,14 +1041,16 @@
             "loading": "Loading workspace...",
             "notFoundTitle": "Workspace not found",
             "notFound": "Submission not found.",
-            "exit": "Exit",
+            "exit": "Back",
             "saveDraft": "Save draft",
             "saving": "Saving...",
             "submit": "Submit",
             "submitting": "Submitting...",
-            "editAgain": "Edit again",
-            "confirmSubmit": "Are you sure you want to submit? After submission, the workspace will be locked by the current rule.",
-            "readOnly": "This submission has been submitted or is being evaluated. You can only view the workspace by the current rule.",
+            "reopening": "Reopening...",
+            "editAgain": "Continue editing",
+            "confirmSubmit": "Are you sure you want to submit? After submission, the work is locked while the system evaluates it.",
+            "readOnly": "This work has been submitted or is being evaluated. You can only review it while waiting for feedback.",
+            "revisionAvailable": "Feedback is ready. Use Continue editing to reopen the workspace and submit round {{nextRound}}/{{max}}.",
             "noDescription": "No detailed description yet.",
             "messages": {
                 "saveSuccess": "Draft saved successfully.",
@@ -511,7 +1076,7 @@
                 "current": "Current round",
                 "currentStatus": "Current round status",
                 "history": "Feedback history",
-                "historyHelp": "Open a round to review its provider, model, and saved hints.",
+                "historyHelp": "Open a round to review the saved hints.",
                 "round": "Round",
                 "roundWithMax": "Round {{round}}/{{max}}",
                 "latestFeedback": "Latest feedback",
@@ -536,7 +1101,7 @@
                 "processing": "The submission is being processed. Results will appear when the status is GRADED.",
                 "processingWithPrevious": "The current round is still being processed. The latest feedback below belongs to the most recent graded round.",
                 "failed": "Evaluation failed. Please try again later or contact your instructor if the problem continues.",
-                "failedCanRevise": "The current round failed to evaluate. You still have a round left, so use Edit again to revise and submit the next round.",
+                "failedCanRevise": "The current round failed to evaluate. You still have a round left, so use Continue editing to revise and submit the next round.",
                 "failedNoRounds": "The current round failed to evaluate and no feedback rounds remain.",
                 "polling": "Automatically checking every {{seconds}} seconds.",
                 "pollTimeout": "Evaluation is taking longer than usual. Reload this page after a few minutes to check the result.",
@@ -609,6 +1174,11 @@
                 "name": "Relationship name",
                 "fromEntity": "From Entity",
                 "toEntity": "To Entity",
+                "entityOne": "Entity 1",
+                "entityTwo": "Entity 2",
+                "sourceCardinality": "Cardinality near Entity 1",
+                "targetCardinality": "Cardinality near Entity 2",
+                "endpointCardinalityHelp": "Displayed near entity: {{value}}",
                 "selectEntity": "Select entity",
                 "cardinality": "Cardinality",
                 "cardinalityHelp": {
@@ -634,6 +1204,18 @@
             "knowledgeBase": "Academic Knowledge",
             "practiceInsights": "Insights"
         },
+        "knowledgeBase": {
+            "confirmations": {
+                "submit": {
+                    "title": "Submit knowledge item for review?",
+                    "message": "This item will be sent to Admin for review. After submission, you cannot edit it until there is a review result."
+                },
+                "delete": {
+                    "title": "Delete knowledge draft?",
+                    "message": "This knowledge draft will be removed from your list if the backend allows it."
+                }
+            }
+        },
         "practiceInsights": {
             "title": "Insights",
             "subtitle": "Anonymized overview of submissions, grading rounds, and common issues by exercise.",
@@ -645,23 +1227,58 @@
             "chooseExercise": "Choose an exercise to view KPI cards, common issue charts, and anonymized submission rows.",
             "privacyNote": "This page only uses aggregate/anonymized data; it does not show student names, student emails, raw diagrams, raw provider errors, or dead-letter payloads.",
             "viewExerciseDetail": "Open exercise detail",
+            "scoreBucketHint": "{{submissions}} submissions, avg score {{average}}",
+            "roundBucketHint": "{{failed}} failed, {{processing}} processing, avg score {{average}}",
+            "trendScoreHint": "Avg score {{score}}",
+            "skillAnalytics": {
+                "impact": "{{rate}} affected rounds",
+                "coverage": "{{submissions}} submissions, {{rounds}} rounds - {{errors}}",
+                "noCommonErrors": "No mapped issue types"
+            },
             "sections": {
                 "scopeBreakdown": "Submission scope",
-                "statusBreakdown": "Grading status"
+                "statusBreakdown": "Grading status",
+                "scoreDistribution": "Score distribution",
+                "roundDistribution": "Round distribution",
+                "trend": "Submitted trend",
+                "skillAnalytics": "Skills to improve"
             },
             "chartDescriptions": {
                 "scope": "Compare direct submissions with AI-derived exercise submissions to understand how the assignment is being used.",
                 "status": "Current graded, failed, and processing submissions in the selected scope.",
+                "score": "Score buckets from real graded round scores in evaluation_rounds.overall_score.",
+                "rounds": "Round 1-3 usage based on evaluation_rounds.round_number.",
+                "trend": "Daily trend by submitted date within the selected exercise scope.",
+                "skillAnalytics": "Skill groups inferred from details_snapshot errors, shown only as aggregate/anonymized signals.",
                 "issues": "The most frequent student issue types for improving assignments or adding guidance."
             },
             "emptyCharts": {
                 "scope": "No submission scope data is available for this exercise.",
                 "status": "No grading status data is available for this exercise.",
+                "score": "Not enough scored grading rounds for a score distribution yet.",
+                "rounds": "No grading round data is available for this exercise.",
+                "trend": "Not enough submitted or graded data for a trend yet.",
+                "skillAnalytics": "No grading issues are available for skill analytics yet.",
                 "issues": "No top issue type data is available for this exercise."
             },
             "chart": {
                 "submissions": "{{count}} submissions",
-                "occurrences": "{{count}} occurrences"
+                "rounds": "{{count}} rounds",
+                "gradedRounds": "{{count}} graded",
+                "roundNumber": "Round {{number}}",
+                "occurrences": "{{count}} occurrences",
+                "submissionLegend": "Submissions",
+                "gradedLegend": "Graded rounds"
+            },
+            "skills": {
+                "ENTITY_MODELING": "Entity modeling",
+                "ATTRIBUTE_AND_KEY": "Attributes and keys",
+                "RELATIONSHIP_MODELING": "Relationship modeling",
+                "CARDINALITY": "Cardinality",
+                "NORMALIZATION": "Normalization",
+                "INTEGRITY_CONSTRAINT": "Integrity constraints",
+                "SCOPE_COMPLETENESS": "Scope completeness",
+                "OTHER": "Other issues"
             }
         },
         "exerciseInsights": {
@@ -673,6 +1290,7 @@
             "unknown": "Unknown",
             "roundNumber": "Round {{number}}",
             "affectedSubmissions": "{{count}} affected submissions",
+            "affectedCoverage": "{{submissions}} submissions, {{rounds}} rounds affected",
             "anonymizedHint": "This table only shows submission IDs and aggregate status, without student names or emails.",
             "totalSubmissions": "{{count}} submissions",
             "scopes": {
@@ -743,7 +1361,8 @@
             "requirements": "Design requirements",
             "constraints": "Business constraints",
             "noRequirements": "No specific requirements yet.",
-            "noConstraints": "No specific constraints yet."
+            "noConstraints": "No specific constraints yet.",
+            "designHints": "Design scope hints"
         },
         "erd": {
             "invalid": "The diagram data is not in a supported format, so it cannot be fully rendered. Please inspect the technical data below.",

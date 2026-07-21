@@ -1,34 +1,73 @@
-# Frontend - DB Design Assistant Web App
+# React + TypeScript + Vite
 
-Ứng dụng phía người dùng (Frontend) được phát triển để tương tác trực quan với Hệ thống Hỗ trợ học tập và thiết kế Cơ sở dữ liệu.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Công nghệ sử dụng
-- **React 18** & **Vite**: Nền tảng framework chính mang lại tốc độ build cực nhanh.
-- **TypeScript**: Hỗ trợ việc kiểm tra chặt chẽ về định dạng kiểu (Type Safe), giảm thiểu lỗi runtime.
-- **TailwindCSS**: Thư viện CSS Utility-first giúp xây dựng và tùy biến giao diện UI nhanh chóng, thống nhất theo thiết kế.
-- **React Flow**: Thư viện biểu đồ vô cùng quan trọng cho việc thiết kế không gian làm việc, hỗ trợ vẽ Biểu đồ Thực thể Liên kết (ERD) bằng cách kéo, thả, liên kết node trực quan.
-- **Axios**: Thư viện gọi các HTTP Request để liên kết và sử dụng các API từ phía Backend.
+Currently, two official plugins are available:
 
-## Khởi chạy dự án
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-Dự án có thể chạy trực tiếp bằng Local Server trong quá trình code, hoặc chạy thông qua Docker Container. Cả 2 cách đều sẽ ánh xạ và phục vụ ứng dụng tại cổng `5173` (địa chỉ `http://localhost:5173`).
+## React Compiler
 
-### Cách 1: Chạy trực tiếp (Local - Development)
-Đảm bảo bạn đã cài đặt môi trường Node.js. Chạy các lệnh sau tại thư mục `frontend`:
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-```bash
-# 1. Cài đặt các gói thư viện phụ thuộc
-npm install
+## Expanding the ESLint configuration
 
-# 2. Khởi chạy ứng dụng
-npm run dev
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
+
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
 
-### Cách 2: Chạy bằng Docker (Production / Demo)
-Nếu bạn không cài sẵn Node.js hoặc muốn khởi chạy đồng bộ cùng các dịch vụ khác một cách sạch sẽ, bạn nên sử dụng cấu hình Docker Compose từ thư mục `DBDesignAssistantWebApp` bên ngoài:
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-```bash
-# Di chuyển ra thư mục gốc DBDesignAssistantWebApp và chạy lệnh
-docker compose up --build -d frontend
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
-Cách này sẽ tạo ra một bản build tĩnh (`dist`) từ Vite và sử dụng Nginx để phục vụ, mô phỏng chính xác môi trường khi triển khai (Production).

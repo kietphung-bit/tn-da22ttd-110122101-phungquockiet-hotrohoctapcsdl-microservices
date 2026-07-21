@@ -23,11 +23,19 @@ public interface ExerciseService {
     ExerciseResponse setExercisePublished(Long exerciseId, boolean isPublished);
 
     // Student methods
-    List<ExerciseResponse> getStudentExercises(String search);
+    List<ExerciseResponse> getStudentExercises(String search, boolean archived);
 
     ExerciseResponse getStudentExerciseById(Long exerciseId);
 
+    ExerciseResponse setStudentExerciseArchived(Long exerciseId, boolean archived);
+
     ExerciseGenerationResponse generateStudentExercise(ExerciseGenerationRequest request);
+
+    ExerciseGenerationResponse generateAdminExercise(ExerciseGenerationRequest request);
+
+    ExerciseResponse approveAdminGeneratedExercise(Long exerciseId, boolean publish);
+
+    ExerciseResponse rejectAdminGeneratedExercise(Long exerciseId, String reason);
 
     // Instructor methods
     List<ExerciseResponse> getInstructorExercises(Long currentUserId, String search, Boolean isPublished);
@@ -41,4 +49,10 @@ public interface ExerciseService {
     void deleteInstructorExercise(Long currentUserId, Long exerciseId);
 
     ExerciseResponse setInstructorExercisePublished(Long currentUserId, Long exerciseId, boolean isPublished);
+
+    ExerciseGenerationResponse generateInstructorExercise(Long currentUserId, ExerciseGenerationRequest request);
+
+    ExerciseResponse approveInstructorGeneratedExercise(Long currentUserId, Long exerciseId, boolean publish);
+
+    ExerciseResponse rejectInstructorGeneratedExercise(Long currentUserId, Long exerciseId, String reason);
 }

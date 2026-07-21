@@ -12,6 +12,10 @@ import type {
     InstructorExerciseInsightsResponse,
     PracticeInsightsScope,
     PracticeIssueTypeItem,
+    PracticeRoundDistributionItem,
+    PracticeScoreDistributionItem,
+    PracticeSkillAnalyticsItem,
+    PracticeTrendItem,
     SubmissionStatus,
 } from "../../types";
 import "../practiceInsights.css";
@@ -23,6 +27,8 @@ type ChartRow = {
     valueText: string;
     description?: string;
     fillClassName?: string;
+    secondaryValue?: number;
+    secondaryText?: string;
 };
 
 type SimpleBarChartProps = {
@@ -42,12 +48,15 @@ const STATUS_CLASS: Record<SubmissionStatus, string> = {
 };
 
 const SimpleBarChart = ({ rows, emptyText, ariaLabel }: SimpleBarChartProps) => {
-    const hasValues = rows.some((row) => row.value > 0);
+    const hasValues = rows.some((row) => row.value > 0 || (row.secondaryValue ?? 0) > 0);
     if (!hasValues) {
         return <div className="insights-empty insights-empty--compact">{emptyText}</div>;
     }
 
-    const maxValue = Math.max(1, ...rows.map((row) => row.value));
+    const maxValue = Math.max(
+        1,
+        ...rows.flatMap((row) => [row.value, row.secondaryValue ?? 0])
+    );
     const widthPercent = (value: number) =>
         value <= 0 ? 0 : Math.max((value / maxValue) * 100, 2);
 
@@ -62,6 +71,7 @@ const SimpleBarChart = ({ rows, emptyText, ariaLabel }: SimpleBarChartProps) => 
                         </div>
                         <div className="insights-chart-row__value">
                             <strong>{row.valueText}</strong>
+                            {row.secondaryText && <span>{row.secondaryText}</span>}
                         </div>
                     </div>
                     <div className="insights-chart-track">
@@ -69,6 +79,12 @@ const SimpleBarChart = ({ rows, emptyText, ariaLabel }: SimpleBarChartProps) => 
                             className={`insights-chart-bar ${row.fillClassName ?? ""}`}
                             style={{ width: `${widthPercent(row.value)}%` }}
                         />
+                        {row.secondaryValue !== undefined && row.secondaryValue > 0 && (
+                            <div
+                                className="insights-chart-bar insights-chart-bar--secondary"
+                                style={{ width: `${widthPercent(row.secondaryValue)}%` }}
+                            />
+                        )}
                     </div>
                 </div>
             ))}
@@ -137,6 +153,25 @@ export default function InstructorPracticeInsightsPage() {
             hour: "2-digit",
             minute: "2-digit",
         });
+    };
+
+    const formatDateOnly = (dateStr: string | null | undefined) => {
+        if (!dateStr) return "-";
+        return new Date(dateStr).toLocaleDateString("vi-VN", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+        });
+    };
+
+    const formatCommonErrorTypes = (errorTypes: string[] | null | undefined) => {
+        const values = (errorTypes ?? []).filter(Boolean).slice(0, 3);
+        if (values.length === 0) {
+            return t("instructor.practiceInsights.skillAnalytics.noCommonErrors", {
+                defaultValue: "No mapped issue types",
+            });
+        }
+        return values.join(", ");
     };
 
     const handleSignOut = () => {
@@ -316,19 +351,119 @@ export default function InstructorPracticeInsightsPage() {
           ]
         : [];
 
-    const issueChartRows: ChartRow[] = insights
-        ? insights.topIssueTypes.map((item: PracticeIssueTypeItem, index) => ({
-              id: `${item.errorType ?? "unknown"}-${index}`,
-              label: item.errorType ?? t("instructor.exerciseInsights.unknown"),
-              value: item.count,
-              valueText: t("instructor.practiceInsights.chart.occurrences", {
-                  count: formatNumber(item.count),
+    const scoreChartRows: ChartRow[] = insights
+        ? (insights.scoreDistribution ?? []).map(
+              (item: PracticeScoreDistributionItem, index) => ({
+                  id: `${item.bucket ?? "score"}-${index}`,
+                  label: item.bucket ?? t("instructor.exerciseInsights.unknown"),
+                  value: item.roundCount ?? 0,
+                  valueText: t("instructor.practiceInsights.chart.rounds", {
+                      count: formatNumber(item.roundCount ?? 0),
+                  }),
+                  description: t("instructor.practiceInsights.scoreBucketHint", {
+                      submissions: formatNumber(item.affectedSubmissionCount ?? 0),
+                      average: formatScore(item.averageScore),
+                  }),
+                  fillClassName: "insights-chart-bar--score",
+              })
+          )
+        : [];
+
+    const roundChartRows: ChartRow[] = insights
+        ? (insights.roundDistribution ?? []).map(
+              (item: PracticeRoundDistributionItem, index) => ({
+                  id: `${item.roundNumber ?? "round"}-${index}`,
+                  label: item.roundNumber
+                      ? t("instructor.practiceInsights.chart.roundNumber", {
+                            number: item.roundNumber,
+                        })
+                      : t("instructor.exerciseInsights.unknown"),
+                  value: item.roundCount ?? 0,
+                  valueText: t("instructor.practiceInsights.chart.rounds", {
+                      count: formatNumber(item.roundCount ?? 0),
+                  }),
+                  secondaryValue: item.gradedCount ?? 0,
+                  secondaryText: t("instructor.practiceInsights.chart.gradedRounds", {
+                      count: formatNumber(item.gradedCount ?? 0),
+                  }),
+                  description: t("instructor.practiceInsights.roundBucketHint", {
+                      failed: formatNumber(item.failedCount ?? 0),
+                      processing: formatNumber(item.processingCount ?? 0),
+                      average: formatScore(item.averageScore),
+                  }),
+                  fillClassName: "insights-chart-bar--round",
+              })
+          )
+        : [];
+
+    const trendChartRows: ChartRow[] = insights
+        ? (insights.trend ?? []).map((item: PracticeTrendItem, index) => ({
+              id: `${item.date ?? "trend"}-${index}`,
+              label: formatDateOnly(item.date),
+              value: item.submissionCount ?? 0,
+              valueText: t("instructor.practiceInsights.chart.submissions", {
+                  count: formatNumber(item.submissionCount ?? 0),
               }),
-              description: t("instructor.exerciseInsights.affectedSubmissions", {
-                  count: formatNumber(item.affectedSubmissionCount),
+              secondaryValue: item.gradedRoundCount ?? 0,
+              secondaryText: t("instructor.practiceInsights.chart.gradedRounds", {
+                  count: formatNumber(item.gradedRoundCount ?? 0),
               }),
-              fillClassName: "insights-chart-bar--issue",
+              description: t("instructor.practiceInsights.trendScoreHint", {
+                  score: formatScore(item.averageScore),
+              }),
+              fillClassName: "insights-chart-bar--trend",
           }))
+        : [];
+
+    const skillChartRows: ChartRow[] = insights
+        ? (insights.skillAnalytics ?? []).map(
+              (item: PracticeSkillAnalyticsItem, index) => ({
+                  id: `${item.skillCode}-${index}`,
+                  label: t(`instructor.practiceInsights.skills.${item.skillCode}`, {
+                      defaultValue: item.skillName ?? item.skillCode,
+                  }),
+                  value: item.issueCount ?? 0,
+                  valueText: t("instructor.practiceInsights.chart.occurrences", {
+                      count: formatNumber(item.issueCount ?? 0),
+                  }),
+                  secondaryValue: item.affectedRoundCount ?? 0,
+                  secondaryText: t("instructor.practiceInsights.skillAnalytics.impact", {
+                      rate: formatRate(item.impactRate),
+                      defaultValue: "{{rate}} affected rounds",
+                  }),
+                  description: t("instructor.practiceInsights.skillAnalytics.coverage", {
+                      submissions: formatNumber(item.affectedSubmissionCount ?? 0),
+                      rounds: formatNumber(item.affectedRoundCount ?? 0),
+                      errors: formatCommonErrorTypes(item.commonErrorTypes),
+                      defaultValue: "{{submissions}} submissions, {{rounds}} rounds - {{errors}}",
+                  }),
+                  fillClassName: "insights-chart-bar--skill",
+              })
+          )
+        : [];
+
+    const issueChartRows: ChartRow[] = insights
+        ? insights.topIssueTypes.map((item: PracticeIssueTypeItem, index) => {
+              const description =
+                  item.affectedRoundCount === undefined
+                      ? t("instructor.exerciseInsights.affectedSubmissions", {
+                            count: formatNumber(item.affectedSubmissionCount),
+                        })
+                      : t("instructor.exerciseInsights.affectedCoverage", {
+                            submissions: formatNumber(item.affectedSubmissionCount),
+                            rounds: formatNumber(item.affectedRoundCount),
+                        });
+              return {
+                  id: `${item.errorType ?? "unknown"}-${index}`,
+                  label: item.errorType ?? t("instructor.exerciseInsights.unknown"),
+                  value: item.count,
+                  valueText: t("instructor.practiceInsights.chart.occurrences", {
+                      count: formatNumber(item.count),
+                  }),
+                  description,
+                  fillClassName: "insights-chart-bar--issue",
+              };
+          })
         : [];
 
     const anonymizedRows: AnonymizedSubmissionSummary[] =
@@ -563,6 +698,85 @@ export default function InstructorPracticeInsightsPage() {
                                     emptyText={t("instructor.practiceInsights.emptyCharts.status")}
                                     ariaLabel={t(
                                         "instructor.practiceInsights.sections.statusBreakdown"
+                                    )}
+                                />
+                            </article>
+
+                            <article className="insights-panel">
+                                <h3>{t("instructor.practiceInsights.sections.trend")}</h3>
+                                <p>{t("instructor.practiceInsights.chartDescriptions.trend")}</p>
+                                <div className="insights-chart-legend">
+                                    <span>
+                                        {t("instructor.practiceInsights.chart.submissionLegend")}
+                                    </span>
+                                    <span>{t("instructor.practiceInsights.chart.gradedLegend")}</span>
+                                </div>
+                                <SimpleBarChart
+                                    rows={trendChartRows}
+                                    emptyText={t("instructor.practiceInsights.emptyCharts.trend")}
+                                    ariaLabel={t("instructor.practiceInsights.sections.trend")}
+                                />
+                            </article>
+                        </section>
+
+                        <section className="insights-section-grid">
+                            <article className="insights-panel">
+                                <h3>
+                                    {t("instructor.practiceInsights.sections.scoreDistribution")}
+                                </h3>
+                                <p>{t("instructor.practiceInsights.chartDescriptions.score")}</p>
+                                <SimpleBarChart
+                                    rows={scoreChartRows}
+                                    emptyText={t("instructor.practiceInsights.emptyCharts.score")}
+                                    ariaLabel={t(
+                                        "instructor.practiceInsights.sections.scoreDistribution"
+                                    )}
+                                />
+                            </article>
+
+                            <article className="insights-panel">
+                                <h3>
+                                    {t("instructor.practiceInsights.sections.roundDistribution")}
+                                </h3>
+                                <p>{t("instructor.practiceInsights.chartDescriptions.rounds")}</p>
+                                <SimpleBarChart
+                                    rows={roundChartRows}
+                                    emptyText={t("instructor.practiceInsights.emptyCharts.rounds")}
+                                    ariaLabel={t(
+                                        "instructor.practiceInsights.sections.roundDistribution"
+                                    )}
+                                />
+                            </article>
+
+                            <article className="insights-panel insights-panel--skill">
+                                <h3>
+                                    {t("instructor.practiceInsights.sections.skillAnalytics", {
+                                        defaultValue: "Kỹ năng cần cải thiện",
+                                    })}
+                                </h3>
+                                <p>
+                                    {t(
+                                        "instructor.practiceInsights.chartDescriptions.skillAnalytics",
+                                        {
+                                            defaultValue:
+                                                "Tổng hợp nhóm kỹ năng từ lỗi trong các vòng đánh giá, không hiển thị thông tin sinh viên.",
+                                        }
+                                    )}
+                                </p>
+                                <SimpleBarChart
+                                    rows={skillChartRows}
+                                    emptyText={t(
+                                        "instructor.practiceInsights.emptyCharts.skillAnalytics",
+                                        {
+                                            defaultValue:
+                                                "Chưa có lỗi đánh giá để suy luận nhóm kỹ năng.",
+                                        }
+                                    )}
+                                    ariaLabel={t(
+                                        "instructor.practiceInsights.sections.skillAnalytics",
+                                        {
+                                            defaultValue: "Kỹ năng cần cải thiện",
+                                        }
                                     )}
                                 />
                             </article>

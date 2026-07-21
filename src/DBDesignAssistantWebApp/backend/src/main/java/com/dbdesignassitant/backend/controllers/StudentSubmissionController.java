@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -79,9 +80,10 @@ public class StudentSubmissionController {
     }
 
     @GetMapping("/submissions")
-    public ResponseEntity<ApiResponse<List<SubmissionResponse>>> getStudentSubmissions() {
+    public ResponseEntity<ApiResponse<List<SubmissionResponse>>> getStudentSubmissions(
+            @RequestParam(defaultValue = "false") boolean archived) {
         Long currentUserId = getCurrentUserId();
-        List<SubmissionResponse> data = submissionService.getStudentSubmissions(currentUserId);
+        List<SubmissionResponse> data = submissionService.getStudentSubmissions(currentUserId, archived);
         ApiResponse<List<SubmissionResponse>> response = ApiResponse.<List<SubmissionResponse>>builder()
                 .status(HttpStatus.OK.value())
                 .message("Success")
@@ -94,6 +96,30 @@ public class StudentSubmissionController {
     public ResponseEntity<ApiResponse<SubmissionResponse>> getStudentSubmissionById(@PathVariable Long id) {
         Long currentUserId = getCurrentUserId();
         SubmissionResponse data = submissionService.getStudentSubmissionById(currentUserId, id);
+        ApiResponse<SubmissionResponse> response = ApiResponse.<SubmissionResponse>builder()
+                .status(HttpStatus.OK.value())
+                .message("Success")
+                .data(data)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/submissions/{id}/archive")
+    public ResponseEntity<ApiResponse<SubmissionResponse>> archiveStudentSubmission(@PathVariable Long id) {
+        Long currentUserId = getCurrentUserId();
+        SubmissionResponse data = submissionService.setStudentSubmissionArchived(currentUserId, id, true);
+        ApiResponse<SubmissionResponse> response = ApiResponse.<SubmissionResponse>builder()
+                .status(HttpStatus.OK.value())
+                .message("Success")
+                .data(data)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/submissions/{id}/restore")
+    public ResponseEntity<ApiResponse<SubmissionResponse>> restoreStudentSubmission(@PathVariable Long id) {
+        Long currentUserId = getCurrentUserId();
+        SubmissionResponse data = submissionService.setStudentSubmissionArchived(currentUserId, id, false);
         ApiResponse<SubmissionResponse> response = ApiResponse.<SubmissionResponse>builder()
                 .status(HttpStatus.OK.value())
                 .message("Success")

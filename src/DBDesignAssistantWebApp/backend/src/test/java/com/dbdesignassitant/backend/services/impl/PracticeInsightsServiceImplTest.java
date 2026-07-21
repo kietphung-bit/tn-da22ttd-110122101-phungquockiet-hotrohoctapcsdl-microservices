@@ -91,7 +91,20 @@ class PracticeInsightsServiceImplTest {
                 isNull(),
                 isNull(),
                 eq(10)))
-                .thenReturn(List.<Object[]>of(new Object[] {"MISSING_PK", 2L, 1L}));
+                .thenReturn(List.<Object[]>of(new Object[] {"MISSING_PK", 2L, 1L, 1L}));
+        when(evaluationRoundRepository.findInstructorPracticeIssueDetails(
+                eq(100L),
+                eq("ALL"),
+                isNull(),
+                isNull(),
+                isNull(),
+                isNull(),
+                isNull(),
+                isNull(),
+                isNull()))
+                .thenReturn(List.<Object[]>of(
+                        new Object[] {300L, 200L, "MISSING_PK"},
+                        new Object[] {300L, 200L, "MISSING_ATTRIBUTE"}));
         when(submissionRepository.findInstructorAnonymizedSubmissionSummaries(
                 eq(100L),
                 eq("ALL"),
@@ -134,6 +147,10 @@ class PracticeInsightsServiceImplTest {
         assertEquals(3L, response.getSummary().getTotalRounds());
         assertEquals(0, BigDecimal.valueOf(0.3333).compareTo(response.getSummary().getFallbackRate()));
         assertEquals("MISSING_PK", response.getTopIssueTypes().get(0).getErrorType());
+        assertEquals("ATTRIBUTE_AND_KEY", response.getSkillAnalytics().get(0).getSkillCode());
+        assertEquals(2L, response.getSkillAnalytics().get(0).getIssueCount());
+        assertEquals(1L, response.getSkillAnalytics().get(0).getAffectedRoundCount());
+        assertEquals(1L, response.getSkillAnalytics().get(0).getAffectedSubmissionCount());
         assertEquals(200L, response.getAnonymizedSubmissionSummaries().get(0).getSubmissionId());
         assertEquals(PracticeInsightsScope.DIRECT,
                 response.getAnonymizedSubmissionSummaries().get(0).getExerciseScope());

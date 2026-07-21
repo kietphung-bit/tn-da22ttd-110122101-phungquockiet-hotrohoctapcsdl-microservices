@@ -1,5 +1,5 @@
 import axiosClient from "./axiosClient";
-import type { Exercise, ExerciseRequest } from "../types";
+import type { Exercise, ExerciseGenerationRequest, ExerciseGenerationResponse, ExerciseRequest, ExerciseReviewRequest } from "../types";
 
 type ExerciseFilters = {
     search?: string;
@@ -33,6 +33,21 @@ const exerciseApi = {
     },
     deleteExercise: (exerciseId: number) => {
         return axiosClient.delete<void>(`/exercises/${exerciseId}`).then((response) => response.data);
+    },
+    generateAiExercise: (payload: ExerciseGenerationRequest) => {
+        return axiosClient
+            .post<ExerciseGenerationResponse>("/admin/exercises/generate", payload)
+            .then((response) => response.data);
+    },
+    approveAiExercise: (exerciseId: number, payload: ExerciseReviewRequest) => {
+        return axiosClient
+            .put<Exercise>(`/admin/exercises/${exerciseId}/approve`, payload)
+            .then((response) => response.data);
+    },
+    rejectAiExercise: (exerciseId: number, payload: ExerciseReviewRequest) => {
+        return axiosClient
+            .put<Exercise>(`/admin/exercises/${exerciseId}/reject`, payload)
+            .then((response) => response.data);
     },
 };
 

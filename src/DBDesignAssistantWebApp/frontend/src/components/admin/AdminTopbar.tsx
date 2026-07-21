@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next";
+import AccountMenu from "../account/AccountMenu";
 
 type AdminTopbarProps = {
     title: string;
@@ -7,16 +7,13 @@ type AdminTopbarProps = {
 };
 
 const AdminTopbar = ({ title, subtitle, onSignOut }: AdminTopbarProps) => {
-    const { t } = useTranslation();
     return (
         <header className="admin-topbar">
             <div>
                 <div style={{ fontSize: "1.4rem", fontWeight: 600 }}>{title}</div>
                 {subtitle && <div style={{ color: "var(--ink-soft)" }}>{subtitle}</div>}
             </div>
-            <button type="button" className="btn btn-outline" onClick={onSignOut}>
-                {t("common.signOut")}
-            </button>
+            <AccountMenu onSignOut={onSignOut} />
         </header>
     );
 };

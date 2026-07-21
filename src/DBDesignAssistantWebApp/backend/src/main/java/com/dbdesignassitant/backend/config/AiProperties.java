@@ -42,6 +42,8 @@ public class AiProperties {
     @Data
     public static class ModelConfig {
         private String apiKey;
+        private String baseUrl;
         private String model;
+        private int timeoutSeconds = 30;
     }
 }

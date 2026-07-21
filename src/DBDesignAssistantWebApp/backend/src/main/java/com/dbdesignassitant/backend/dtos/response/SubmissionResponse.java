@@ -21,6 +21,8 @@ public class SubmissionResponse {
     private SubmissionStatus submissionStatus;
     private LocalDateTime createdAt;
     private LocalDateTime submittedAt;
+    private Boolean studentArchived;
+    private LocalDateTime studentArchivedAt;
     private Integer currentRound;
     private Integer roundsUsed;
     private Integer maxRounds;

@@ -25,6 +25,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.security.SecureRandom;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -45,6 +46,20 @@ public class ExerciseServiceImpl implements ExerciseService {
         private static final int CODE_SUFFIX_LENGTH = 6;
         private static final String CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789";
         private static final int EXERCISE_CONTEXT_LIMIT = 3;
+        private static final String REVIEW_STATUS_KEY = "reviewStatus";
+        private static final String REVIEW_STATUS_DRAFT = "DRAFT";
+        private static final String REVIEW_STATUS_APPROVED = "APPROVED";
+        private static final String REVIEW_STATUS_REJECTED = "REJECTED";
+        private static final String REVIEW_SOURCE_KEY = "reviewSource";
+        private static final String REVIEW_CREATED_AT_KEY = "reviewCreatedAt";
+        private static final String REVIEWED_AT_KEY = "reviewedAt";
+        private static final String REVIEWED_BY_ROLE_KEY = "reviewedByRole";
+        private static final String REJECT_REASON_KEY = "rejectReason";
+        private static final String REVIEW_PURPOSE_KEY = "reviewPurpose";
+        private static final String REVIEW_PURPOSE_AI_GENERATION_TRIAL = "AI_GENERATION_TRIAL";
+        private static final String APPROVED_FOR_GENERATION_KEY = "approvedForGeneration";
+        private static final String REVISION_OF_EXERCISE_ID_KEY = "revisionOfExerciseId";
+        private static final String AI_GENERATION_POLICY_KEY = "aiGenerationPolicy";
         private final SecureRandom secureRandom = new SecureRandom();
     private final ExerciseRepository exerciseRepository;
     private final UserRepository userRepository;
@@ -140,6 +155,7 @@ public class ExerciseServiceImpl implements ExerciseService {
         public ExerciseResponse setExercisePublished(Long exerciseId, boolean isPublished) {
                 Exercise exercise = exerciseRepository.findById(exerciseId)
                                 .orElseThrow(() -> new ResourceNotFoundException("Exercise not found"));
+                validatePublishAllowed(exercise, isPublished);
                 exercise.setIsPublished(isPublished);
                 return ResponseMapper.toExerciseResponse(exerciseRepository.save(exercise));
         }
@@ -147,13 +163,18 @@ public class ExerciseServiceImpl implements ExerciseService {
         // --- Student Methods ---
         @Override
         @Transactional(readOnly = true)
-        public List<ExerciseResponse> getStudentExercises(String search) {
+        public List<ExerciseResponse> getStudentExercises(String search, boolean archived) {
                 String normalizedSearch = search == null ? null : search.trim();
                 if (normalizedSearch != null && normalizedSearch.isEmpty()) {
                         normalizedSearch = null;
                 }
                 User currentUser = currentUserProvider.getCurrentUser();
-                return exerciseRepository.findStudentVisibleExercises(currentUser.getUserId(), normalizedSearch).stream()
+                return exerciseRepository.findStudentVisibleExercises(
+                                currentUser.getUserId(),
+                                normalizedSearch,
+                                archived).stream()
+                                .filter(exercise -> isExerciseVisibleToStudent(exercise, currentUser.getUserId())
+                                                && matchesStudentArchiveView(exercise, currentUser.getUserId(), archived))
                                 .map(ResponseMapper::toExerciseResponse)
                                 .collect(Collectors.toList());
         }
@@ -164,16 +185,35 @@ public class ExerciseServiceImpl implements ExerciseService {
                 User currentUser = currentUserProvider.getCurrentUser();
                 Exercise exercise = exerciseRepository.findById(exerciseId)
                                 .orElseThrow(() -> new ResourceNotFoundException("Exercise not found"));
-                
-                boolean availableManual = exercise.getExerciseSource() == ExerciseSource.MANUAL
-                                && Boolean.TRUE.equals(exercise.getIsPublished());
-                boolean ownedAi = exercise.getExerciseSource() == ExerciseSource.AI_GENERATED
-                                && exercise.getOwnerStudent() != null
-                                && exercise.getOwnerStudent().getUserId().equals(currentUser.getUserId());
-                if (!availableManual && !ownedAi) {
+
+                if (!isStudentOwnedAiExercise(exercise, currentUser.getUserId())) {
+                        if (exercise.getExerciseSource() == ExerciseSource.MANUAL) {
+                                throw new BadRequestException(
+                                                "Manual exercises are templates for AI generation and cannot be opened directly by students");
+                        }
                         throw new ResourceNotFoundException("Exercise not found");
                 }
                 return ResponseMapper.toExerciseResponse(exercise);
+        }
+
+        @Override
+        @Transactional
+        public ExerciseResponse setStudentExerciseArchived(Long exerciseId, boolean archived) {
+                User currentUser = currentUserProvider.getCurrentUser();
+                Exercise exercise = exerciseRepository.findById(exerciseId)
+                                .orElseThrow(() -> new ResourceNotFoundException("Exercise not found"));
+                if (!isStudentOwnedAiExercise(exercise, currentUser.getUserId())) {
+                        if (exercise.getExerciseSource() == ExerciseSource.MANUAL
+                                        && Boolean.TRUE.equals(exercise.getIsPublished())) {
+                                throw new BadRequestException("Only student-private AI-generated exercises can be archived");
+                        }
+                        throw new ResourceNotFoundException("Exercise not found");
+                }
+
+                exercise.setStudentArchived(archived);
+                exercise.setStudentArchivedAt(archived ? LocalDateTime.now() : null);
+
+                return ResponseMapper.toExerciseResponse(exerciseRepository.save(exercise));
         }
 
         @Override
@@ -183,7 +223,7 @@ public class ExerciseServiceImpl implements ExerciseService {
                 Exercise baseExercise = resolveGenerationBaseExercise(request.getBaseExerciseId());
                 List<Exercise> sampleExercises = resolveGenerationSampleExercises(request, baseExercise);
                 List<RetrievedKnowledgeResponse> knowledgeSources = retrieveGenerationKnowledge(request);
-                String prompt = buildExerciseGenerationPrompt(request, sampleExercises, knowledgeSources);
+                String prompt = buildExerciseGenerationPrompt(request, sampleExercises, knowledgeSources, null);
 
                 GeneratedExercise generatedExercise = generateExerciseContent(request, prompt, knowledgeSources);
                 String exerciseCode = resolveExerciseCode(null, null, ExerciseSource.AI_GENERATED);
@@ -200,6 +240,31 @@ public class ExerciseServiceImpl implements ExerciseService {
                                 .build();
 
                 return toGenerationResponse(exerciseRepository.save(exercise));
+        }
+
+        @Override
+        @Transactional
+        public ExerciseGenerationResponse generateAdminExercise(ExerciseGenerationRequest request) {
+                User currentUser = currentUserProvider.getCurrentUser();
+                return generateStaffExercise(currentUser, request, "ADMIN");
+        }
+
+        @Override
+        @Transactional
+        public ExerciseResponse approveAdminGeneratedExercise(Long exerciseId, boolean publish) {
+                User currentUser = currentUserProvider.getCurrentUser();
+                Exercise exercise = exerciseRepository.findById(exerciseId)
+                                .orElseThrow(() -> new ResourceNotFoundException("Exercise not found"));
+                return approveGeneratedExercise(exercise, currentUser, publish);
+        }
+
+        @Override
+        @Transactional
+        public ExerciseResponse rejectAdminGeneratedExercise(Long exerciseId, String reason) {
+                User currentUser = currentUserProvider.getCurrentUser();
+                Exercise exercise = exerciseRepository.findById(exerciseId)
+                                .orElseThrow(() -> new ResourceNotFoundException("Exercise not found"));
+                return rejectGeneratedExercise(exercise, currentUser, reason);
         }
 
         // --- Instructor Methods ---
@@ -281,8 +346,248 @@ public class ExerciseServiceImpl implements ExerciseService {
         @Override
         public ExerciseResponse setInstructorExercisePublished(Long currentUserId, Long exerciseId, boolean isPublished) {
                 Exercise exercise = getInstructorExercise(currentUserId, exerciseId);
+                validatePublishAllowed(exercise, isPublished);
                 exercise.setIsPublished(isPublished);
                 return ResponseMapper.toExerciseResponse(exerciseRepository.save(exercise));
+        }
+
+        @Override
+        @Transactional
+        public ExerciseGenerationResponse generateInstructorExercise(Long currentUserId, ExerciseGenerationRequest request) {
+                User currentUser = userRepository.findById(currentUserId)
+                                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                return generateStaffExercise(currentUser, request, "INSTRUCTOR");
+        }
+
+        @Override
+        @Transactional
+        public ExerciseResponse approveInstructorGeneratedExercise(Long currentUserId, Long exerciseId, boolean publish) {
+                Exercise exercise = getInstructorExercise(currentUserId, exerciseId);
+                User currentUser = userRepository.findById(currentUserId)
+                                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                return approveGeneratedExercise(exercise, currentUser, publish);
+        }
+
+        @Override
+        @Transactional
+        public ExerciseResponse rejectInstructorGeneratedExercise(Long currentUserId, Long exerciseId, String reason) {
+                Exercise exercise = getInstructorExercise(currentUserId, exerciseId);
+                User currentUser = userRepository.findById(currentUserId)
+                                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                return rejectGeneratedExercise(exercise, currentUser, reason);
+        }
+
+        private ExerciseGenerationResponse generateStaffExercise(
+                        User currentUser,
+                        ExerciseGenerationRequest request,
+                        String reviewSource) {
+                validateStaffGenerationRequest(request);
+                Exercise baseExercise = resolveGenerationBaseExercise(request.getBaseExerciseId());
+                Exercise rejectedRevisionSource = resolveLatestRejectedStaffTrial(baseExercise);
+                List<Exercise> sampleExercises = resolveGenerationSampleExercises(request, baseExercise);
+                List<RetrievedKnowledgeResponse> knowledgeSources = retrieveGenerationKnowledge(request);
+                String prompt = buildExerciseGenerationPrompt(
+                                request,
+                                sampleExercises,
+                                knowledgeSources,
+                                rejectedRevisionSource);
+
+                GeneratedExercise generatedExercise = generateExerciseContent(request, prompt, knowledgeSources);
+                String exerciseCode = resolveExerciseCode(null, null, ExerciseSource.AI_GENERATED);
+                Exercise exercise = Exercise.builder()
+                                .exTitle(generatedExercise.title())
+                                .exDescription(generatedExercise.description())
+                                .scenarioData(withDraftReviewMetadata(
+                                                generatedExercise.scenarioData(),
+                                                baseExercise,
+                                                reviewSource,
+                                                rejectedRevisionSource))
+                                .exerciseSource(ExerciseSource.AI_GENERATED)
+                                .exerciseCode(exerciseCode)
+                                .createdBy(currentUser)
+                                .ownerStudent(null)
+                                .baseExercise(baseExercise)
+                                .isPublished(false)
+                                .build();
+
+                return toGenerationResponse(exerciseRepository.save(exercise));
+        }
+
+        private void validateStaffGenerationRequest(ExerciseGenerationRequest request) {
+                boolean hasBaseExercise = request.getBaseExerciseId() != null;
+                boolean hasPromptContext = StringUtils.hasText(request.getCustomPrompt())
+                                || StringUtils.hasText(request.getBusinessContext())
+                                || StringUtils.hasText(request.getTopic())
+                                || StringUtils.hasText(request.getBusinessDomain())
+                                || StringUtils.hasText(request.getAdditionalRequirements())
+                                || StringUtils.hasText(request.getKeywords());
+                if (!hasBaseExercise && !hasPromptContext) {
+                        throw new BadRequestException("Provide a base exercise or prompt context to generate an exercise");
+                }
+        }
+
+        private ExerciseResponse approveGeneratedExercise(Exercise exercise, User reviewer, boolean publish) {
+                validateStaffGeneratedExercise(exercise);
+                Map<String, Object> scenarioData = copyScenarioData(exercise);
+                scenarioData.put(REVIEW_STATUS_KEY, REVIEW_STATUS_APPROVED);
+                scenarioData.put(REVIEWED_AT_KEY, LocalDateTime.now().toString());
+                scenarioData.put(REVIEWED_BY_ROLE_KEY, roleName(reviewer));
+                scenarioData.put(REVIEW_PURPOSE_KEY, REVIEW_PURPOSE_AI_GENERATION_TRIAL);
+                scenarioData.put(APPROVED_FOR_GENERATION_KEY, exercise.getBaseExercise() != null);
+                scenarioData.remove(REJECT_REASON_KEY);
+                exercise.setScenarioData(scenarioData);
+                exercise.setIsPublished(false);
+                if (exercise.getBaseExercise() != null) {
+                        markBaseExerciseApprovedForGeneration(
+                                        exercise.getBaseExercise(),
+                                        exercise,
+                                        reviewer,
+                                        null);
+                } else if (publish) {
+                        log.info("Ignoring publish=true for staff AI generation trial {} without a base exercise",
+                                        exercise.getExerciseId());
+                }
+                return ResponseMapper.toExerciseResponse(exerciseRepository.save(exercise));
+        }
+
+        private ExerciseResponse rejectGeneratedExercise(Exercise exercise, User reviewer, String reason) {
+                validateStaffGeneratedExercise(exercise);
+                if (!StringUtils.hasText(reason)) {
+                        throw new BadRequestException("Reject reason is required for AI generation trial");
+                }
+                Map<String, Object> scenarioData = copyScenarioData(exercise);
+                scenarioData.put(REVIEW_STATUS_KEY, REVIEW_STATUS_REJECTED);
+                scenarioData.put(REVIEWED_AT_KEY, LocalDateTime.now().toString());
+                scenarioData.put(REVIEWED_BY_ROLE_KEY, roleName(reviewer));
+                scenarioData.put(REVIEW_PURPOSE_KEY, REVIEW_PURPOSE_AI_GENERATION_TRIAL);
+                scenarioData.put(APPROVED_FOR_GENERATION_KEY, false);
+                scenarioData.put(REJECT_REASON_KEY, reason.trim());
+                exercise.setScenarioData(scenarioData);
+                exercise.setIsPublished(false);
+                return ResponseMapper.toExerciseResponse(exerciseRepository.save(exercise));
+        }
+
+        private void validateStaffGeneratedExercise(Exercise exercise) {
+                if (exercise.getExerciseSource() != ExerciseSource.AI_GENERATED) {
+                        throw new BadRequestException("Only AI-generated exercises can be reviewed");
+                }
+                if (exercise.getOwnerStudent() != null) {
+                        throw new BadRequestException("Student-private AI-generated exercises cannot be reviewed by staff");
+                }
+        }
+
+        private void validatePublishAllowed(Exercise exercise, boolean isPublished) {
+                if (!isPublished) {
+                        return;
+                }
+                if (exercise.getExerciseSource() == ExerciseSource.AI_GENERATED) {
+                        throw new BadRequestException("AI-generated exercises cannot be published directly");
+                }
+        }
+
+        private boolean isExerciseVisibleToStudent(Exercise exercise, Long studentId) {
+                return isStudentOwnedAiExercise(exercise, studentId);
+        }
+
+        private boolean matchesStudentArchiveView(Exercise exercise, Long studentId, boolean archived) {
+                if (archived) {
+                        return isStudentOwnedAiExercise(exercise, studentId)
+                                        && Boolean.TRUE.equals(exercise.getStudentArchived());
+                }
+                if (isStudentOwnedAiExercise(exercise, studentId)) {
+                        return !Boolean.TRUE.equals(exercise.getStudentArchived());
+                }
+                return false;
+        }
+
+        private boolean isStudentOwnedAiExercise(Exercise exercise, Long studentId) {
+                return exercise.getExerciseSource() == ExerciseSource.AI_GENERATED
+                                && exercise.getOwnerStudent() != null
+                                && exercise.getOwnerStudent().getUserId().equals(studentId);
+        }
+
+        private boolean isReviewRejected(Exercise exercise) {
+                Object status = exercise.getScenarioData() == null
+                                ? null
+                                : exercise.getScenarioData().get(REVIEW_STATUS_KEY);
+                return REVIEW_STATUS_REJECTED.equals(String.valueOf(status));
+        }
+
+        private Map<String, Object> withDraftReviewMetadata(
+                        Map<String, Object> source,
+                        Exercise baseExercise,
+                        String reviewSource,
+                        Exercise revisionSource) {
+                Map<String, Object> scenarioData = new LinkedHashMap<>(source == null ? Map.of() : source);
+                scenarioData.put(REVIEW_STATUS_KEY, REVIEW_STATUS_DRAFT);
+                scenarioData.put(REVIEW_SOURCE_KEY, reviewSource);
+                scenarioData.put(REVIEW_PURPOSE_KEY, REVIEW_PURPOSE_AI_GENERATION_TRIAL);
+                scenarioData.put(APPROVED_FOR_GENERATION_KEY, false);
+                scenarioData.put(REVIEW_CREATED_AT_KEY, LocalDateTime.now().toString());
+                scenarioData.remove(REVIEWED_AT_KEY);
+                scenarioData.remove(REVIEWED_BY_ROLE_KEY);
+                scenarioData.remove(REJECT_REASON_KEY);
+                if (baseExercise != null) {
+                        scenarioData.put("baseExerciseId", baseExercise.getExerciseId());
+                        scenarioData.put("baseExerciseCode", baseExercise.getExerciseCode());
+                }
+                if (revisionSource != null) {
+                        scenarioData.put(REVISION_OF_EXERCISE_ID_KEY, revisionSource.getExerciseId());
+                }
+                return scenarioData;
+        }
+
+        private Map<String, Object> copyScenarioData(Exercise exercise) {
+                return new LinkedHashMap<>(exercise.getScenarioData() == null ? Map.of() : exercise.getScenarioData());
+        }
+
+        private void markBaseExerciseApprovedForGeneration(
+                        Exercise baseExercise,
+                        Exercise approvedTrial,
+                        User reviewer,
+                        String notes) {
+                Map<String, Object> scenarioData = copyScenarioData(baseExercise);
+                Map<String, Object> policy = copyObjectMap(scenarioData.get(AI_GENERATION_POLICY_KEY));
+                policy.put("enabled", true);
+                policy.put("approvedTrialExerciseId", approvedTrial.getExerciseId());
+                policy.put("approvedAt", LocalDateTime.now().toString());
+                policy.put("approvedByRole", roleName(reviewer));
+                if (StringUtils.hasText(notes)) {
+                        policy.put("notes", notes.trim());
+                }
+                scenarioData.put(AI_GENERATION_POLICY_KEY, policy);
+                baseExercise.setScenarioData(scenarioData);
+                exerciseRepository.save(baseExercise);
+        }
+
+        private Map<String, Object> copyObjectMap(Object value) {
+                Map<String, Object> copy = new LinkedHashMap<>();
+                if (value instanceof Map<?, ?> existing) {
+                        existing.forEach((key, entryValue) -> {
+                                if (key != null) {
+                                        copy.put(String.valueOf(key), entryValue);
+                                }
+                        });
+                }
+                return copy;
+        }
+
+        private Exercise resolveLatestRejectedStaffTrial(Exercise baseExercise) {
+                if (baseExercise == null || baseExercise.getExerciseId() == null) {
+                        return null;
+                }
+                return exerciseRepository.findStaffAiTrialsByBaseExerciseId(baseExercise.getExerciseId())
+                                .stream()
+                                .filter(this::isReviewRejected)
+                                .findFirst()
+                                .orElse(null);
+        }
+
+        private String roleName(User user) {
+                if (user == null || user.getRole() == null || user.getRole().getRoleName() == null) {
+                        return "";
+                }
+                return user.getRole().getRoleName().name();
         }
 
         private Exercise resolveGenerationBaseExercise(Long baseExerciseId) {
@@ -323,15 +628,23 @@ public class ExerciseServiceImpl implements ExerciseService {
 
         private List<RetrievedKnowledgeResponse> retrieveGenerationKnowledge(ExerciseGenerationRequest request) {
                 String query = String.join(" ",
+                                normalizePart(request.getCustomPrompt()),
                                 normalizePart(request.getTopic()),
                                 normalizePart(request.getDifficulty()),
                                 normalizePart(request.getBusinessDomain()),
+                                normalizePart(request.getBusinessContext()),
                                 normalizePart(request.getKeywords()),
                                 normalizePart(request.getAdditionalRequirements()))
                                 .trim();
                 int topK = Math.max(1, aiProperties.getRag().getTopK());
                 KnowledgeRetrievalResult result = knowledgeRetrievalService.retrieveTopK(query, topK);
-                return result.getSources() == null ? List.of() : result.getSources();
+                List<RetrievedKnowledgeResponse> sources = result.getSources() == null ? List.of() : result.getSources();
+                if (!sources.isEmpty()) {
+                        log.info("Exercise generation KnowledgeBase context: retrievalMode={}, sourceIds={}",
+                                        result.getRetrievalMode(),
+                                        sources.stream().map(RetrievedKnowledgeResponse::getKbId).toList());
+                }
+                return sources;
         }
 
         private GeneratedExercise generateExerciseContent(
@@ -387,14 +700,7 @@ public class ExerciseServiceImpl implements ExerciseService {
                         throw new BadRequestException("Generated exercise is missing title or description");
                 }
 
-                Map<String, Object> scenarioData = new LinkedHashMap<>(parsed);
-                scenarioData.putIfAbsent("difficulty", normalizePart(request.getDifficulty()));
-                scenarioData.putIfAbsent("topic", normalizePart(request.getTopic()));
-                scenarioData.putIfAbsent("businessDomain", normalizePart(request.getBusinessDomain()));
-                scenarioData.put("generationMode", "LLM");
-                scenarioData.remove("sampleSolution");
-                scenarioData.remove("sampleSolutions");
-                scenarioData.remove("solutionData");
+                Map<String, Object> scenarioData = enrichScenarioData(parsed, request, "LLM");
                 return new GeneratedExercise(title, description, scenarioData);
         }
 
@@ -411,59 +717,76 @@ public class ExerciseServiceImpl implements ExerciseService {
         }
 
         private GeneratedExercise buildMockGeneratedExercise(ExerciseGenerationRequest request) {
-                String topic = defaultIfBlank(request.getTopic(), "thiet ke co so du lieu");
+                String customPrompt = normalizePart(request.getCustomPrompt());
+                String topic = defaultIfBlank(request.getTopic(), "thiết kế cơ sở dữ liệu");
                 String difficulty = defaultIfBlank(request.getDifficulty(), "MEDIUM");
-                String domain = defaultIfBlank(request.getBusinessDomain(), "thu vien so");
-                String title = "Bai tap thiet ke CSDL - " + domain;
-                String description = "Hay phan tich boi canh " + domain
-                                + " va thiet ke mo hinh du lieu dap ung cac yeu cau nghiep vu da cho.";
+                String domain = resolveMockDomain(request);
+                String title = "Bài tập thiết kế CSDL - " + domain;
+                String description = StringUtils.hasText(customPrompt)
+                                ? "Hãy chuẩn hóa bối cảnh đã nhập và thiết kế mô hình dữ liệu phù hợp."
+                                : "Hãy phân tích bối cảnh " + domain
+                                                + " và thiết kế mô hình dữ liệu đáp ứng các yêu cầu nghiệp vụ đã cho.";
 
+                List<String> requirements = List.of(
+                                "Quản lý hồ sơ người dùng/khách hàng và thông tin định danh cần thiết.",
+                                "Quản lý đối tượng nghiệp vụ chính, trạng thái và lịch sử xử lý.",
+                                "Ghi nhận giao dịch phát sinh và truy vết mối liên kết giữa các đối tượng.");
+                List<String> constraints = List.of(
+                                "Mỗi thực thể chính cần có khóa định danh duy nhất.",
+                                "Thông tin giao dịch phải tham chiếu đến các đối tượng nghiệp vụ hợp lệ.",
+                                "Trạng thái nghiệp vụ chỉ được nhận các giá trị hợp lệ theo vòng đời xử lý.");
+                String businessContext = firstNonBlank(
+                                request.getBusinessContext(),
+                                customPrompt,
+                                "Một đơn vị vận hành " + domain
+                                                + " cần quản lý người dùng, tài nguyên, giao dịch và lịch sử xử lý.");
                 Map<String, Object> scenarioData = new LinkedHashMap<>();
                 scenarioData.put("title", title);
                 scenarioData.put("description", description);
                 scenarioData.put("topic", topic);
                 scenarioData.put("difficulty", difficulty);
                 scenarioData.put("businessDomain", domain);
-                scenarioData.put("businessContext",
-                                "Mot don vi van hanh " + domain
-                                                + " can quan ly nguoi dung, tai nguyen, giao dich va lich su xu ly.");
-                scenarioData.put("functionalRequirements", List.of(
-                                "Quan ly ho so nguoi dung va trang thai tai khoan.",
-                                "Quan ly danh muc tai nguyen/chuc nang chinh cua mien nghiep vu.",
-                                "Ghi nhan giao dich phat sinh va truy vet lich su thay doi."));
-                scenarioData.put("dataConstraints", List.of(
-                                "Moi ban ghi chinh can co khoa dinh danh duy nhat.",
-                                "Thong tin giao dich phai tham chieu den nguoi dung va doi tuong nghiep vu hop le.",
-                                "Trang thai nghiep vu chi duoc nhan cac gia tri hop le theo vong doi xu ly."));
+                scenarioData.put("businessContext", businessContext);
+                scenarioData.put("requirements", requirements);
+                scenarioData.put("functionalRequirements", requirements);
+                scenarioData.put("constraints", constraints);
+                scenarioData.put("dataConstraints", constraints);
                 scenarioData.put("designScopeHints", List.of(
-                                "Xac dinh cac thuc the trung tam, thuoc tinh bat buoc va khoa chinh.",
-                                "Mo ta quan he va cardinality giua nguoi dung, tai nguyen va giao dich.",
-                                "Can nhac cac bang trung gian neu co quan he nhieu-nhieu."));
+                                "Xác định các thực thể trung tâm, thuộc tính bắt buộc và khóa chính.",
+                                "Mô tả quan hệ và cardinality giữa người dùng, tài nguyên và giao dịch.",
+                                "Cân nhắc bảng trung gian nếu có quan hệ nhiều-nhiều."));
                 scenarioData.put("keywords", normalizePart(request.getKeywords()));
+                scenarioData.put("tags", buildScenarioTags(request));
+                if (StringUtils.hasText(customPrompt)) {
+                        scenarioData.put("studentPrompt", customPrompt);
+                }
                 scenarioData.put("additionalRequirements", normalizePart(request.getAdditionalRequirements()));
-                scenarioData.put("generationMode", "MOCK");
-                return new GeneratedExercise(title, description, scenarioData);
+                return new GeneratedExercise(title, description, enrichScenarioData(scenarioData, request, "MOCK"));
         }
 
         private String buildExerciseGenerationPrompt(
                         ExerciseGenerationRequest request,
                         List<Exercise> sampleExercises,
-                        List<RetrievedKnowledgeResponse> knowledgeSources) {
+                        List<RetrievedKnowledgeResponse> knowledgeSources,
+                        Exercise rejectedTrial) {
                 StringBuilder builder = new StringBuilder();
-                builder.append("Ban la chuyen gia tao de bai thuc hanh thiet ke co so du lieu cho sinh vien.\n");
-                builder.append("Chi tao DE BAI, tuyet doi khong dua loi giai, dap an mau, SampleSolution, SQL DDL hoan chinh.\n");
-                builder.append("Tra ve dung mot JSON object, khong markdown, khong giai thich ngoai JSON.\n");
-                builder.append("JSON bat buoc co cac truong: title, description, businessContext, functionalRequirements, dataConstraints, designScopeHints, difficulty.\n");
-                builder.append("functionalRequirements, dataConstraints, designScopeHints la mang string.\n\n");
-                builder.append("YEU_CAU_SINH_VIEN:\n");
+                builder.append("Bạn là chuyên gia tạo đề bài thực hành thiết kế cơ sở dữ liệu cho sinh viên.\n");
+                builder.append("Chỉ tạo ĐỀ BÀI tự nhiên, rõ bối cảnh và yêu cầu; tuyệt đối không đưa lời giải, đáp án mẫu, SampleSolution hoặc SQL DDL hoàn chỉnh.\n");
+                builder.append("Không nhắc tên các nhãn ngữ cảnh kỹ thuật trong nội dung đề bài.\n");
+                builder.append("Trả về đúng một JSON object, không markdown, không giải thích ngoài JSON.\n");
+                builder.append("JSON bắt buộc có các trường: title, description, businessContext, functionalRequirements, dataConstraints, designScopeHints, difficulty.\n");
+                builder.append("functionalRequirements, dataConstraints, designScopeHints là mảng string.\n\n");
+                builder.append("YEU_CAU_TAO_DE:\n");
+                builder.append("customPrompt: ").append(normalizePart(request.getCustomPrompt())).append("\n");
                 builder.append("topic: ").append(normalizePart(request.getTopic())).append("\n");
                 builder.append("difficulty: ").append(normalizePart(request.getDifficulty())).append("\n");
                 builder.append("businessDomain: ").append(normalizePart(request.getBusinessDomain())).append("\n");
+                builder.append("businessContext: ").append(normalizePart(request.getBusinessContext())).append("\n");
                 builder.append("keywords: ").append(normalizePart(request.getKeywords())).append("\n");
                 builder.append("additionalRequirements: ").append(normalizePart(request.getAdditionalRequirements())).append("\n\n");
                 builder.append("BAI_MAU_CONTEXT_KHONG_LO_SOLUTION:\n");
                 if (sampleExercises.isEmpty()) {
-                        builder.append("(Khong co bai mau phu hop.)\n\n");
+                        builder.append("(Không có bài mẫu phù hợp.)\n\n");
                 } else {
                         for (int i = 0; i < sampleExercises.size(); i++) {
                                 Exercise sample = sampleExercises.get(i);
@@ -475,9 +798,10 @@ public class ExerciseServiceImpl implements ExerciseService {
                                                 .append("\n\n");
                         }
                 }
+                appendRejectedTrialFeedback(builder, rejectedTrial);
                 builder.append("KNOWLEDGE_BASE_APPROVED_CONTEXT:\n");
                 if (knowledgeSources.isEmpty()) {
-                        builder.append("(Khong co hoc lieu APPROVED phu hop.)\n");
+                        builder.append("(Không có học liệu APPROVED phù hợp.)\n");
                 } else {
                         for (int i = 0; i < knowledgeSources.size(); i++) {
                                 RetrievedKnowledgeResponse source = knowledgeSources.get(i);
@@ -488,6 +812,23 @@ public class ExerciseServiceImpl implements ExerciseService {
                         }
                 }
                 return builder.toString();
+        }
+
+        private void appendRejectedTrialFeedback(StringBuilder builder, Exercise rejectedTrial) {
+                if (rejectedTrial == null) {
+                        return;
+                }
+                builder.append("FEEDBACK_BAN_KIEM_TRA_AI_BI_TU_CHOI:\n");
+                builder.append("trialExerciseId: ").append(rejectedTrial.getExerciseId()).append("\n");
+                builder.append("title: ").append(nullToEmpty(rejectedTrial.getExTitle())).append("\n");
+                builder.append("description: ").append(nullToEmpty(rejectedTrial.getExDescription())).append("\n");
+                builder.append("rejectReason: ")
+                                .append(readScenarioString(rejectedTrial.getScenarioData(), REJECT_REASON_KEY))
+                                .append("\n");
+                builder.append("rejectedScenarioData: ")
+                                .append(safeScenarioContext(rejectedTrial.getScenarioData()))
+                                .append("\n");
+                builder.append("Hay tao lai mot bien the tot hon dua tren bai mau goc, tranh lap lai cac loi da bi tu choi, va van khong dua loi giai/SampleSolution/SQL DDL.\n\n");
         }
 
         private String safeScenarioContext(Map<String, Object> scenarioData) {
@@ -520,21 +861,131 @@ public class ExerciseServiceImpl implements ExerciseService {
                                 .baseExerciseId(exercise.getBaseExercise() == null
                                                 ? null
                                                 : exercise.getBaseExercise().getExerciseId())
+                                .isPublished(exercise.getIsPublished())
                                 .build();
         }
 
         private String buildSampleSearch(ExerciseGenerationRequest request) {
                 List<String> parts = new ArrayList<>();
+                if (StringUtils.hasText(request.getCustomPrompt())) {
+                        parts.add(request.getCustomPrompt().trim());
+                }
                 if (StringUtils.hasText(request.getTopic())) {
                         parts.add(request.getTopic().trim());
                 }
                 if (StringUtils.hasText(request.getBusinessDomain())) {
                         parts.add(request.getBusinessDomain().trim());
                 }
+                if (StringUtils.hasText(request.getBusinessContext())) {
+                        parts.add(request.getBusinessContext().trim());
+                }
                 if (StringUtils.hasText(request.getKeywords())) {
                         parts.add(request.getKeywords().trim());
                 }
                 return parts.isEmpty() ? null : parts.get(0);
+        }
+
+        private Map<String, Object> enrichScenarioData(
+                        Map<String, Object> source,
+                        ExerciseGenerationRequest request,
+                        String generationMode) {
+                Map<String, Object> scenarioData = new LinkedHashMap<>(source);
+                scenarioData.remove("sampleSolution");
+                scenarioData.remove("sampleSolutions");
+                scenarioData.remove("solutionData");
+                scenarioData.remove("answer");
+
+                scenarioData.putIfAbsent("difficulty", defaultIfBlank(request.getDifficulty(), "MEDIUM"));
+                scenarioData.putIfAbsent("topic", normalizePart(request.getTopic()));
+                scenarioData.putIfAbsent("businessDomain", normalizePart(request.getBusinessDomain()));
+
+                String customPrompt = normalizePart(request.getCustomPrompt());
+                String inputBusinessContext = normalizePart(request.getBusinessContext());
+                if (StringUtils.hasText(customPrompt)) {
+                        scenarioData.putIfAbsent("studentPrompt", customPrompt);
+                }
+                if (StringUtils.hasText(inputBusinessContext)) {
+                        scenarioData.putIfAbsent("inputBusinessContext", inputBusinessContext);
+                }
+                if (!StringUtils.hasText(readString(scenarioData, "businessContext"))) {
+                        String context = firstNonBlank(inputBusinessContext, customPrompt, request.getAdditionalRequirements());
+                        if (StringUtils.hasText(context)) {
+                                scenarioData.put("businessContext", context);
+                        }
+                }
+
+                Object requirements = firstScenarioValue(
+                                scenarioData,
+                                List.of("requirements", "businessRequirements", "functionalRequirements", "tasks"));
+                if (requirements != null) {
+                        scenarioData.putIfAbsent("requirements", requirements);
+                        scenarioData.putIfAbsent("functionalRequirements", requirements);
+                }
+
+                Object constraints = firstScenarioValue(
+                                scenarioData,
+                                List.of("constraints", "businessRules", "dataConstraints", "integrityConstraints"));
+                if (constraints != null) {
+                        scenarioData.putIfAbsent("constraints", constraints);
+                        scenarioData.putIfAbsent("dataConstraints", constraints);
+                }
+
+                scenarioData.putIfAbsent("tags", buildScenarioTags(request));
+                scenarioData.put("generationMode", generationMode);
+                scenarioData.put(
+                                "generationInputType",
+                                StringUtils.hasText(customPrompt) ? "CUSTOM_PROMPT" : "PARAMETERIZED");
+                return scenarioData;
+        }
+
+        private Object firstScenarioValue(Map<String, Object> data, List<String> keys) {
+                for (String key : keys) {
+                        Object value = data.get(key);
+                        if (value != null) {
+                                return value;
+                        }
+                }
+                return null;
+        }
+
+        private List<String> buildScenarioTags(ExerciseGenerationRequest request) {
+                List<String> tags = new ArrayList<>();
+                addTag(tags, request.getTopic());
+                addTag(tags, request.getBusinessDomain());
+                if (StringUtils.hasText(request.getKeywords())) {
+                        for (String keyword : request.getKeywords().split("[,;\\n]")) {
+                                addTag(tags, keyword);
+                        }
+                }
+                addTag(tags, request.getDifficulty());
+                return tags;
+        }
+
+        private void addTag(List<String> tags, String value) {
+                String normalized = normalizePart(value);
+                if (StringUtils.hasText(normalized) && !tags.contains(normalized)) {
+                        tags.add(normalized);
+                }
+        }
+
+        private String resolveMockDomain(ExerciseGenerationRequest request) {
+                String domain = normalizePart(request.getBusinessDomain());
+                if (StringUtils.hasText(domain)) {
+                        return domain;
+                }
+                String customPrompt = normalizePart(request.getCustomPrompt());
+                if (StringUtils.hasText(customPrompt)) {
+                        return abbreviateForTitle(customPrompt);
+                }
+                return "thu vien so";
+        }
+
+        private String abbreviateForTitle(String value) {
+                String normalized = value.replaceAll("\\s+", " ").trim();
+                if (normalized.length() <= 60) {
+                        return normalized;
+                }
+                return normalized.substring(0, 57).trim() + "...";
         }
 
         private String readString(Map<String, Object> data, String key) {
@@ -546,12 +997,29 @@ public class ExerciseServiceImpl implements ExerciseService {
                 return StringUtils.hasText(value) ? value.trim() : fallback;
         }
 
+        private String firstNonBlank(String... values) {
+                for (String value : values) {
+                        if (StringUtils.hasText(value)) {
+                                return value.trim();
+                        }
+                }
+                return "";
+        }
+
         private String normalizePart(String value) {
                 return value == null ? "" : value.trim();
         }
 
         private String nullToEmpty(String value) {
                 return value == null ? "" : value;
+        }
+
+        private String readScenarioString(Map<String, Object> scenarioData, String key) {
+                if (scenarioData == null) {
+                        return "";
+                }
+                Object value = scenarioData.get(key);
+                return value == null ? "" : String.valueOf(value).trim();
         }
 
         private ExerciseSource resolveSource(ExerciseSource requested, ExerciseSource current) {

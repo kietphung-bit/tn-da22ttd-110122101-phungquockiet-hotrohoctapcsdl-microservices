@@ -1,9 +1,11 @@
 package com.dbdesignassitant.backend.controllers;
 
+import com.dbdesignassitant.backend.dtos.request.ExerciseGenerationRequest;
 import com.dbdesignassitant.backend.dtos.request.ExerciseRequest;
+import com.dbdesignassitant.backend.dtos.request.ExerciseReviewRequest;
 import com.dbdesignassitant.backend.dtos.response.ApiResponse;
+import com.dbdesignassitant.backend.dtos.response.ExerciseGenerationResponse;
 import com.dbdesignassitant.backend.dtos.response.ExerciseResponse;
-import com.dbdesignassitant.backend.entities.User;
 import com.dbdesignassitant.backend.services.ExerciseService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -84,6 +86,49 @@ public class InstructorExerciseController {
         Long currentUserId = getCurrentUserId();
         List<ExerciseResponse> data = exerciseService.getInstructorExercises(currentUserId, search, isPublished);
         ApiResponse<List<ExerciseResponse>> response = ApiResponse.<List<ExerciseResponse>>builder()
+                .status(HttpStatus.OK.value())
+                .message("Success")
+                .data(data)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/generate")
+    public ResponseEntity<ApiResponse<ExerciseGenerationResponse>> generateExercise(
+            @Valid @RequestBody ExerciseGenerationRequest request) {
+        Long currentUserId = getCurrentUserId();
+        ExerciseGenerationResponse data = exerciseService.generateInstructorExercise(currentUserId, request);
+        ApiResponse<ExerciseGenerationResponse> response = ApiResponse.<ExerciseGenerationResponse>builder()
+                .status(HttpStatus.CREATED.value())
+                .message("Exercise generated successfully")
+                .data(data)
+                .build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PutMapping("/{id}/approve")
+    public ResponseEntity<ApiResponse<ExerciseResponse>> approveGeneratedExercise(
+            @PathVariable Long id,
+            @Valid @RequestBody(required = false) ExerciseReviewRequest request) {
+        Long currentUserId = getCurrentUserId();
+        boolean publish = request != null && Boolean.TRUE.equals(request.getPublish());
+        ExerciseResponse data = exerciseService.approveInstructorGeneratedExercise(currentUserId, id, publish);
+        ApiResponse<ExerciseResponse> response = ApiResponse.<ExerciseResponse>builder()
+                .status(HttpStatus.OK.value())
+                .message("Success")
+                .data(data)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}/reject")
+    public ResponseEntity<ApiResponse<ExerciseResponse>> rejectGeneratedExercise(
+            @PathVariable Long id,
+            @Valid @RequestBody(required = false) ExerciseReviewRequest request) {
+        Long currentUserId = getCurrentUserId();
+        String reason = request == null ? null : request.getReason();
+        ExerciseResponse data = exerciseService.rejectInstructorGeneratedExercise(currentUserId, id, reason);
+        ApiResponse<ExerciseResponse> response = ApiResponse.<ExerciseResponse>builder()
                 .status(HttpStatus.OK.value())
                 .message("Success")
                 .data(data)

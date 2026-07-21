@@ -2,8 +2,8 @@ import axiosClient from './axiosClient';
 import type { AIEvaluation, EvaluationRound, Submission, SubmissionStatusResponse } from '../types';
 
 export const studentSubmissionApi = {
-  getAll: () => {
-    return axiosClient.get<Submission[]>('/student/submissions').then(res => res.data);
+  getAll: (params?: { archived?: boolean }) => {
+    return axiosClient.get<Submission[]>('/student/submissions', { params }).then(res => res.data);
   },
 
   getById: (id: number) => {
@@ -20,6 +20,14 @@ export const studentSubmissionApi = {
 
   submit: (id: number, data?: { diagramData: Record<string, unknown> }) => {
     return axiosClient.put<Submission>(`/student/submissions/${id}/submit`, data).then(res => res.data);
+  },
+
+  archive: (id: number) => {
+    return axiosClient.put<Submission>(`/student/submissions/${id}/archive`).then(res => res.data);
+  },
+
+  restore: (id: number) => {
+    return axiosClient.put<Submission>(`/student/submissions/${id}/restore`).then(res => res.data);
   },
 
   getStatus: (id: number) => {

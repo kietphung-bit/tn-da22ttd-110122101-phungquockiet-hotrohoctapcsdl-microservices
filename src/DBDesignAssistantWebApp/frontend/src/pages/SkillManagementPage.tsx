@@ -6,6 +6,12 @@ import { useAuth } from "../hooks/useAuth";
 import AdminLayout from "../components/layouts/AdminLayout";
 import { useTranslation } from "react-i18next";
 import { Edit2, Eye, Trash2, Plus, XCircle, CheckCircle } from "lucide-react";
+import ConfirmDialog from "../components/common/ConfirmDialog";
+
+type PendingSkillAction = {
+    kind: "delete" | "hide" | "show";
+    item: Skill;
+};
 
 const SkillManagementPage = () => {
     const navigate = useNavigate();
@@ -20,6 +26,7 @@ const SkillManagementPage = () => {
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     
     const [selectedItem, setSelectedItem] = useState<Skill | null>(null);
+    const [pendingSkillAction, setPendingSkillAction] = useState<PendingSkillAction | null>(null);
     const [formError, setFormError] = useState<string | null>(null);
     const [formData, setFormData] = useState({
         skillName: "",
@@ -143,9 +150,6 @@ const SkillManagementPage = () => {
     };
 
     const handleDelete = async (id: number) => {
-        if (!window.confirm(t("admin.skills.confirmDelete", "Are you sure you want to delete this item?"))) {
-            return;
-        }
         try {
             await skillApi.delete(id);
             loadItems();
@@ -154,13 +158,15 @@ const SkillManagementPage = () => {
         }
     };
 
+    const requestDelete = (item: Skill) => {
+        setPendingSkillAction({ kind: "delete", item });
+    };
+
+    const requestToggleActive = (item: Skill) => {
+        setPendingSkillAction({ kind: item.isActive ? "hide" : "show", item });
+    };
+
     const handleToggleActive = async (item: Skill) => {
-        const confirmMessage = item.isActive 
-            ? t("admin.skills.confirmHide", "Are you sure you want to hide this item?") 
-            : t("admin.skills.confirmShow", "Are you sure you want to show this item?");
-        if (!window.confirm(confirmMessage)) {
-            return;
-        }
         try {
             const updated = await skillApi.update(item.skillId, {
                 skillName: item.skillName,
@@ -174,12 +180,45 @@ const SkillManagementPage = () => {
         }
     };
 
+    const handleConfirmSkillAction = () => {
+        const action = pendingSkillAction;
+        if (!action) {
+            return;
+        }
+        setPendingSkillAction(null);
+        if (action.kind === "delete") {
+            void handleDelete(action.item.skillId);
+            return;
+        }
+        void handleToggleActive(action.item);
+    };
+
+    const pendingSkillKind = pendingSkillAction?.kind ?? "delete";
+    const pendingSkillVariant =
+        pendingSkillKind === "delete" ? "danger" : pendingSkillKind === "hide" ? "warning" : "normal";
+    const pendingSkillConfirmLabel =
+        pendingSkillKind === "delete"
+            ? t("common.delete", "Delete")
+            : pendingSkillKind === "hide"
+              ? t("common.hide", "Hide")
+              : t("common.show", "Show");
+
     return (
         <AdminLayout
             title={t("sidebar.skills", "Kỹ năng")}
             subtitle={t("admin.skills.subtitle", "Quản lý danh mục kỹ năng thiết kế DB")}
             onSignOut={handleSignOut}
         >
+            <ConfirmDialog
+                open={Boolean(pendingSkillAction)}
+                title={t(`admin.skills.confirmations.${pendingSkillKind}.title`)}
+                message={t(`admin.skills.confirmations.${pendingSkillKind}.message`)}
+                confirmLabel={pendingSkillConfirmLabel}
+                cancelLabel={t("common.cancel", "Cancel")}
+                variant={pendingSkillVariant}
+                onCancel={() => setPendingSkillAction(null)}
+                onConfirm={handleConfirmSkillAction}
+            />
             {error && <div className="alert">{error}</div>}
             
             {/* Create Modal */}
@@ -316,10 +355,10 @@ const SkillManagementPage = () => {
                                                 <button type="button" className="btn btn-icon" onClick={() => handleOpenEdit(item)} title={t("common.edit", "Sửa")}>
                                                     <Edit2 size={18} />
                                                 </button>
-                                                <button type="button" className="btn btn-icon" onClick={() => handleToggleActive(item)} title={item.isActive ? t("common.hide", "Ẩn") : t("common.show", "Hiện")}>
+                                                <button type="button" className="btn btn-icon" onClick={() => requestToggleActive(item)} title={item.isActive ? t("common.hide", "Ẩn") : t("common.show", "Hiện")}>
                                                     {item.isActive ? <XCircle size={18} /> : <CheckCircle size={18} />}
                                                 </button>
-                                                <button type="button" className="btn btn-icon btn-danger" onClick={() => handleDelete(item.skillId)} title={t("common.delete", "Xóa")}>
+                                                <button type="button" className="btn btn-icon btn-danger" onClick={() => requestDelete(item)} title={t("common.delete", "Xóa")}>
                                                     <Trash2 size={18} />
                                                 </button>
                                             </div>

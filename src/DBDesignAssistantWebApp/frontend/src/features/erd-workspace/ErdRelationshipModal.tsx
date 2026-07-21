@@ -83,13 +83,18 @@ const ErdRelationshipModal = ({
 
     const isFormDisabled = isLocked || entities.length < 2;
     const usesPerEndCardinality = cardinalityMode === "per-end";
-    const fromEntityName = entities.find((entity) => entity.id === fromEntityId)?.name;
-    const toEntityName = entities.find((entity) => entity.id === toEntityId)?.name;
-    // TODO: Move report-demo labels to i18n if per-end cardinality becomes production UI.
-    const firstEntityLabel = usesPerEndCardinality ? "Entity 1" : t("student.workspace.relationship.fromEntity");
-    const secondEntityLabel = usesPerEndCardinality ? "Entity 2" : t("student.workspace.relationship.toEntity");
-    const sourceCardinalityLabel = `Bản số phía ${fromEntityName || firstEntityLabel}`;
-    const targetCardinalityLabel = `Bản số phía ${toEntityName || secondEntityLabel}`;
+    const firstEntityLabel = usesPerEndCardinality
+        ? t("student.workspace.relationship.entityOne")
+        : t("student.workspace.relationship.fromEntity");
+    const secondEntityLabel = usesPerEndCardinality
+        ? t("student.workspace.relationship.entityTwo")
+        : t("student.workspace.relationship.toEntity");
+    const sourceCardinalityLabel = usesPerEndCardinality
+        ? t("student.workspace.relationship.sourceCardinality")
+        : t("student.workspace.relationship.cardinality");
+    const targetCardinalityLabel = usesPerEndCardinality
+        ? t("student.workspace.relationship.targetCardinality")
+        : t("student.workspace.relationship.cardinality");
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -196,7 +201,9 @@ const ErdRelationshipModal = ({
                                     ))}
                                 </select>
                                 <small className="erd-field-help">
-                                    Hiển thị gần entity: {formatEndpointCardinalityLabel(sourceCardinality)}
+                                    {t("student.workspace.relationship.endpointCardinalityHelp", {
+                                        value: formatEndpointCardinalityLabel(sourceCardinality),
+                                    })}
                                 </small>
                             </div>
                             <div className="form-field">
@@ -215,7 +222,9 @@ const ErdRelationshipModal = ({
                                     ))}
                                 </select>
                                 <small className="erd-field-help">
-                                    Hiển thị gần entity: {formatEndpointCardinalityLabel(targetCardinality)}
+                                    {t("student.workspace.relationship.endpointCardinalityHelp", {
+                                        value: formatEndpointCardinalityLabel(targetCardinality),
+                                    })}
                                 </small>
                             </div>
                         </div>

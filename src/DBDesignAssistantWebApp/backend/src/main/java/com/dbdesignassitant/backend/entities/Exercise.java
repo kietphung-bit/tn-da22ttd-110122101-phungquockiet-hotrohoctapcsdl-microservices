@@ -10,7 +10,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -65,4 +67,18 @@ public class Exercise {
 
     @Column(name = "is_published", nullable = false)
     private Boolean isPublished;
+
+    @Builder.Default
+    @Column(name = "student_archived")
+    private Boolean studentArchived = false;
+
+    @Column(name = "student_archived_at")
+    private LocalDateTime studentArchivedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (studentArchived == null) {
+            studentArchived = false;
+        }
+    }
 }

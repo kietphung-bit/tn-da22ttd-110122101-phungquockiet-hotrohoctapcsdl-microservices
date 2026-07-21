@@ -17,4 +17,6 @@ public class ChatConversationSummaryResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String lastMessagePreview;
+    private Boolean studentArchived;
+    private LocalDateTime studentArchivedAt;
 }

@@ -45,10 +45,20 @@ public class Submission {
     @Column(name = "submitted_at")
     private LocalDateTime submittedAt;
 
+    @Builder.Default
+    @Column(name = "student_archived")
+    private Boolean studentArchived = false;
+
+    @Column(name = "student_archived_at")
+    private LocalDateTime studentArchivedAt;
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
+        }
+        if (studentArchived == null) {
+            studentArchived = false;
         }
     }
 }

@@ -1,4 +1,26 @@
+import re
+from dataclasses import dataclass
 from typing import Any
+
+
+@dataclass(frozen=True)
+class RelationshipCardinality:
+    source: str
+    target: str
+
+    @property
+    def has_cardinality(self) -> bool:
+        return bool(self.source and self.target)
+
+    @property
+    def is_many_to_many(self) -> bool:
+        return self.source in {"1-N", "0-N"} and self.target in {"1-N", "0-N"}
+
+    @property
+    def summary(self) -> str:
+        if not self.has_cardinality:
+            return ""
+        return f"{self.source} - {self.target}"
 
 
 def evaluate_diagram(diagram_data: dict[str, Any] | None) -> tuple[float, list[dict[str, str]]]:
@@ -11,7 +33,7 @@ def evaluate_diagram(diagram_data: dict[str, Any] | None) -> tuple[float, list[d
         details.append(
             _detail(
                 "MISSING_ENTITY",
-                "Diagram chua co entity nao. Hay xac dinh cac doi tuong chinh trong de bai truoc khi thiet ke relationship.",
+                "Sơ đồ chưa có entity nào. Hãy xác định các đối tượng chính trong đề bài trước khi thiết kế relationship.",
                 "Diagram",
             )
         )
@@ -24,7 +46,7 @@ def evaluate_diagram(diagram_data: dict[str, Any] | None) -> tuple[float, list[d
             details.append(
                 _detail(
                     "MISSING_PRIMARY_KEY",
-                    "Entity nen co primary key de dinh danh moi ban ghi mot cach ro rang.",
+                    "Entity nên có primary key để định danh mỗi bản ghi một cách rõ ràng.",
                     f"Entity: {entity_name}",
                 )
             )
@@ -33,30 +55,29 @@ def evaluate_diagram(diagram_data: dict[str, Any] | None) -> tuple[float, list[d
         details.append(
             _detail(
                 "MISSING_RELATIONSHIP",
-                "Diagram chua co relationship. Hay mo ta lien ket va rang buoc giua cac entity neu de bai co nhieu doi tuong.",
+                "Sơ đồ chưa có relationship. Hãy mô tả liên kết và ràng buộc giữa các entity nếu đề bài có nhiều đối tượng.",
                 "Relationships",
             )
         )
 
     for relationship in relationships:
         relationship_name = _read_string(relationship, "name", "Unnamed relationship")
-        cardinality = _read_string(relationship, "cardinality", "")
-        if not cardinality:
+        cardinality = normalize_relationship_cardinality(relationship)
+        if not cardinality.has_cardinality:
             details.append(
                 _detail(
                     "MISSING_CARDINALITY",
-                    "Relationship can co cardinality de the hien rang buoc 1-1, 1-N, N-1 hoac N-N.",
+                    "Relationship cần có cardinality để thể hiện ràng buộc mỗi đầu: 1-1, 0-1, 1-N hoặc 0-N.",
                     f"Relationship: {relationship_name}",
                 )
             )
             continue
 
-        normalized_cardinality = cardinality.upper().replace(" ", "")
-        if normalized_cardinality in {"N-N", "M-N"}:
+        if cardinality.is_many_to_many:
             details.append(
                 _detail(
                     "MANY_TO_MANY_HINT",
-                    "Relationship N-N thuong can can nhac bang trung gian khi chuyen sang thiet ke logic.",
+                    "Relationship có nhiều bản ghi ở cả hai đầu thường cần cân nhắc bảng trung gian khi chuyển sang thiết kế logic.",
                     f"Relationship: {relationship_name}",
                 )
             )
@@ -65,7 +86,7 @@ def evaluate_diagram(diagram_data: dict[str, Any] | None) -> tuple[float, list[d
         details.append(
             _detail(
                 "MOCK_PASS",
-                "Danh gia demo/MOCK khong phat hien loi cau truc co ban trong diagram hien tai.",
+                "Đánh giá MOCK chưa phát hiện lỗi cấu trúc cơ bản trong sơ đồ hiện tại.",
                 "Diagram",
             )
         )
@@ -91,6 +112,76 @@ def _detail(error_type: str, description: str, location: str) -> dict[str, str]:
         "description": description,
         "location": location,
     }
+
+
+def normalize_diagram_relationship_cardinalities(diagram_data: dict[str, Any] | None) -> dict[str, Any]:
+    if not isinstance(diagram_data, dict):
+        return {}
+
+    normalized = dict(diagram_data)
+    relationships = diagram_data.get("relationships")
+    if not isinstance(relationships, list):
+        return normalized
+
+    normalized_relationships: list[Any] = []
+    for relationship in relationships:
+        if not isinstance(relationship, dict):
+            normalized_relationships.append(relationship)
+            continue
+
+        next_relationship = dict(relationship)
+        cardinality = normalize_relationship_cardinality(relationship)
+        if cardinality.has_cardinality:
+            next_relationship["sourceCardinality"] = cardinality.source
+            next_relationship["targetCardinality"] = cardinality.target
+            next_relationship["normalizedCardinality"] = {
+                "source": cardinality.source,
+                "target": cardinality.target,
+                "summary": cardinality.summary,
+                "isManyToMany": cardinality.is_many_to_many,
+            }
+        normalized_relationships.append(next_relationship)
+
+    normalized["relationships"] = normalized_relationships
+    return normalized
+
+
+def normalize_relationship_cardinality(relationship: dict[str, Any]) -> RelationshipCardinality:
+    source = normalize_endpoint_cardinality_value(_read_string(relationship, "sourceCardinality", ""))
+    target = normalize_endpoint_cardinality_value(_read_string(relationship, "targetCardinality", ""))
+    if source and target:
+        return RelationshipCardinality(source=source, target=target)
+
+    return _parse_relationship_cardinality(_read_string(relationship, "cardinality", ""))
+
+
+def normalize_endpoint_cardinality_value(value: str) -> str:
+    normalized = re.sub(r"\s+", "", value.strip().upper())
+    if normalized in {"1", "1-1", "1..1"}:
+        return "1-1"
+    if normalized in {"0-1", "0..1"}:
+        return "0-1"
+    if normalized in {"1-N", "1-M", "1..N", "1..M"}:
+        return "1-N"
+    if normalized in {"0-N", "0-M", "0..N", "0..M"}:
+        return "0-N"
+    if normalized in {"N", "M", "*"}:
+        return "0-N"
+    return ""
+
+
+def _parse_relationship_cardinality(cardinality: str) -> RelationshipCardinality:
+    trimmed = cardinality.strip()
+    if not trimmed:
+        return RelationshipCardinality(source="", target="")
+
+    parts = re.split(r"\s+-\s+", trimmed) if re.search(r"\s+-\s+", trimmed) else trimmed.split("-")
+    if len(parts) < 2:
+        return RelationshipCardinality(source="", target="")
+
+    source = normalize_endpoint_cardinality_value(parts[0])
+    target = normalize_endpoint_cardinality_value(parts[1])
+    return RelationshipCardinality(source=source, target=target)
 
 
 def _read_object_list(source: dict[str, Any], key: str) -> list[dict[str, Any]]:

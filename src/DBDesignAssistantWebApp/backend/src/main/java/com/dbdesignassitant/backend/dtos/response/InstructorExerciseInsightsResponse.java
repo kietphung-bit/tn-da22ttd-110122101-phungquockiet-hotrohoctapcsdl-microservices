@@ -15,7 +15,12 @@ public class InstructorExerciseInsightsResponse {
     private ExerciseSummary exercise;
     private ScopeSummary scope;
     private Summary summary;
+    private List<AdminPracticeInsightsResponse.ScoreDistributionItem> scoreDistribution;
+    private List<AdminPracticeInsightsResponse.RoundDistributionItem> roundDistribution;
+    private List<AdminPracticeInsightsResponse.TrendItem> trend;
+    private String trendDateSource;
     private List<AdminPracticeInsightsResponse.IssueTypeItem> topIssueTypes;
+    private List<AdminPracticeInsightsResponse.SkillAnalyticsItem> skillAnalytics;
     private List<AnonymizedSubmissionSummary> anonymizedSubmissionSummaries;
 
     @Data

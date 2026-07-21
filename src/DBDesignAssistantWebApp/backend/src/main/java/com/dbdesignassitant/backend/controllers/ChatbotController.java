@@ -31,8 +31,9 @@ public class ChatbotController {
     }
 
     @GetMapping("/conversations")
-    public ResponseEntity<ApiResponse<List<ChatConversationSummaryResponse>>> listConversations() {
-        List<ChatConversationSummaryResponse> data = chatbotService.listConversations();
+    public ResponseEntity<ApiResponse<List<ChatConversationSummaryResponse>>> listConversations(
+            @RequestParam(defaultValue = "false") boolean archived) {
+        List<ChatConversationSummaryResponse> data = chatbotService.listConversations(archived);
         return ResponseEntity.ok(ApiResponse.<List<ChatConversationSummaryResponse>>builder()
                 .status(HttpStatus.OK.value())
                 .message("Success")
@@ -45,6 +46,28 @@ public class ChatbotController {
             @PathVariable String conversationId) {
         ChatConversationDetailResponse data = chatbotService.getConversation(conversationId);
         return ResponseEntity.ok(ApiResponse.<ChatConversationDetailResponse>builder()
+                .status(HttpStatus.OK.value())
+                .message("Success")
+                .data(data)
+                .build());
+    }
+
+    @PutMapping("/conversations/{conversationId}/archive")
+    public ResponseEntity<ApiResponse<ChatConversationSummaryResponse>> archiveConversation(
+            @PathVariable String conversationId) {
+        ChatConversationSummaryResponse data = chatbotService.setConversationArchived(conversationId, true);
+        return ResponseEntity.ok(ApiResponse.<ChatConversationSummaryResponse>builder()
+                .status(HttpStatus.OK.value())
+                .message("Success")
+                .data(data)
+                .build());
+    }
+
+    @PutMapping("/conversations/{conversationId}/restore")
+    public ResponseEntity<ApiResponse<ChatConversationSummaryResponse>> restoreConversation(
+            @PathVariable String conversationId) {
+        ChatConversationSummaryResponse data = chatbotService.setConversationArchived(conversationId, false);
+        return ResponseEntity.ok(ApiResponse.<ChatConversationSummaryResponse>builder()
                 .status(HttpStatus.OK.value())
                 .message("Success")
                 .data(data)

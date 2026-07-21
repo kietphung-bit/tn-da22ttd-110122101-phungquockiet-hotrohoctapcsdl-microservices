@@ -22,6 +22,15 @@
     color: var(--ink);
 }
 
+.page-header .btn,
+.exercise-generator-grid .btn,
+.generated-exercise .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
 .muted-text {
     color: var(--ink-soft);
     margin: 4px 0 0;
@@ -71,8 +80,13 @@
     color: #92400e;
 }
 
-.manual-practice-placeholder {
-    max-width: 760px;
+.manual-practice-form {
+    min-width: 0;
+}
+
+.manual-prompt-textarea {
+    min-height: 180px;
+    resize: vertical;
 }
 
 .generated-exercise {

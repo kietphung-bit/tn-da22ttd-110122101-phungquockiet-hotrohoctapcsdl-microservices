@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import instructorKnowledgeBaseApi from "../../services/instructorKnowledgeBaseApi";
 import type { KnowledgeBase } from "../../types";
@@ -6,6 +6,12 @@ import { useAuth } from "../../hooks/useAuth";
 import InstructorLayout from "../../components/layouts/InstructorLayout";
 import { useTranslation } from "react-i18next";
 import { Edit2, Eye, Trash2, Plus, Send } from "lucide-react";
+import ConfirmDialog from "../../components/common/ConfirmDialog";
+
+type PendingInstructorKnowledgeBaseAction = {
+    kind: "delete" | "submit";
+    item: KnowledgeBase;
+};
 
 const InstructorKnowledgeBasePage = () => {
     const navigate = useNavigate();
@@ -22,6 +28,8 @@ const InstructorKnowledgeBasePage = () => {
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     
     const [selectedItem, setSelectedItem] = useState<KnowledgeBase | null>(null);
+    const [pendingKnowledgeBaseAction, setPendingKnowledgeBaseAction] =
+        useState<PendingInstructorKnowledgeBaseAction | null>(null);
     const [formError, setFormError] = useState<string | null>(null);
     const [formData, setFormData] = useState({
         kbTitle: "",
@@ -60,6 +68,26 @@ const InstructorKnowledgeBasePage = () => {
             isCancelled = true;
         };
     }, [loadMyItems, loadSystemItems]);
+
+    const report = useMemo(() => {
+        const activeSystemApproved = systemItems.filter(
+            (item) => item.approvalStatus === "APPROVED" && item.isActive
+        );
+        const systemCategories = new Set(
+            activeSystemApproved
+                .map((item) => item.kbCategory?.trim())
+                .filter((category): category is string => Boolean(category))
+        );
+
+        return {
+            activeSystemApproved: activeSystemApproved.length,
+            systemCategories: systemCategories.size,
+            myDrafts: myItems.filter((item) => item.approvalStatus === "DRAFT").length,
+            myPending: myItems.filter((item) => item.approvalStatus === "SUBMITTED").length,
+            myApproved: myItems.filter((item) => item.approvalStatus === "APPROVED").length,
+            myRejected: myItems.filter((item) => item.approvalStatus === "REJECTED").length,
+        };
+    }, [myItems, systemItems]);
 
     const handleSignOut = () => {
         logout();
@@ -160,9 +188,6 @@ const InstructorKnowledgeBasePage = () => {
     };
 
     const handleDelete = async (id: number) => {
-        if (!window.confirm(t("admin.knowledgeBase.confirmDelete", "Are you sure you want to delete this item?"))) {
-            return;
-        }
         try {
             await instructorKnowledgeBaseApi.delete(id);
             setMyItems(prev => prev.filter(item => item.kbId !== id));
@@ -172,9 +197,6 @@ const InstructorKnowledgeBasePage = () => {
     };
 
     const handleSubmit = async (id: number) => {
-        if (!window.confirm(t("instructor.knowledgeBase.confirmSubmit", "Bạn có chắc muốn gửi tài liệu này cho Admin duyệt? Sau khi gửi sẽ không thể chỉnh sửa."))) {
-            return;
-        }
         try {
             const updated = await instructorKnowledgeBaseApi.submit(id);
             setMyItems((prev) => prev.map(item => item.kbId === updated.kbId ? updated : item));
@@ -183,12 +205,50 @@ const InstructorKnowledgeBasePage = () => {
         }
     };
 
+    const requestDelete = (item: KnowledgeBase) => {
+        setPendingKnowledgeBaseAction({ kind: "delete", item });
+    };
+
+    const requestSubmit = (item: KnowledgeBase) => {
+        setPendingKnowledgeBaseAction({ kind: "submit", item });
+    };
+
+    const handleConfirmKnowledgeBaseAction = () => {
+        const action = pendingKnowledgeBaseAction;
+        if (!action) {
+            return;
+        }
+        setPendingKnowledgeBaseAction(null);
+        if (action.kind === "delete") {
+            void handleDelete(action.item.kbId);
+            return;
+        }
+        void handleSubmit(action.item.kbId);
+    };
+
+    const pendingKnowledgeBaseKind = pendingKnowledgeBaseAction?.kind ?? "delete";
+    const pendingKnowledgeBaseVariant = pendingKnowledgeBaseKind === "delete" ? "danger" : "normal";
+    const pendingKnowledgeBaseConfirmLabel =
+        pendingKnowledgeBaseKind === "delete"
+            ? t("common.delete", "Delete")
+            : t("common.submit", "Submit");
+
     return (
         <InstructorLayout
             title={t("instructor.sidebar.knowledgeBase", "Kiến thức học thuật")}
             subtitle={t("instructor.knowledgeBase.subtitle", "Đóng góp và tra cứu tài liệu học thuật")}
             onSignOut={handleSignOut}
         >
+            <ConfirmDialog
+                open={Boolean(pendingKnowledgeBaseAction)}
+                title={t(`instructor.knowledgeBase.confirmations.${pendingKnowledgeBaseKind}.title`)}
+                message={t(`instructor.knowledgeBase.confirmations.${pendingKnowledgeBaseKind}.message`)}
+                confirmLabel={pendingKnowledgeBaseConfirmLabel}
+                cancelLabel={t("common.cancel", "Cancel")}
+                variant={pendingKnowledgeBaseVariant}
+                onCancel={() => setPendingKnowledgeBaseAction(null)}
+                onConfirm={handleConfirmKnowledgeBaseAction}
+            />
             {error && <div className="alert">{error}</div>}
             
             <div className="tabs" style={{ marginBottom: 16 }}>
@@ -205,6 +265,43 @@ const InstructorKnowledgeBasePage = () => {
                     {t("instructor.knowledgeBase.tabs.system", "Kiến thức hệ thống (Đã duyệt)")}
                 </button>
             </div>
+
+            <section className="section-card" style={{ marginBottom: 16 }}>
+                <div style={{ marginBottom: 12 }}>
+                    <h2 style={{ margin: 0, fontSize: "1rem" }}>
+                        {t("instructor.knowledgeBase.report.title", "B\u00e1o c\u00e1o h\u1ecdc li\u1ec7u")}
+                    </h2>
+                    <p style={{ margin: "4px 0 0", color: "var(--text-secondary)" }}>
+                        {t(
+                            "instructor.knowledgeBase.report.subtitle",
+                            "T\u00f3m t\u1eaft ch\u1ec9 \u0111\u1ecdc v\u1ec1 h\u1ecdc li\u1ec7u \u0111\u00e3 duy\u1ec7t v\u00e0 quy tr\u00ecnh \u0111\u00f3ng g\u00f3p c\u1ee7a b\u1ea1n."
+                        )}
+                    </p>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
+                    {[
+                        [t("instructor.knowledgeBase.report.activeSystemApproved", "H\u1ec7 th\u1ed1ng \u0111\u00e3 duy\u1ec7t"), report.activeSystemApproved],
+                        [t("instructor.knowledgeBase.report.systemCategories", "Danh m\u1ee5c h\u1ec7 th\u1ed1ng"), report.systemCategories],
+                        [t("instructor.knowledgeBase.report.myDrafts", "B\u1ea3n nh\u00e1p c\u1ee7a t\u00f4i"), report.myDrafts],
+                        [t("instructor.knowledgeBase.report.myPending", "Ch\u1edd duy\u1ec7t"), report.myPending],
+                        [t("instructor.knowledgeBase.report.myApproved", "\u0110\u00e3 duy\u1ec7t"), report.myApproved],
+                        [t("instructor.knowledgeBase.report.myRejected", "B\u1ecb t\u1eeb ch\u1ed1i"), report.myRejected],
+                    ].map(([label, value]) => (
+                        <div
+                            key={String(label)}
+                            style={{
+                                border: "1px solid var(--border)",
+                                borderRadius: 8,
+                                padding: 12,
+                                background: "var(--surface)",
+                            }}
+                        >
+                            <div style={{ color: "var(--text-secondary)", fontSize: "0.82rem" }}>{label}</div>
+                            <div style={{ fontSize: "1.4rem", fontWeight: 700 }}>{value}</div>
+                        </div>
+                    ))}
+                </div>
+            </section>
 
             {/* Detail Modal */}
             {isDetailOpen && selectedItem && (
@@ -350,13 +447,13 @@ const InstructorKnowledgeBasePage = () => {
                                                     
                                                     {(item.approvalStatus === 'DRAFT' || item.approvalStatus === 'REJECTED') && (
                                                         <>
-                                                            <button type="button" className="btn btn-icon" style={{ color: "var(--primary)" }} onClick={() => handleSubmit(item.kbId)} title={t("common.submit", "Gửi duyệt")}>
+                                                            <button type="button" className="btn btn-icon" style={{ color: "var(--primary)" }} onClick={() => requestSubmit(item)} title={t("common.submit", "Gửi duyệt")}>
                                                                 <Send size={18} />
                                                             </button>
                                                             <button type="button" className="btn btn-icon" onClick={() => handleOpenEdit(item)} title={t("common.edit", "Sửa")}>
                                                                 <Edit2 size={18} />
                                                             </button>
-                                                            <button type="button" className="btn btn-icon btn-danger" onClick={() => handleDelete(item.kbId)} title={t("common.delete", "Xóa")}>
+                                                            <button type="button" className="btn btn-icon btn-danger" onClick={() => requestDelete(item)} title={t("common.delete", "Xóa")}>
                                                                 <Trash2 size={18} />
                                                             </button>
                                                         </>

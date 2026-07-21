@@ -4,6 +4,10 @@ import "./viewers.css";
 
 type ScenarioViewerProps = {
     data: Record<string, unknown> | null | undefined;
+    showSummary?: boolean;
+    showTechnicalData?: boolean;
+    showExtraFields?: boolean;
+    showEmptySections?: boolean;
 };
 
 type FieldItem = {
@@ -64,7 +68,13 @@ const findFirst = (data: Record<string, unknown>, keys: string[]) => {
 const isRenderablePrimitive = (value: unknown) =>
     typeof value === "string" || typeof value === "number" || typeof value === "boolean";
 
-const ScenarioViewer = ({ data }: ScenarioViewerProps) => {
+const ScenarioViewer = ({
+    data,
+    showSummary = true,
+    showTechnicalData = true,
+    showExtraFields = true,
+    showEmptySections = true,
+}: ScenarioViewerProps) => {
     const { t } = useTranslation();
 
     const normalized = useMemo(() => {
@@ -85,9 +95,15 @@ const ScenarioViewer = ({ data }: ScenarioViewerProps) => {
         ]));
         const constraints = toTextList(findFirst(source, [
             "constraints",
+            "dataConstraints",
             "businessRules",
             "rules",
             "integrityConstraints",
+        ]));
+        const designHints = toTextList(findFirst(source, [
+            "designScopeHints",
+            "scopeHints",
+            "designHints",
         ]));
         const tags = toTextList(findFirst(source, ["tags", "keywords"]));
         const difficulty = readString(findFirst(source, ["difficulty", "level"]));
@@ -105,14 +121,26 @@ const ScenarioViewer = ({ data }: ScenarioViewerProps) => {
             "functionalRequirements",
             "tasks",
             "constraints",
+            "dataConstraints",
             "businessRules",
             "rules",
             "integrityConstraints",
+            "designScopeHints",
+            "scopeHints",
+            "designHints",
             "tags",
             "keywords",
             "difficulty",
             "level",
             "entities",
+            "reviewStatus",
+            "reviewSource",
+            "reviewCreatedAt",
+            "reviewedAt",
+            "reviewedByRole",
+            "rejectReason",
+            "baseExerciseId",
+            "baseExerciseCode",
         ]);
 
         const extraFields: FieldItem[] = Object.entries(source)
@@ -125,6 +153,7 @@ const ScenarioViewer = ({ data }: ScenarioViewerProps) => {
             context: readString(context),
             requirements,
             constraints,
+            designHints,
             tags,
             difficulty,
             entities,
@@ -144,12 +173,27 @@ const ScenarioViewer = ({ data }: ScenarioViewerProps) => {
                         defaultValue: "Dữ liệu kịch bản không đúng định dạng. Hệ thống vẫn giữ dữ liệu kỹ thuật bên dưới để kiểm tra.",
                     })}
                 </div>
-                <details className="viewer-technical">
-                    <summary>{t("viewers.technicalData", { defaultValue: "Dữ liệu kỹ thuật" })}</summary>
-                    <pre className="json-viewer">{rawJson}</pre>
-                </details>
+                {showTechnicalData && (
+                    <details className="viewer-technical">
+                        <summary>{t("viewers.technicalData", { defaultValue: "Dữ liệu kỹ thuật" })}</summary>
+                        <pre className="json-viewer">{rawJson}</pre>
+                    </details>
+                )}
             </section>
         );
+    }
+
+    const hasVisibleLearningContent = Boolean(
+        normalized.context
+        || normalized.requirements.length > 0
+        || normalized.constraints.length > 0
+        || normalized.designHints.length > 0
+        || normalized.tags.length > 0
+        || (showExtraFields && normalized.extraFields.length > 0)
+    );
+
+    if (!normalized.isEmpty && !showSummary && !showTechnicalData && !hasVisibleLearningContent) {
+        return null;
     }
 
     return (
@@ -160,24 +204,26 @@ const ScenarioViewer = ({ data }: ScenarioViewerProps) => {
                 </div>
             ) : (
                 <>
-                    <div className="scenario-summary-grid">
-                        <div className="scenario-summary-card">
-                            <span>{t("viewers.scenario.difficulty", { defaultValue: "Độ khó" })}</span>
-                            <strong>{normalized.difficulty || t("common.empty", { defaultValue: "Không có dữ liệu" })}</strong>
+                    {showSummary && (
+                        <div className="scenario-summary-grid">
+                            <div className="scenario-summary-card">
+                                <span>{t("viewers.scenario.difficulty", { defaultValue: "Độ khó" })}</span>
+                                <strong>{normalized.difficulty || t("common.empty", { defaultValue: "Không có dữ liệu" })}</strong>
+                            </div>
+                            <div className="scenario-summary-card">
+                                <span>{t("viewers.scenario.requirementCount", { defaultValue: "Yêu cầu" })}</span>
+                                <strong>{normalized.requirements.length}</strong>
+                            </div>
+                            <div className="scenario-summary-card">
+                                <span>{t("viewers.scenario.constraintCount", { defaultValue: "Ràng buộc" })}</span>
+                                <strong>{normalized.constraints.length}</strong>
+                            </div>
+                            <div className="scenario-summary-card">
+                                <span>{t("viewers.scenario.entityCount", { defaultValue: "Entity gợi ý" })}</span>
+                                <strong>{normalized.entities.length}</strong>
+                            </div>
                         </div>
-                        <div className="scenario-summary-card">
-                            <span>{t("viewers.scenario.requirementCount", { defaultValue: "Yêu cầu" })}</span>
-                            <strong>{normalized.requirements.length}</strong>
-                        </div>
-                        <div className="scenario-summary-card">
-                            <span>{t("viewers.scenario.constraintCount", { defaultValue: "Ràng buộc" })}</span>
-                            <strong>{normalized.constraints.length}</strong>
-                        </div>
-                        <div className="scenario-summary-card">
-                            <span>{t("viewers.scenario.entityCount", { defaultValue: "Entity gợi ý" })}</span>
-                            <strong>{normalized.entities.length}</strong>
-                        </div>
-                    </div>
+                    )}
 
                     {normalized.context && (
                         <div className="viewer-panel">
@@ -186,38 +232,55 @@ const ScenarioViewer = ({ data }: ScenarioViewerProps) => {
                         </div>
                     )}
 
-                    <div className="viewer-two-column">
-                        <div className="viewer-panel">
-                            <h3>{t("viewers.scenario.requirements", { defaultValue: "Yêu cầu thiết kế" })}</h3>
-                            {normalized.requirements.length > 0 ? (
-                                <ul className="viewer-list">
-                                    {normalized.requirements.map((item, index) => (
-                                        <li key={`${item}-${index}`}>{item}</li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <p className="viewer-muted">
-                                    {t("viewers.scenario.noRequirements", { defaultValue: "Chưa có yêu cầu cụ thể." })}
-                                </p>
+                    {(showEmptySections || normalized.requirements.length > 0 || normalized.constraints.length > 0) && (
+                        <div className="viewer-two-column">
+                            {(showEmptySections || normalized.requirements.length > 0) && (
+                                <div className="viewer-panel">
+                                    <h3>{t("viewers.scenario.requirements", { defaultValue: "Yêu cầu thiết kế" })}</h3>
+                                    {normalized.requirements.length > 0 ? (
+                                        <ul className="viewer-list">
+                                            {normalized.requirements.map((item, index) => (
+                                                <li key={`${item}-${index}`}>{item}</li>
+                                            ))}
+                                        </ul>
+                                    ) : (
+                                        <p className="viewer-muted">
+                                            {t("viewers.scenario.noRequirements", { defaultValue: "Chưa có yêu cầu cụ thể." })}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+                            {(showEmptySections || normalized.constraints.length > 0) && (
+                                <div className="viewer-panel">
+                                    <h3>{t("viewers.scenario.constraints", { defaultValue: "Ràng buộc nghiệp vụ" })}</h3>
+                                    {normalized.constraints.length > 0 ? (
+                                        <ul className="viewer-list">
+                                            {normalized.constraints.map((item, index) => (
+                                                <li key={`${item}-${index}`}>{item}</li>
+                                            ))}
+                                        </ul>
+                                    ) : (
+                                        <p className="viewer-muted">
+                                            {t("viewers.scenario.noConstraints", { defaultValue: "Chưa có ràng buộc cụ thể." })}
+                                        </p>
+                                    )}
+                                </div>
                             )}
                         </div>
-                        <div className="viewer-panel">
-                            <h3>{t("viewers.scenario.constraints", { defaultValue: "Ràng buộc nghiệp vụ" })}</h3>
-                            {normalized.constraints.length > 0 ? (
-                                <ul className="viewer-list">
-                                    {normalized.constraints.map((item, index) => (
-                                        <li key={`${item}-${index}`}>{item}</li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <p className="viewer-muted">
-                                    {t("viewers.scenario.noConstraints", { defaultValue: "Chưa có ràng buộc cụ thể." })}
-                                </p>
-                            )}
-                        </div>
-                    </div>
+                    )}
 
-                    {(normalized.tags.length > 0 || normalized.extraFields.length > 0) && (
+                    {normalized.designHints.length > 0 && (
+                        <div className="viewer-panel">
+                            <h3>{t("viewers.scenario.designHints", { defaultValue: "Gợi ý phạm vi thiết kế" })}</h3>
+                            <ul className="viewer-list">
+                                {normalized.designHints.map((item, index) => (
+                                    <li key={`${item}-${index}`}>{item}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    {(normalized.tags.length > 0 || (showExtraFields && normalized.extraFields.length > 0)) && (
                         <div className="viewer-panel">
                             {normalized.tags.length > 0 && (
                                 <div className="viewer-tags">
@@ -226,7 +289,7 @@ const ScenarioViewer = ({ data }: ScenarioViewerProps) => {
                                     ))}
                                 </div>
                             )}
-                            {normalized.extraFields.length > 0 && (
+                            {showExtraFields && normalized.extraFields.length > 0 && (
                                 <dl className="viewer-kv-grid">
                                     {normalized.extraFields.map((field) => (
                                         <div key={field.key}>
@@ -241,10 +304,12 @@ const ScenarioViewer = ({ data }: ScenarioViewerProps) => {
                 </>
             )}
 
-            <details className="viewer-technical">
-                <summary>{t("viewers.technicalData", { defaultValue: "Dữ liệu kỹ thuật" })}</summary>
-                <pre className="json-viewer">{rawJson}</pre>
-            </details>
+            {showTechnicalData && (
+                <details className="viewer-technical">
+                    <summary>{t("viewers.technicalData", { defaultValue: "Dữ liệu kỹ thuật" })}</summary>
+                    <pre className="json-viewer">{rawJson}</pre>
+                </details>
+            )}
         </section>
     );
 };

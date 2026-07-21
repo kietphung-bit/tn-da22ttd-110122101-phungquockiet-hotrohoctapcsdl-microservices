@@ -6,8 +6,10 @@ import com.dbdesignassitant.backend.dtos.response.RetrievedKnowledgeResponse;
 import com.dbdesignassitant.backend.entities.KnowledgeBase;
 import com.dbdesignassitant.backend.enums.AiProvider;
 import com.dbdesignassitant.backend.enums.KnowledgeApprovalStatus;
+import com.dbdesignassitant.backend.enums.KnowledgeScope;
 import com.dbdesignassitant.backend.enums.RetrievalMode;
 import com.dbdesignassitant.backend.repositories.KnowledgeBaseRepository;
+import com.dbdesignassitant.backend.repositories.KnowledgeSearchProjection;
 import com.dbdesignassitant.backend.services.EmbeddingClient;
 import com.dbdesignassitant.backend.services.KnowledgeRetrievalService;
 import com.dbdesignassitant.backend.services.PgVectorService;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.text.Normalizer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -68,13 +71,10 @@ public class KnowledgeRetrievalServiceImpl implements KnowledgeRetrievalService 
             List<Double> embedding = client.embed(question);
             String vectorLiteral = EmbeddingVectorUtils.toPgVectorLiteral(embedding);
             List<String> terms = tokenize(question);
-            List<KnowledgeBase> matches = pgVectorService.isKnowledgeBaseVectorColumnReady()
-                    ? knowledgeBaseRepository.findTopKByVectorSimilarity(vectorLiteral, topK)
-                    : knowledgeBaseRepository.findTopKByTextVectorCastSimilarity(vectorLiteral, topK);
-            return matches
-                    .stream()
-                    .map(kb -> mapToRetrieved(kb, terms))
-                    .collect(Collectors.toList());
+            List<KnowledgeSearchProjection> matches = pgVectorService.isKnowledgeBaseVectorColumnReady()
+                    ? knowledgeBaseRepository.findTopKProjectedByVectorSimilarity(vectorLiteral, topK)
+                    : knowledgeBaseRepository.findTopKProjectedByTextVectorCastSimilarity(vectorLiteral, topK);
+            return mapVectorMatches(matches, terms);
         } catch (RuntimeException ex) {
             log.warn("Vector retrieval failed. Falling back to keyword retrieval. Error: {}", ex.getMessage());
             return List.of();
@@ -99,8 +99,7 @@ public class KnowledgeRetrievalServiceImpl implements KnowledgeRetrievalService 
                 .sorted(Comparator.comparingInt(ScoredKnowledge::score).reversed()
                         .thenComparing(item -> item.knowledgeBase().getKbId()))
                 .limit(topK)
-                .map(item -> mapToRetrieved(item.knowledgeBase(), terms))
-                .collect(Collectors.toList());
+                .collect(Collectors.collectingAndThen(Collectors.toList(), items -> mapKeywordMatches(items, terms)));
     }
 
     private KnowledgeRetrievalResult result(List<RetrievedKnowledgeResponse> sources, RetrievalMode mode) {
@@ -153,14 +152,119 @@ public class KnowledgeRetrievalServiceImpl implements KnowledgeRetrievalService 
         return score;
     }
 
-    private RetrievedKnowledgeResponse mapToRetrieved(KnowledgeBase kb, List<String> terms) {
+    private List<RetrievedKnowledgeResponse> mapVectorMatches(
+            List<KnowledgeSearchProjection> matches,
+            List<String> terms) {
+        List<RetrievedKnowledgeResponse> sources = new ArrayList<>();
+        for (int i = 0; i < matches.size(); i++) {
+            sources.add(mapToRetrieved(matches.get(i), terms, i + 1));
+        }
+        return sources;
+    }
+
+    private List<RetrievedKnowledgeResponse> mapKeywordMatches(List<ScoredKnowledge> matches, List<String> terms) {
+        List<RetrievedKnowledgeResponse> sources = new ArrayList<>();
+        for (int i = 0; i < matches.size(); i++) {
+            ScoredKnowledge match = matches.get(i);
+            sources.add(mapToRetrieved(match.knowledgeBase(), terms, i + 1, match.score()));
+        }
+        return sources;
+    }
+
+    private RetrievedKnowledgeResponse mapToRetrieved(
+            KnowledgeSearchProjection row,
+            List<String> terms,
+            int rank) {
+        KnowledgeScope scope = parseKnowledgeScope(row.getKnowledgeScope());
+        return RetrievedKnowledgeResponse.builder()
+                .kbId(row.getKbId())
+                .kbTitle(row.getKbTitle())
+                .kbCategory(row.getKbCategory())
+                .kbSource(row.getKbSource())
+                .snippet(buildSnippet(row.getKbContent(), terms))
+                .rank(rank)
+                .retrievalMode(RetrievalMode.VECTOR)
+                .relevanceScore(row.getRelevanceScore())
+                .relevanceLabel(vectorRelevanceLabel(row.getRelevanceScore()))
+                .knowledgeScope(scope)
+                .approvalStatus(parseApprovalStatus(row.getApprovalStatus()))
+                .contributorDisplayName(contributorDisplayName(scope, row.getCreatedByName()))
+                .build();
+    }
+
+    private RetrievedKnowledgeResponse mapToRetrieved(
+            KnowledgeBase kb,
+            List<String> terms,
+            int rank,
+            int keywordScore) {
+        KnowledgeScope scope = kb.getKnowledgeScope();
         return RetrievedKnowledgeResponse.builder()
                 .kbId(kb.getKbId())
                 .kbTitle(kb.getKbTitle())
                 .kbCategory(kb.getKbCategory())
                 .kbSource(kb.getKbSource())
                 .snippet(buildSnippet(kb.getKbContent(), terms))
+                .rank(rank)
+                .retrievalMode(RetrievalMode.KEYWORD_FALLBACK)
+                .relevanceLabel(keywordRelevanceLabel(keywordScore))
+                .knowledgeScope(scope)
+                .approvalStatus(kb.getApprovalStatus())
+                .contributorDisplayName(contributorDisplayName(
+                        scope,
+                        kb.getCreatedBy() == null ? null : kb.getCreatedBy().getFullName()))
                 .build();
+    }
+
+    private KnowledgeScope parseKnowledgeScope(String value) {
+        if (!StringUtils.hasText(value)) {
+            return null;
+        }
+        try {
+            return KnowledgeScope.valueOf(value.trim());
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+
+    private KnowledgeApprovalStatus parseApprovalStatus(String value) {
+        if (!StringUtils.hasText(value)) {
+            return null;
+        }
+        try {
+            return KnowledgeApprovalStatus.valueOf(value.trim());
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+
+    private String contributorDisplayName(KnowledgeScope scope, String createdByName) {
+        if (scope == KnowledgeScope.INSTRUCTOR_CONTRIBUTED && StringUtils.hasText(createdByName)) {
+            return createdByName.trim();
+        }
+        return null;
+    }
+
+    private String vectorRelevanceLabel(Double relevanceScore) {
+        if (relevanceScore == null) {
+            return "MATCH";
+        }
+        if (relevanceScore >= 0.75D) {
+            return "HIGH";
+        }
+        if (relevanceScore >= 0.50D) {
+            return "MEDIUM";
+        }
+        return "LOW";
+    }
+
+    private String keywordRelevanceLabel(int keywordScore) {
+        if (keywordScore >= 8) {
+            return "HIGH";
+        }
+        if (keywordScore >= 3) {
+            return "MEDIUM";
+        }
+        return "LOW";
     }
 
     private String buildSnippet(String content, List<String> terms) {

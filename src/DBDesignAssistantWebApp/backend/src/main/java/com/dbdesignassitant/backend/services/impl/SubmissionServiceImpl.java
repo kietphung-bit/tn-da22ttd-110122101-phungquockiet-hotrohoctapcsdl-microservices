@@ -152,7 +152,7 @@ public class SubmissionServiceImpl implements SubmissionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Exercise not found"));
 
         if (!isExerciseAvailableForStudent(exercise, userId)) {
-            throw new BadRequestException("Exercise is not available");
+            throw new BadRequestException("Students can only create drafts from their own AI-generated exercises");
         }
 
         Submission submission = Submission.builder()
@@ -258,8 +258,8 @@ public class SubmissionServiceImpl implements SubmissionService {
     }
 
     @Override
-    public List<SubmissionResponse> getStudentSubmissions(Long userId) {
-        return submissionRepository.findAllByUser_UserIdOrderByCreatedAtDesc(userId).stream()
+    public List<SubmissionResponse> getStudentSubmissions(Long userId, boolean archived) {
+        return submissionRepository.findStudentSubmissionsByArchiveState(userId, archived).stream()
                 .map(this::toSummaryResponse)
                 .collect(Collectors.toList());
     }
@@ -273,6 +273,18 @@ public class SubmissionServiceImpl implements SubmissionService {
         attachEvaluationData(response, submissionId, true);
 
         return response;
+    }
+
+    @Override
+    @Transactional
+    public SubmissionResponse setStudentSubmissionArchived(Long userId, Long submissionId, boolean archived) {
+        Submission submission = submissionRepository.findBySubmissionIdAndUser_UserId(submissionId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Submission not found"));
+
+        submission.setStudentArchived(archived);
+        submission.setStudentArchivedAt(archived ? LocalDateTime.now() : null);
+
+        return toSummaryResponse(submissionRepository.save(submission));
     }
 
     @Override
@@ -319,13 +331,10 @@ public class SubmissionServiceImpl implements SubmissionService {
     }
 
     private boolean isExerciseAvailableForStudent(Exercise exercise, Long studentId) {
-        if (exercise.getExerciseSource() == ExerciseSource.MANUAL) {
-            return Boolean.TRUE.equals(exercise.getIsPublished());
-        }
-
         if (exercise.getExerciseSource() == ExerciseSource.AI_GENERATED) {
-            return exercise.getOwnerStudent() != null
+            boolean ownedAi = exercise.getOwnerStudent() != null
                     && studentId.equals(exercise.getOwnerStudent().getUserId());
+            return ownedAi;
         }
 
         return false;
@@ -346,6 +355,8 @@ public class SubmissionServiceImpl implements SubmissionService {
                 .submissionStatus(s.getSubmissionStatus())
                 .createdAt(s.getCreatedAt())
                 .submittedAt(s.getSubmittedAt())
+                .studentArchived(Boolean.TRUE.equals(s.getStudentArchived()))
+                .studentArchivedAt(s.getStudentArchivedAt())
                 .currentRound(latestRound(s.getSubmissionId()).map(EvaluationRound::getRoundNumber).orElse(0))
                 .roundsUsed(roundsUsed(s.getSubmissionId()))
                 .maxRounds(MAX_EVALUATION_ROUNDS)

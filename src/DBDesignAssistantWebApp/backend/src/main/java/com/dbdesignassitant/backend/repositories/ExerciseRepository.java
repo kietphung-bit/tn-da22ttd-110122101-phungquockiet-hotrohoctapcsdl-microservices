@@ -40,18 +40,21 @@ public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
 			@Param("published") Boolean published);
 
 	@Query("SELECT e FROM Exercise e "
-			+ "WHERE ("
-			+ "(e.exerciseSource = com.dbdesignassitant.backend.enums.ExerciseSource.MANUAL AND e.isPublished = true) "
-			+ "OR (e.exerciseSource = com.dbdesignassitant.backend.enums.ExerciseSource.AI_GENERATED "
-			+ "AND e.ownerStudent.userId = :studentId)"
+			+ "WHERE e.exerciseSource = com.dbdesignassitant.backend.enums.ExerciseSource.AI_GENERATED "
+			+ "AND e.ownerStudent.userId = :studentId "
+			+ "AND ("
+			+ "(:archived = false AND (e.studentArchived = false OR e.studentArchived IS NULL)) "
+			+ "OR (:archived = true AND e.studentArchived = true)"
 			+ ") "
 			+ "AND (:search IS NULL OR :search = '' "
 			+ "OR LOWER(e.exTitle) LIKE LOWER(CONCAT('%', :search, '%')) "
 			+ "OR LOWER(e.exDescription) LIKE LOWER(CONCAT('%', :search, '%')) "
-			+ "OR LOWER(e.exerciseCode) LIKE LOWER(CONCAT('%', :search, '%')))")
+			+ "OR LOWER(e.exerciseCode) LIKE LOWER(CONCAT('%', :search, '%'))) "
+			+ "ORDER BY e.exerciseId DESC")
 	List<Exercise> findStudentVisibleExercises(
 			@Param("studentId") Long studentId,
-			@Param("search") String search);
+			@Param("search") String search,
+			@Param("archived") boolean archived);
 
 	@Query("SELECT e FROM Exercise e "
 			+ "WHERE e.exerciseSource = com.dbdesignassitant.backend.enums.ExerciseSource.MANUAL "
@@ -73,4 +76,11 @@ public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
 			+ "WHERE e.exerciseSource = com.dbdesignassitant.backend.enums.ExerciseSource.AI_GENERATED "
 			+ "AND e.baseExercise.exerciseId = :baseExerciseId")
 	long countDerivedAiExercises(@Param("baseExerciseId") Long baseExerciseId);
+
+	@Query("SELECT e FROM Exercise e "
+			+ "WHERE e.exerciseSource = com.dbdesignassitant.backend.enums.ExerciseSource.AI_GENERATED "
+			+ "AND e.ownerStudent IS NULL "
+			+ "AND e.baseExercise.exerciseId = :baseExerciseId "
+			+ "ORDER BY e.exerciseId DESC")
+	List<Exercise> findStaffAiTrialsByBaseExerciseId(@Param("baseExerciseId") Long baseExerciseId);
 }

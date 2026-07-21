@@ -9,11 +9,13 @@ import UserManagementPage from "./pages/UserManagementPage";
 import SubmissionManagementPage from "./pages/SubmissionManagementPage";
 import SubmissionDetailPage from "./pages/SubmissionDetailPage";
 import EvaluationRoundMonitoringPage from "./pages/EvaluationRoundMonitoringPage";
+import AdminExerciseAiGenerationPage from "./pages/admin/AdminExerciseAiGenerationPage";
 import AdminPracticeInsightsPage from "./pages/admin/AdminPracticeInsightsPage";
 import KnowledgeBaseManagementPage from "./pages/KnowledgeBaseManagementPage";
 import SkillManagementPage from "./pages/SkillManagementPage";
 import StudentSkillStatsPage from "./pages/StudentSkillStatsPage";
 import InstructorExerciseManagementPage from "./pages/instructor/InstructorExerciseManagementPage";
+import InstructorExerciseAiGenerationPage from "./pages/instructor/InstructorExerciseAiGenerationPage";
 import InstructorExerciseDetailPage from "./pages/instructor/InstructorExerciseDetailPage";
 import InstructorKnowledgeBasePage from "./pages/instructor/InstructorKnowledgeBasePage";
 import InstructorPracticeInsightsPage from "./pages/instructor/InstructorPracticeInsightsPage";
@@ -56,6 +58,14 @@ function App() {
                 }
             />
             <Route
+                path="/admin/exercises/ai-generate"
+                element={
+                    <ProtectedRoute>
+                        <AdminExerciseAiGenerationPage />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
                 path="/admin/exercises/:id"
                 element={
                     <ProtectedRoute>
@@ -68,6 +78,14 @@ function App() {
                 element={
                     <ProtectedRoute allowedRoles={["INSTRUCTOR"]}>
                         <InstructorExerciseManagementPage />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/instructor/exercises/ai-generate"
+                element={
+                    <ProtectedRoute allowedRoles={["INSTRUCTOR"]}>
+                        <InstructorExerciseAiGenerationPage />
                     </ProtectedRoute>
                 }
             />

@@ -87,7 +87,11 @@
 
 .insights-panel--status,
 .insights-panel--provider,
-.insights-panel--issues {
+.insights-panel--issues,
+.insights-panel--skill,
+.insights-panel--score,
+.insights-panel--rounds,
+.insights-panel--trend {
   min-height: 310px;
 }
 
@@ -153,8 +157,24 @@
   background: #0369a1;
 }
 
+.insights-chart-bar--score {
+  background: #0f766e;
+}
+
+.insights-chart-bar--round {
+  background: #16a34a;
+}
+
+.insights-chart-bar--trend {
+  background: #2563eb;
+}
+
 .insights-chart-bar--issue {
   background: #7c3aed;
+}
+
+.insights-chart-bar--skill {
+  background: #0891b2;
 }
 
 .insights-chart-bar--status-draft {
@@ -243,28 +263,42 @@
   display: flex;
   flex-direction: column;
   gap: 9px;
+  min-width: 0;
 }
 
 .insights-donut-legend-row {
   display: grid;
-  grid-template-columns: 10px minmax(90px, 1fr) auto auto;
+  grid-template-columns: 10px minmax(0, 1fr) minmax(58px, max-content) minmax(44px, max-content);
   gap: 8px;
   align-items: center;
   font-size: 0.82rem;
+  max-width: 100%;
 }
 
 .insights-donut-legend-row strong {
   font-size: 0.86rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .insights-donut-legend-row span {
   color: var(--ink-soft);
+  min-width: 0;
+}
+
+.insights-donut-legend-row > span:not(.insights-color-dot) {
+  justify-self: end;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .insights-color-dot {
   width: 10px;
   height: 10px;
   border-radius: 999px;
+  min-width: 10px;
 }
 
 .insights-provider-chart {
